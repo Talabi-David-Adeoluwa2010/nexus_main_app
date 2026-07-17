@@ -467,7 +467,7 @@
         }
         .gradebook-table th { background: rgba(212, 175, 55, 0.1); color: var(--gold-accent); }
 
-        .controls-row { display: flex; gap: 10px; align-items: center; }
+        .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
         .media-btn {
             background: rgba(10, 20, 38, 0.9);
             color: var(--gold-accent);
@@ -482,6 +482,38 @@
         }
         .media-btn:hover { background: var(--gold-accent); color: #050c1a; }
         .media-btn.inactive { background: var(--danger-color); color: #fff; border-color: var(--danger-color); }
+
+        /* Independent Full-Width Custom Typing Layout Spaces */
+        .typing-row-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .independent-typing-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            background: rgba(10, 20, 38, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .role-badge {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            min-width: 90px;
+            text-align: center;
+        }
+        .student-badge { background: rgba(143, 160, 181, 0.2); color: var(--text-main); border: 1px solid var(--text-muted); }
+        .teacher-badge { background: rgba(212, 175, 55, 0.15); color: var(--gold-accent); border: 1px solid var(--gold-accent); }
 
         .corner-founder-credit {
             position: fixed;
@@ -636,8 +668,20 @@
                 <input type="file" id="file-import-input" style="display: none;">
                 <button class="media-btn" onclick="document.getElementById('file-import-input').click();">📁 Import File</button>
                 <button class="media-btn" id="snap-cam-btn">📷 Snap Pic</button>
-                <input type="text" id="text-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message..." onkeypress="handleKeyPress(event)">
-                <button class="btn" id="send-msg-btn" style="width: auto; padding: 12px 20px;">Send</button>
+            </div>
+
+            <div class="typing-row-container">
+                <div class="independent-typing-block">
+                    <div class="role-badge student-badge">Student</div>
+                    <input type="text" id="student-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message as Student..." onkeypress="handleKeyPress(event, 'student')">
+                    <button class="btn" id="send-student-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('student')">Send</button>
+                </div>
+
+                <div class="independent-typing-block">
+                    <div class="role-badge teacher-badge">Teacher</div>
+                    <input type="text" id="teacher-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message as Teacher..." onkeypress="handleKeyPress(event, 'teacher')">
+                    <button class="btn" id="send-teacher-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('teacher')">Send</button>
+                </div>
             </div>
 
             <div class="admin-dashboard-sub-panel hidden" id="admin-tracking-section">
@@ -1063,20 +1107,20 @@
             if (peerConnections[data.socket_id]) { peerConnections[data.socket_id].close(); delete peerConnections[data.socket_id]; }
         });
 
-        // Media communications
-        document.getElementById('send-msg-btn').addEventListener('click', sendMsg);
-        function sendMsg() {
-            const el = document.getElementById('text-input-field');
-            if(el.value.trim()) {
-                socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: el.value.trim(), type: "text" });
-                appendMsg(myUsername, el.value.trim(), "text");
+        // Updated text message routing logic handling both independent user roles
+        function sendMsg(role) {
+            const el = document.getElementById(`${role}-input-field`);
+            if(el && el.value.trim()) {
+                const displayName = `${myUsername} (${role.toUpperCase()})`;
+                socket.emit('text_message', { room: classCodeRoom, name: displayName, content: el.value.trim(), type: "text" });
+                appendMsg(displayName, el.value.trim(), "text");
                 el.value = "";
             }
         }
 
-        function handleKeyPress(e) {
+        function handleKeyPress(e, role) {
             if (e.key === 'Enter') {
-                sendMsg();
+                sendMsg(role);
             }
         }
 
