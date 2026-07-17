@@ -6,17 +6,18 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Updated to support the production async engine (Gevent) 
+socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 # --- MASTER ADMIN CONFIGURATION ---
-# URL of your deployed Render Admin Web Service (Do not put a trailing slash)
 ADMIN_APP_URL = "https://nexus-admin-app.onrender.com"
 
 # --- DATABASE-FREE IN-MEMORY STORAGE ---
 classrooms = {}       # Format: { class_code: { "classname": name, "teacher": username, "members": [] } }
 active_sockets = {}   # Format: { socket_id: { "username": username, "room": room, "role": role } }
 teacher_accounts = {
-    "admin": "admin123"  # Default developer access ticket login
+    "admin": "admin123"  # Default developer fallback access
 }
 
 @app.route('/')
@@ -31,18 +32,38 @@ def handle_register_teacher(data):
     password = data.get('password', '')
     activation_code = data.get('activationCode', '').strip()
 
-    if not username or not password:
-        emit('auth_response', {'success': False, 'message': 'Username and password cannot be empty.'})
-        return
-
-    if activation_code != "NEXUS-ADMIN-2026":
-        emit('auth_response', {'success': False, 'message': 'Invalid Admin Activation Ticket!'})
+    if not username or not password or not activation_code:
+        emit('auth_response', {'success': False, 'message': 'All registration fields are required.'})
         return
 
     if username in teacher_accounts:
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
+    # 🔑 FIX: Perform live API lookup against your deployed Admin App validation system
+    try:
+        response = requests.post(
+            f"{ADMIN_APP_URL}/validate_ticket", 
+            json={"ticket": activation_code}, 
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if not result.get("valid"):
+                emit('auth_response', {'success': False, 'message': 'Invalid Admin Activation Ticket!'})
+                return
+        else:
+            emit('auth_response', {'success': False, 'message': 'Admin validation server rejected the request.'})
+            return
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Connection Error to Admin: {e}")
+        emit('auth_response', {'success': False, 'message': 'Admin validation server is offline!'})
+        return
+
+    # Ticket is verified, register the teacher account
     teacher_accounts[username] = password
     emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
 
@@ -62,7 +83,7 @@ def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
     
-    class_code = str(uuid.uuid4())[:13].upper()  # Generates XXXX-XXXX-XXXX equivalent
+    class_code = str(uuid.uuid4())[:13].upper()  # Generates XXXX-XXXX-XXXX structure
 
     classrooms[class_code] = {
         "classname": classname,
@@ -77,7 +98,7 @@ def handle_join_class(data):
     name = data.get('name', '').strip()
     class_code = data.get('classCode', '').strip()
 
-    # 1. Verification Handshake: Check if student is banned in Master Panel
+    # Verification Handshake: Check if student is banned in Master Panel
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=3).json()
         if ban_check.get('banned'):
@@ -120,7 +141,7 @@ def handle_join_class(data):
     # Broadcast introduction update
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
     
-    # Update users list locally and on the admin interface
+    # Update user lists locally and broadcast
     broadcast_active_users(class_code)
 
 @socketio.on('register_user')
@@ -129,7 +150,6 @@ def handle_register_user(data):
     role = data.get('role', 'student')
     room = data.get('room')
     
-    # Safeguard registration details
     active_sockets[request.sid] = {
         "username": username,
         "room": room,
@@ -164,7 +184,7 @@ def handle_text_message(data):
     content = data.get('content')
     msg_type = data.get('type', 'text')
 
-    # Continuous ban verification (prevents mid-session abuse)
+    # Continuous ban verification (prevents mid-session evasion)
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
         if ban_check.get('banned'):
@@ -174,7 +194,7 @@ def handle_text_message(data):
     except Exception:
         pass
 
-    # Bounce payloads directly down to active room members (excluding sender)
+    # Bounce payloads down to active room members
     emit('bounce_message', {
         'sender_id': request.sid,
         'name': name,
@@ -209,13 +229,11 @@ def handle_webrtc_signal(data):
 def handle_block_user_by_username(data):
     target_username = data.get('username')
     
-    # Optional: Send a block signal to the Master admin server
     try:
         requests.post(f"{ADMIN_APP_URL}/api/apply_ban", json={"username": target_username}, timeout=3)
     except Exception:
         pass
 
-    # Disconnect target users matched on active sockets
     sockets_to_kick = [sid for sid, info in active_sockets.items() if info['username'] == target_username]
 
     for sid in sockets_to_kick:
@@ -239,4 +257,6 @@ def broadcast_active_users(room_code):
     emit('update_active_users', {'users': active_list}, room=room_code)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port)
