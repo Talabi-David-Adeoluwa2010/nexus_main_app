@@ -1,9 +1,8 @@
-Flask==3.0.3
-Flask-SocketIO==5.3.6
+flask
+flask-socketio
 gevent
-gunicorn==22.0.0
-eventlet>=0.33.3
-gunicorn
-Flask-SocketIO
+gevent-websocket
+requests
+
 
 
