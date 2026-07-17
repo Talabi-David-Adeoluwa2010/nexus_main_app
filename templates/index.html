@@ -267,6 +267,9 @@
             height: 100%; 
             object-fit: cover; 
         }
+        .video-card video.mirrored {
+            transform: scaleX(-1);
+        }
         .video-label {
             position: absolute;
             bottom: 8px;
@@ -584,6 +587,7 @@
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <button class="btn" id="swap-cam-btn" style="width: auto; padding: 8px 12px;">Flip Cam</button>
+                    <button class="btn btn-secondary" id="mirror-cam-btn" style="width: auto; background:#374151; color:#fff; padding: 8px 12px; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; cursor:pointer;">Mirror view</button>
                     <button class="btn" style="background: #ea4335; color: #fff; width: auto; padding: 8px 12px;" onclick="location.reload();">Leave</button>
                 </div>
             </div>
@@ -602,7 +606,7 @@
 
             <div class="video-grid-container" id="video-layout-grid">
                 <div class="video-card" id="local-video-card">
-                    <video id="my-camera" autoplay playsinline muted></video>
+                    <video id="my-camera" autoplay playsinline muted class="mirrored"></video>
                     <div class="video-blocked-overlay hidden" id="local-video-blocked">
                         <span>📷</span> Camera Closed
                     </div>
@@ -632,7 +636,7 @@
                 <input type="file" id="file-import-input" style="display: none;">
                 <button class="media-btn" onclick="document.getElementById('file-import-input').click();">📁 Import File</button>
                 <button class="media-btn" id="snap-cam-btn">📷 Snap Pic</button>
-                <input type="text" id="text-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message...">
+                <input type="text" id="text-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message..." onkeypress="handleKeyPress(event)">
                 <button class="btn" id="send-msg-btn" style="width: auto; padding: 12px 20px;">Send</button>
             </div>
 
@@ -1001,6 +1005,11 @@
             }
         });
 
+        // Mirror view switch event handler
+        document.getElementById('mirror-cam-btn').addEventListener('click', () => {
+            document.getElementById('my-camera').classList.toggle('mirrored');
+        });
+
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
@@ -1065,6 +1074,12 @@
             }
         }
 
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMsg();
+            }
+        }
+
         document.getElementById('file-import-input').addEventListener('change', function() {
             const f = this.files[0];
             if (f) {
@@ -1084,6 +1099,13 @@
                 const ctx = canvasEl.getContext('2d');
                 canvasEl.width = videoEl.videoWidth || 640;
                 canvasEl.height = videoEl.videoHeight || 480;
+                
+                // Keep snapshot aligned with current layout metrics
+                if (videoEl.classList.contains('mirrored')) {
+                    ctx.translate(canvasEl.width, 0);
+                    ctx.scale(-1, 1);
+                }
+                
                 ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
                 const snapData = canvasEl.toDataURL('image/jpeg', 0.8);
                 socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: snapData });
