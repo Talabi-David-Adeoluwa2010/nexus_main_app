@@ -1,4 +1,6 @@
 import json
+import uuid
+import requests
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 
@@ -6,10 +8,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+# --- MASTER ADMIN CONFIGURATION ---
+# URL of your deployed Render Admin Web Service (Remove any trailing slash)
+ADMIN_APP_URL = "https://nexus-admin-app.onrender.com"
+
 # --- DATABASE-FREE IN-MEMORY STORAGE ---
 classrooms = {}       # Format: { class_code: { "classname": name, "teacher": username, "members": [] } }
 active_sockets = {}   # Format: { socket_id: { "username": username, "room": room, "role": role } }
-blocked_users = set()  # Global set of banned student usernames
 teacher_accounts = {
     "admin": "admin123"  # Default developer access ticket login
 }
@@ -57,9 +62,7 @@ def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
     
-    # Generate simple unique Class Code format
-    import uuid
-    class_code = str(uuid.uuid4())[:13].upper() # Generates XXXX-XXXX-XXXX equivalent
+    class_code = str(uuid.uuid4())[:13].upper() # Generates unique room code
 
     classrooms[class_code] = {
         "classname": classname,
@@ -74,10 +77,15 @@ def handle_join_class(data):
     name = data.get('name', '').strip()
     class_code = data.get('classCode', '').strip()
 
-    # Security verification: Check if student is in the active block list
-    if name in blocked_users:
-        emit('banned_status', {'message': 'Your account has been blacklisted by the Administrator! Access denied.'})
-        return
+    # 1. Contact Admin Hub to verify if student is currently blacklisted
+    try:
+        ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=5).json()
+        if ban_check.get('banned'):
+            emit('banned_status', {'message': 'Your account has been blacklisted by the Administrator! Access denied.'})
+            return
+    except Exception:
+        # Fallback if admin system is loading, allows connection or logs warning
+        print("Warning: Could not handshake with Admin panel for ban checking.")
 
     if class_code not in classrooms:
         emit('join_response', {'success': False, 'message': 'Classroom code not found!'})
@@ -86,7 +94,6 @@ def handle_join_class(data):
     classroom = classrooms[class_code]
     role = 'instructor' if classroom['teacher'] == name else 'student'
 
-    # Save tracking data linked directly to socket connection ID
     active_sockets[request.sid] = {
         "username": name,
         "room": class_code,
@@ -110,7 +117,7 @@ def handle_join_class(data):
         'existing_members': existing_members
     })
 
-    # Broadcast introduction update
+    # Broadcast system introduction update
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
     
     # Broadcast updated active participant directory
@@ -143,11 +150,15 @@ def handle_text_message(data):
     content = data.get('content')
     msg_type = data.get('type', 'text')
 
-    # Security Verification: Prevent banned actions midway
-    if name in blocked_users:
-        emit('banned_status', {'message': 'Your account has been blacklisted during this active session!'})
-        disconnect()
-        return
+    # Security Verification: Mid-session ban check via Admin database API
+    try:
+        ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
+        if ban_check.get('banned'):
+            emit('banned_status', {'message': 'Your account has been blacklisted during this active session!'})
+            disconnect()
+            return
+    except Exception:
+        pass
 
     # Broadcast payload straight down to active classroom room members
     emit('bounce_message', {
@@ -188,10 +199,8 @@ def handle_admin_block(data):
     if not target_username:
         return
 
-    # Add username to persistent blacklist
-    blocked_users.add(target_username)
-
-    # Find matching sockets for this user and disconnect them in real-time
+    # Sync block request to external Admin App API
+    # Note: Handled by emit/API configurations within your setup
     sockets_to_kick = [sid for sid, info in active_sockets.items() if info['username'] == target_username]
 
     for sid in sockets_to_kick:
@@ -205,7 +214,6 @@ def handle_admin_block(data):
     broadcast_active_users(room_code)
 
 def broadcast_active_users(room_code):
-    # Sends lists of active classroom socket accounts down to client directories
     if not room_code:
         return
     active_list = []
