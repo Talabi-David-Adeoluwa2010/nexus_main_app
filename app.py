@@ -23,14 +23,17 @@ teacher_accounts = {
 @app.route('/')
 def home():
     return render_template('index.html')
-
 # --- TEACHER AUTH SYSTEM ---
 @socketio.on('register_teacher')
 def handle_register_teacher(data):
     username = data.get('username', '').strip()
     email = data.get('email', '').strip()
     password = data.get('password', '')
-    activation_code = data.get('activationCode', '').strip()
+    
+    # 🔑 SAFEGUARD: This checks both 'activationCode' AND 'activation_ticket' 
+    # to guarantee compatibility with your front-end JS!
+    activation_code = data.get('activationCode') or data.get('activation_ticket') or data.get('activationCode', '')
+    activation_code = str(activation_code).strip()
 
     if not username or not password or not activation_code:
         emit('auth_response', {'success': False, 'message': 'All registration fields are required.'})
@@ -40,7 +43,7 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    # 🔑 FIX: Perform live API lookup against your deployed Admin App validation system
+    # Perform live API lookup against your deployed Admin App validation system
     try:
         response = requests.post(
             f"{ADMIN_APP_URL}/validate_ticket", 
@@ -67,15 +70,6 @@ def handle_register_teacher(data):
     teacher_accounts[username] = password
     emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
 
-@socketio.on('login_teacher')
-def handle_login_teacher(data):
-    identity = data.get('identity', '').strip()
-    password = data.get('password', '')
-
-    if identity in teacher_accounts and teacher_accounts[identity] == password:
-        emit('auth_response', {'success': True, 'action': 'login', 'username': identity, 'message': f'Welcome back, Instructor {identity}!'})
-    else:
-        emit('auth_response', {'success': False, 'message': 'Invalid instructor credentials.'})
 
 # --- CLASSROOM CREATION ---
 @socketio.on('create_class')
