@@ -1,3 +1,7 @@
+# MUST BE THE FIRST TWO LINES IN THE FILE TO PREVENT DEADLOCKS
+from gevent import monkey
+monkey.patch_all()
+
 import json
 import uuid
 import requests
@@ -7,7 +11,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
-# Updated to support the production async engine (Gevent) 
+# Configured for production asynchronous Gevent engine
 socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 # --- MASTER ADMIN CONFIGURATION ---
@@ -23,6 +27,7 @@ teacher_accounts = {
 @app.route('/')
 def home():
     return render_template('index.html')
+
 # --- TEACHER AUTH SYSTEM ---
 @socketio.on('register_teacher')
 def handle_register_teacher(data):
@@ -30,9 +35,7 @@ def handle_register_teacher(data):
     email = data.get('email', '').strip()
     password = data.get('password', '')
     
-    # 🔑 SAFEGUARD: This checks both 'activationCode' AND 'activation_ticket' 
-    # to guarantee compatibility with your front-end JS!
-    activation_code = data.get('activationCode') or data.get('activation_ticket') or data.get('activationCode', '')
+    activation_code = data.get('activationCode') or data.get('activation_ticket') or ''
     activation_code = str(activation_code).strip()
 
     if not username or not password or not activation_code:
@@ -43,11 +46,11 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    # Perform live API lookup against your deployed Admin App validation system
+    # Non-blocking cross-origin HTTP API check against Admin Panel
     try:
         response = requests.post(
-            f"{ADMIN_APP_URL}/validate_ticket", 
-            json={"ticket": activation_code}, 
+            f"{ADMIN_APP_URL}/api/verify_code", 
+            json={"code": activation_code}, 
             headers={"Content-Type": "application/json"},
             timeout=5
         )
@@ -58,7 +61,11 @@ def handle_register_teacher(data):
                 emit('auth_response', {'success': False, 'message': 'Invalid Admin Activation Ticket!'})
                 return
         else:
-            emit('auth_response', {'success': False, 'message': 'Admin validation server rejected the request.'})
+            try:
+                err_reason = response.json().get("reason", "Admin validation server rejected the request.")
+            except Exception:
+                err_reason = "Admin validation server rejected the request."
+            emit('auth_response', {'success': False, 'message': err_reason})
             return
             
     except requests.exceptions.RequestException as e:
@@ -66,10 +73,19 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Admin validation server is offline!'})
         return
 
-    # Ticket is verified, register the teacher account
+    # Registration valid
     teacher_accounts[username] = password
     emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
 
+@socketio.on('login_teacher')
+def handle_login_teacher(data):
+    identity = data.get('identity', '').strip()
+    password = data.get('password', '')
+
+    if identity in teacher_accounts and teacher_accounts[identity] == password:
+        emit('auth_response', {'success': True, 'action': 'login', 'username': identity, 'message': f'Welcome back, Instructor {identity}!'})
+    else:
+        emit('auth_response', {'success': False, 'message': 'Invalid instructor credentials.'})
 
 # --- CLASSROOM CREATION ---
 @socketio.on('create_class')
@@ -77,7 +93,7 @@ def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
     
-    class_code = str(uuid.uuid4())[:13].upper()  # Generates XXXX-XXXX-XXXX structure
+    class_code = str(uuid.uuid4())[:13].upper()
 
     classrooms[class_code] = {
         "classname": classname,
@@ -92,7 +108,6 @@ def handle_join_class(data):
     name = data.get('name', '').strip()
     class_code = data.get('classCode', '').strip()
 
-    # Verification Handshake: Check if student is banned in Master Panel
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=3).json()
         if ban_check.get('banned'):
@@ -108,7 +123,6 @@ def handle_join_class(data):
     classroom = classrooms[class_code]
     role = 'instructor' if classroom['teacher'] == name else 'student'
 
-    # Save socket tracking data
     active_sockets[request.sid] = {
         "username": name,
         "room": class_code,
@@ -117,7 +131,6 @@ def handle_join_class(data):
 
     join_room(class_code)
 
-    # Collect existing peers inside room
     existing_members = []
     for sid, info in active_sockets.items():
         if info['room'] == class_code and sid != request.sid:
@@ -132,10 +145,7 @@ def handle_join_class(data):
         'existing_members': existing_members
     })
 
-    # Broadcast introduction update
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
-    
-    # Update user lists locally and broadcast
     broadcast_active_users(class_code)
 
 @socketio.on('register_user')
@@ -170,7 +180,7 @@ def handle_disconnect():
         del active_sockets[request.sid]
         broadcast_active_users(room)
 
-# --- REAL-TIME AUDIO, VIDEO, CHAT, EXAM AND SYSTEM BRIDGING ---
+# --- REAL-TIME DATA TRANSPORT BRIDGES ---
 @socketio.on('text_message')
 def handle_text_message(data):
     room = data.get('room')
@@ -178,7 +188,6 @@ def handle_text_message(data):
     content = data.get('content')
     msg_type = data.get('type', 'text')
 
-    # Continuous ban verification (prevents mid-session evasion)
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
         if ban_check.get('banned'):
@@ -188,7 +197,6 @@ def handle_text_message(data):
     except Exception:
         pass
 
-    # Bounce payloads down to active room members
     emit('bounce_message', {
         'sender_id': request.sid,
         'name': name,
@@ -218,13 +226,13 @@ def handle_webrtc_signal(data):
         'signal': signal
     }, room=target_id)
 
-# --- SECURITY SYSTEM CONTROL CENTER ---
+# --- PANEL REMOTING EXECUTIONS ---
 @socketio.on('block_user_by_username')
 def handle_block_user_by_username(data):
     target_username = data.get('username')
     
     try:
-        requests.post(f"{ADMIN_APP_URL}/api/apply_ban", json={"username": target_username}, timeout=3)
+        requests.post(f"{ADMIN_APP_URL}/api/apply_ban_remote", json={"username": target_username}, timeout=3)
     except Exception:
         pass
 
