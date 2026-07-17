@@ -9,7 +9,7 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # --- MASTER ADMIN CONFIGURATION ---
-# URL of your deployed Render Admin Web Service (Remove any trailing slash)
+# URL of your deployed Render Admin Web Service (Do not put a trailing slash)
 ADMIN_APP_URL = "https://nexus-admin-app.onrender.com"
 
 # --- DATABASE-FREE IN-MEMORY STORAGE ---
@@ -62,7 +62,7 @@ def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
     
-    class_code = str(uuid.uuid4())[:13].upper() # Generates unique room code
+    class_code = str(uuid.uuid4())[:13].upper()  # Generates XXXX-XXXX-XXXX equivalent
 
     classrooms[class_code] = {
         "classname": classname,
@@ -77,15 +77,14 @@ def handle_join_class(data):
     name = data.get('name', '').strip()
     class_code = data.get('classCode', '').strip()
 
-    # 1. Contact Admin Hub to verify if student is currently blacklisted
+    # 1. Verification Handshake: Check if student is banned in Master Panel
     try:
-        ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=5).json()
+        ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=3).json()
         if ban_check.get('banned'):
             emit('banned_status', {'message': 'Your account has been blacklisted by the Administrator! Access denied.'})
             return
     except Exception:
-        # Fallback if admin system is loading, allows connection or logs warning
-        print("Warning: Could not handshake with Admin panel for ban checking.")
+        print("Warning: Could not connect to Admin Panel for live ban verification.")
 
     if class_code not in classrooms:
         emit('join_response', {'success': False, 'message': 'Classroom code not found!'})
@@ -94,6 +93,7 @@ def handle_join_class(data):
     classroom = classrooms[class_code]
     role = 'instructor' if classroom['teacher'] == name else 'student'
 
+    # Save socket tracking data
     active_sockets[request.sid] = {
         "username": name,
         "room": class_code,
@@ -117,11 +117,25 @@ def handle_join_class(data):
         'existing_members': existing_members
     })
 
-    # Broadcast system introduction update
+    # Broadcast introduction update
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
     
-    # Broadcast updated active participant directory
+    # Update users list locally and on the admin interface
     broadcast_active_users(class_code)
+
+@socketio.on('register_user')
+def handle_register_user(data):
+    username = data.get('username')
+    role = data.get('role', 'student')
+    room = data.get('room')
+    
+    # Safeguard registration details
+    active_sockets[request.sid] = {
+        "username": username,
+        "room": room,
+        "role": role
+    }
+    broadcast_active_users(room)
 
 # --- SYSTEM WIDE DISCONNECTION RECOVERY ---
 @socketio.on('disconnect')
@@ -142,7 +156,7 @@ def handle_disconnect():
         del active_sockets[request.sid]
         broadcast_active_users(room)
 
-# --- REAL-TIME AUDIO, VIDEO, CHAT AND SYSTEM BRIDGING ---
+# --- REAL-TIME AUDIO, VIDEO, CHAT, EXAM AND SYSTEM BRIDGING ---
 @socketio.on('text_message')
 def handle_text_message(data):
     room = data.get('room')
@@ -150,7 +164,7 @@ def handle_text_message(data):
     content = data.get('content')
     msg_type = data.get('type', 'text')
 
-    # Security Verification: Mid-session ban check via Admin database API
+    # Continuous ban verification (prevents mid-session abuse)
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
         if ban_check.get('banned'):
@@ -160,7 +174,7 @@ def handle_text_message(data):
     except Exception:
         pass
 
-    # Broadcast payload straight down to active classroom room members
+    # Bounce payloads directly down to active room members (excluding sender)
     emit('bounce_message', {
         'sender_id': request.sid,
         'name': name,
@@ -190,28 +204,30 @@ def handle_webrtc_signal(data):
         'signal': signal
     }, room=target_id)
 
-# --- REAL-TIME BANNING, BLOCKING, AND SECURITY CONTROL CENTER ---
-@socketio.on('admin_block_request')
-def handle_admin_block(data):
+# --- SECURITY SYSTEM CONTROL CENTER ---
+@socketio.on('block_user_by_username')
+def handle_block_user_by_username(data):
     target_username = data.get('username')
-    room_code = data.get('room')
+    
+    # Optional: Send a block signal to the Master admin server
+    try:
+        requests.post(f"{ADMIN_APP_URL}/api/apply_ban", json={"username": target_username}, timeout=3)
+    except Exception:
+        pass
 
-    if not target_username:
-        return
-
-    # Sync block request to external Admin App API
-    # Note: Handled by emit/API configurations within your setup
+    # Disconnect target users matched on active sockets
     sockets_to_kick = [sid for sid, info in active_sockets.items() if info['username'] == target_username]
 
     for sid in sockets_to_kick:
         emit('forced_kick', {
             'reason': 'Your connection has been terminated. You have been blacklisted by the classroom administrator.'
         }, room=sid)
+        
+        room_code = active_sockets[sid]['room']
         disconnect(sid)
         if sid in active_sockets:
             del active_sockets[sid]
-
-    broadcast_active_users(room_code)
+        broadcast_active_users(room_code)
 
 def broadcast_active_users(room_code):
     if not room_code:
@@ -220,7 +236,7 @@ def broadcast_active_users(room_code):
     for sid, info in active_sockets.items():
         if info['room'] == room_code:
             active_list.append({"username": info["username"], "role": info["role"]})
-    emit('active_users_update', {'users': active_list}, room=room_code)
+    emit('update_active_users', {'users': active_list}, room=room_code)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
