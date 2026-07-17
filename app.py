@@ -1,0 +1,218 @@
+import json
+from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# --- DATABASE-FREE IN-MEMORY STORAGE ---
+classrooms = {}       # Format: { class_code: { "classname": name, "teacher": username, "members": [] } }
+active_sockets = {}   # Format: { socket_id: { "username": username, "room": room, "role": role } }
+blocked_users = set()  # Global set of banned student usernames
+teacher_accounts = {
+    "admin": "admin123"  # Default developer access ticket login
+}
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# --- TEACHER AUTH SYSTEM ---
+@socketio.on('register_teacher')
+def handle_register_teacher(data):
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    activation_code = data.get('activationCode', '').strip()
+
+    if not username or not password:
+        emit('auth_response', {'success': False, 'message': 'Username and password cannot be empty.'})
+        return
+
+    if activation_code != "NEXUS-ADMIN-2026":
+        emit('auth_response', {'success': False, 'message': 'Invalid Admin Activation Ticket!'})
+        return
+
+    if username in teacher_accounts:
+        emit('auth_response', {'success': False, 'message': 'Username already registered!'})
+        return
+
+    teacher_accounts[username] = password
+    emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
+
+@socketio.on('login_teacher')
+def handle_login_teacher(data):
+    identity = data.get('identity', '').strip()
+    password = data.get('password', '')
+
+    if identity in teacher_accounts and teacher_accounts[identity] == password:
+        emit('auth_response', {'success': True, 'action': 'login', 'username': identity, 'message': f'Welcome back, Instructor {identity}!'})
+    else:
+        emit('auth_response', {'success': False, 'message': 'Invalid instructor credentials.'})
+
+# --- CLASSROOM CREATION ---
+@socketio.on('create_class')
+def handle_create_class(data):
+    username = data.get('username')
+    classname = data.get('classname', '').strip() or "Untitled Session"
+    
+    # Generate simple unique Class Code format
+    import uuid
+    class_code = str(uuid.uuid4())[:13].upper() # Generates XXXX-XXXX-XXXX equivalent
+
+    classrooms[class_code] = {
+        "classname": classname,
+        "teacher": username,
+        "members": []
+    }
+    emit('class_created', {'class_code': class_code})
+
+# --- WORKSPACE LOGISTICS & ACTIVE MONITORING ---
+@socketio.on('join_class_session')
+def handle_join_class(data):
+    name = data.get('name', '').strip()
+    class_code = data.get('classCode', '').strip()
+
+    # Security verification: Check if student is in the active block list
+    if name in blocked_users:
+        emit('banned_status', {'message': 'Your account has been blacklisted by the Administrator! Access denied.'})
+        return
+
+    if class_code not in classrooms:
+        emit('join_response', {'success': False, 'message': 'Classroom code not found!'})
+        return
+
+    classroom = classrooms[class_code]
+    role = 'instructor' if classroom['teacher'] == name else 'student'
+
+    # Save tracking data linked directly to socket connection ID
+    active_sockets[request.sid] = {
+        "username": name,
+        "room": class_code,
+        "role": role
+    }
+
+    join_room(class_code)
+
+    # Collect existing peers inside room
+    existing_members = []
+    for sid, info in active_sockets.items():
+        if info['room'] == class_code and sid != request.sid:
+            existing_members.append({"socket_id": sid, "name": info["username"]})
+
+    classroom['members'].append({"socket_id": request.sid, "name": name})
+
+    emit('join_response', {
+        'success': True,
+        'classname': classroom['classname'],
+        'teacher': classroom['teacher'],
+        'existing_members': existing_members
+    })
+
+    # Broadcast introduction update
+    emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
+    
+    # Broadcast updated active participant directory
+    broadcast_active_users(class_code)
+
+# --- SYSTEM WIDE DISCONNECTION RECOVERY ---
+@socketio.on('disconnect')
+def handle_disconnect():
+    if request.sid in active_sockets:
+        user_info = active_sockets[request.sid]
+        room = user_info['room']
+        username = user_info['username']
+
+        leave_room(room)
+        
+        if room in classrooms:
+            classrooms[room]['members'] = [m for m in classrooms[room]['members'] if m['socket_id'] != request.sid]
+
+        emit('user_left', {'socket_id': request.sid}, room=room)
+        emit('bounce_message', {'name': 'SYSTEM', 'content': f'{username} disconnected.', 'type': 'text'}, room=room)
+        
+        del active_sockets[request.sid]
+        broadcast_active_users(room)
+
+# --- REAL-TIME AUDIO, VIDEO, CHAT AND SYSTEM BRIDGING ---
+@socketio.on('text_message')
+def handle_text_message(data):
+    room = data.get('room')
+    name = data.get('name')
+    content = data.get('content')
+    msg_type = data.get('type', 'text')
+
+    # Security Verification: Prevent banned actions midway
+    if name in blocked_users:
+        emit('banned_status', {'message': 'Your account has been blacklisted during this active session!'})
+        disconnect()
+        return
+
+    # Broadcast payload straight down to active classroom room members
+    emit('bounce_message', {
+        'sender_id': request.sid,
+        'name': name,
+        'content': content,
+        'type': msg_type
+    }, room=room, include_self=False)
+
+@socketio.on('image_broadcast')
+def handle_image_broadcast(data):
+    room = data.get('room')
+    name = data.get('name')
+    image_data = data.get('image_data')
+
+    emit('bounce_message', {
+        'sender_id': request.sid,
+        'name': name,
+        'content': image_data,
+        'type': 'image'
+    }, room=room, include_self=False)
+
+@socketio.on('webrtc_signal')
+def handle_webrtc_signal(data):
+    target_id = data.get('target_id')
+    signal = data.get('signal')
+    emit('webrtc_signal_received', {
+        'sender_id': request.sid,
+        'signal': signal
+    }, room=target_id)
+
+# --- REAL-TIME BANNING, BLOCKING, AND SECURITY CONTROL CENTER ---
+@socketio.on('admin_block_request')
+def handle_admin_block(data):
+    target_username = data.get('username')
+    room_code = data.get('room')
+
+    if not target_username:
+        return
+
+    # Add username to persistent blacklist
+    blocked_users.add(target_username)
+
+    # Find matching sockets for this user and disconnect them in real-time
+    sockets_to_kick = [sid for sid, info in active_sockets.items() if info['username'] == target_username]
+
+    for sid in sockets_to_kick:
+        emit('forced_kick', {
+            'reason': 'Your connection has been terminated. You have been blacklisted by the classroom administrator.'
+        }, room=sid)
+        disconnect(sid)
+        if sid in active_sockets:
+            del active_sockets[sid]
+
+    broadcast_active_users(room_code)
+
+def broadcast_active_users(room_code):
+    # Sends lists of active classroom socket accounts down to client directories
+    if not room_code:
+        return
+    active_list = []
+    for sid, info in active_sockets.items():
+        if info['room'] == room_code:
+            active_list.append({"username": info["username"], "role": info["role"]})
+    emit('active_users_update', {'users': active_list}, room=room_code)
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
