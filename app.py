@@ -2,6 +2,7 @@
 from gevent import monkey
 monkey.patch_all()
 
+import os
 import json
 import uuid
 import requests
@@ -15,7 +16,8 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 # --- MASTER ADMIN CONFIGURATION ---
-ADMIN_APP_URL = "https://nexus-admin-app.onrender.com"
+# Fallback defaults to local runtime if variable is missing on Render/Hosting platform
+ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app.onrender.com").rstrip('/')
 
 # --- DATABASE-FREE IN-MEMORY STORAGE ---
 classrooms = {}       # Format: { class_code: { "classname": name, "teacher": username, "members": [] } }
@@ -259,6 +261,5 @@ def broadcast_active_users(room_code):
     emit('update_active_users', {'users': active_list}, room=room_code)
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host='0.0.0.0', port=port)
