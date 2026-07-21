@@ -571,7 +571,7 @@
                             <input type="text" id="reg-username" class="nexus-input" placeholder="Username">
                             <input type="email" id="reg-email" class="nexus-input" placeholder="Email Address">
                             <input type="password" id="reg-password" class="nexus-input" placeholder="Password">
-                            <input type="text" id="reg-activation" class="nexus-input" placeholder="Admin Activation Ticket">
+                            <input type="text" id="reg-activation" class="nexus-input" maxlength="14" placeholder="14-Char Key (NEXUS-XXXXXXXX)" style="text-transform: uppercase;">
                         </div>
                         <button class="btn" id="register-btn">Complete Registration</button>
                         <div class="register-link" onclick="showInlineLogin()">Back to Login Portals</div>
@@ -834,6 +834,13 @@
                 bar.style.width = progress + '%';
                 text.innerText = progress + '%';
             }, 50);
+
+            const activationInput = document.getElementById('reg-activation');
+            if (activationInput) {
+                activationInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.toUpperCase();
+                });
+            }
         });
 
         function showInlineRegister() {
@@ -868,11 +875,16 @@
         }
 
         document.getElementById('register-btn').addEventListener('click', () => {
+            const code = document.getElementById('reg-activation').value.trim().toUpperCase();
+            if(!code) {
+                alert("Please enter a valid 14-character activation code.");
+                return;
+            }
             socket.emit('register_teacher', {
                 username: document.getElementById('reg-username').value.trim(),
                 email: document.getElementById('reg-email').value.trim(),
                 password: document.getElementById('reg-password').value,
-                activationCode: document.getElementById('reg-activation').value.trim()
+                activationCode: code
             });
         });
 
