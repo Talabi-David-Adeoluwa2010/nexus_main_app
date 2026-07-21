@@ -15,7 +15,7 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
 # MASTER ADMIN CONFIGURATION (Defaults to your live Admin Render App)
-ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-5.onrender.com").rstrip('/')
+ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
 
 classrooms = {}       
 active_sockets = {}   
