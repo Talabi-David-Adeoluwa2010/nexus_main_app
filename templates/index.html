@@ -796,7 +796,14 @@
     </div>
 
     <script>
-        const socket = io();
+        // Force WebSockets transport for instant connection on Render
+        const socket = io({
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000
+        });
+
         let myUsername = "";
         let classCodeRoom = "";
         let currentTeacherUser = "";
