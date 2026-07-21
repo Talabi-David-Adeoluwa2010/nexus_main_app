@@ -69,9 +69,9 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    # Enforce exact 14-character format check before querying Admin server
+    # Validate length and mandatory prefix criteria cleanly
     if len(activation_code) != 14 or not activation_code.startswith("NEXUS-"):
-        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters (NEXUS-XXXXXXXX).'})
+        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters total (NEXUS-XXXXXXXX).'})
         return
 
     # Strictly verify ticket against Admin App API
@@ -96,7 +96,11 @@ def handle_register_teacher(data):
 
     # Save registered account to memory
     teacher_accounts[username] = password
-    emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! You can now log in.'})
+    emit('auth_response', {
+        'success': True, 
+        'action': 'register', 
+        'message': 'Registration successful! You can now log in.'
+    })
 
 # --- CLASSROOM CREATION ---
 @socketio.on('create_class')
