@@ -14,8 +14,8 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
 socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
 
-# MASTER ADMIN CONFIGURATION
-ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "http://127.0.0.1:5000").rstrip('/')
+# MASTER ADMIN CONFIGURATION (Defaults to your live Admin Render App)
+ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-4.onrender.com").rstrip('/')
 
 classrooms = {}       
 active_sockets = {}   
@@ -59,8 +59,7 @@ def handle_register_teacher(data):
     is_valid = False
     try:
         response = requests.post(
-            f"{https://nexus-admin-app-4.onrender.com
-}/api/verify_code", 
+            f"{ADMIN_APP_URL}/api/verify_code", 
             json={"code": activation_code, "username": username}, 
             headers={"Content-Type": "application/json"},
             timeout=5
