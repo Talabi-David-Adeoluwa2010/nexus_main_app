@@ -341,7 +341,87 @@
             margin-bottom: 15px;
         }
         .msg { margin-bottom: 10px; font-size: 13px; line-height: 1.4; }
-        .shared-image { max-width: 280px; max-height: 200px; border-radius: 8px; margin-top: 5px; border: 1px solid var(--border-color); }
+        
+        /* Interactive Chat Image & Zoom Button Layout */
+        .chat-img-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .shared-image { 
+            max-width: 280px; 
+            max-height: 200px; 
+            border-radius: 8px; 
+            display: block;
+            border: 1px solid var(--border-color); 
+        }
+        .chat-zoom-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(5, 12, 26, 0.85);
+            color: var(--gold-accent);
+            border: 1px solid var(--border-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chat-zoom-btn:hover {
+            background: var(--gold-accent);
+            color: #050c1a;
+        }
+
+        /* Image Zooming Modal View */
+        .image-zoom-modal {
+            display: none;
+            position: fixed;
+            z-index: 20000;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(3, 7, 16, 0.95);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .image-zoom-modal.active {
+            display: flex;
+        }
+        .zoom-content-wrapper {
+            overflow: hidden;
+            max-width: 85vw;
+            max-height: 75vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #000;
+        }
+        .zoom-modal-img {
+            max-width: 100%;
+            max-height: 100%;
+            transition: transform 0.15s ease-out;
+            transform-origin: center center;
+        }
+        .zoom-controls-bar {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .close-zoom-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 2rem;
+            color: var(--gold-accent);
+            cursor: pointer;
+            font-weight: bold;
+        }
         
         .emoji-bar {
             display: flex;
@@ -694,6 +774,18 @@
         </div>
     </div>
 
+    <div class="image-zoom-modal" id="imageZoomModal">
+        <span class="close-zoom-modal" id="closeZoomModal">&times;</span>
+        <div class="zoom-content-wrapper">
+            <img id="zoomModalImg" class="zoom-modal-img" src="" alt="Zoomed view" />
+        </div>
+        <div class="zoom-controls-bar">
+            <button class="media-btn" id="zoomInBtn">Zoom In (+)</button>
+            <button class="media-btn" id="zoomOutBtn">Zoom Out (-)</button>
+            <button class="media-btn" id="resetZoomBtn">Reset</button>
+        </div>
+    </div>
+
     <canvas id="screenshot-canvas" style="display: none;"></canvas>
 
     <div class="exam-modal hidden" id="teacher-exam-setup-modal">
@@ -822,7 +914,7 @@
         const peerConnections = {};
         const pendingCandidates = {};
 
-        // Added multiple public STUN servers for cross-network NAT traversal
+        // Multiple public STUN servers for cross-network NAT traversal
         const rtcConfig = { 
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -830,6 +922,55 @@
                 { urls: 'stun:stun2.l.google.com:19302' }
             ] 
         };
+
+        // Optimized Media Constraints (Crystal Clear Audio Processing + Low Data Video Stream)
+        const optimizedConstraints = {
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                channelCount: 1
+            },
+            video: {
+                facingMode: "user",
+                width: { ideal: 320, max: 640 },
+                height: { ideal: 240, max: 480 },
+                frameRate: { max: 15 }
+            }
+        };
+
+        // Image Zoom Modal Handling
+        let currentZoomScale = 1;
+        const zoomModal = document.getElementById('imageZoomModal');
+        const zoomModalImg = document.getElementById('zoomModalImg');
+
+        function openZoomModal(imageSrc) {
+            zoomModalImg.src = imageSrc;
+            currentZoomScale = 1;
+            zoomModalImg.style.transform = `scale(${currentZoomScale})`;
+            zoomModal.classList.add('active');
+        }
+
+        document.getElementById('closeZoomModal').addEventListener('click', () => {
+            zoomModal.classList.remove('active');
+        });
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            currentZoomScale += 0.25;
+            zoomModalImg.style.transform = `scale(${currentZoomScale})`;
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            if (currentZoomScale > 0.5) {
+                currentZoomScale -= 0.25;
+                zoomModalImg.style.transform = `scale(${currentZoomScale})`;
+            }
+        });
+
+        document.getElementById('resetZoomBtn').addEventListener('click', () => {
+            currentZoomScale = 1;
+            zoomModalImg.style.transform = `scale(${currentZoomScale})`;
+        });
 
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
@@ -1009,7 +1150,10 @@
         async function startLocalCameraAndMic() {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: true });
+                const constraints = JSON.parse(JSON.stringify(optimizedConstraints));
+                constraints.video.facingMode = currentFacingMode;
+
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 document.getElementById('my-camera').srcObject = localStream;
                 if (micMuted || forceMutedByTeacher) {
                     localStream.getAudioTracks().forEach(t => t.enabled = false);
@@ -1116,7 +1260,6 @@
                     video.playsInline = true;
                     video.srcObject = e.streams[0]; 
                     
-                    // Explicit play call to circumvent browser autoplay restrictions
                     video.play().catch(err => console.log("Autoplay stream warning:", err));
                     card.appendChild(video);
                     
@@ -1154,7 +1297,7 @@
                   .catch(err => console.error("Create offer error:", err));
             }
 
-            return pc; // Return PeerConnection instance
+            return pc;
         }
 
         socket.on('webrtc_signal_received', async data => {
@@ -1166,7 +1309,6 @@
             if (data.signal.sdp) {
                 await pc.setRemoteDescription(new RTCSessionDescription(data.signal.sdp));
                 
-                // Drain queued ICE candidates received prior to remote description configuration
                 if (pendingCandidates[data.sender_id]) {
                     while (pendingCandidates[data.sender_id].length) {
                         const cand = pendingCandidates[data.sender_id].shift();
@@ -1624,13 +1766,31 @@
 
         function appendMsg(sender, content, type) {
             const log = document.getElementById('text-chat-log');
-            const d = document.createElement('div'); d.className = 'msg';
+            const d = document.createElement('div'); 
+            d.className = 'msg';
             if (type === "image") {
-                d.innerHTML = `<strong>${sender}:</strong><br><img class="shared-image" src="${content}">`;
+                const imgWrap = document.createElement('div');
+                imgWrap.className = 'chat-img-container';
+
+                const img = document.createElement('img');
+                img.className = 'shared-image';
+                img.src = content;
+
+                const zoomBtn = document.createElement('button');
+                zoomBtn.className = 'chat-zoom-btn';
+                zoomBtn.innerText = '🔍 Zoom';
+                zoomBtn.onclick = () => openZoomModal(content);
+
+                imgWrap.appendChild(img);
+                imgWrap.appendChild(zoomBtn);
+
+                d.innerHTML = `<strong>${sender}:</strong><br>`;
+                d.appendChild(imgWrap);
             } else {
                 d.innerHTML = `<strong>${sender}:</strong> ${content}`;
             }
-            log.appendChild(d); log.scrollTop = log.scrollHeight;
+            log.appendChild(d); 
+            log.scrollTop = log.scrollHeight;
         }
     </script>
 </body>
