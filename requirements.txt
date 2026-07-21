@@ -4,6 +4,10 @@ gevent
 gevent-websocket
 requests
 gunicorn
+gevent
+gevent-websocket
+gunicorn
+Flask-SocketIO
 
 
 
