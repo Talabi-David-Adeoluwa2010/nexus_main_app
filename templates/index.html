@@ -558,7 +558,7 @@
                     <div id="teacher-login-container">
                         <div class="column-title">Teacher Login</div>
                         <div class="input-group">
-                            <input type="text" id="login-identity" class="nexus-input" placeholder="Username or Email">
+                            <input type="text" id="login-identity" class="nexus-input" placeholder="Username">
                             <input type="password" id="login-password" class="nexus-input" placeholder="Access Password">
                         </div>
                         <button class="btn" id="login-btn">Secure Login</button>
@@ -831,7 +831,7 @@
             const interval = setInterval(() => {
                 progress += Math.floor(Math.random() * 8) + 2;
                 if (progress >= 98) {
-                    progress = 98;
+                    progress = 100;
                     clearInterval(interval);
                     setTimeout(() => {
                         loader.style.opacity = '0';
@@ -882,23 +882,40 @@
         }
 
         document.getElementById('register-btn').addEventListener('click', () => {
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
             const code = document.getElementById('reg-activation').value.trim().toUpperCase();
-            if(!code) {
-                alert("Please enter a valid 14-character activation code.");
+
+            if(!username || !password || !code) {
+                alert("All registration fields are required.");
                 return;
             }
+            if(code.length !== 14 || !code.startsWith("NEXUS-")) {
+                alert("Key must be 14 characters long (NEXUS-XXXXXXXX).");
+                return;
+            }
+
             socket.emit('register_teacher', {
-                username: document.getElementById('reg-username').value.trim(),
-                email: document.getElementById('reg-email').value.trim(),
-                password: document.getElementById('reg-password').value,
+                username: username,
+                email: email,
+                password: password,
                 activationCode: code
             });
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
+            const username = document.getElementById('login-identity').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if(!username || !password) {
+                alert("Please enter both username and password.");
+                return;
+            }
+
             socket.emit('login_teacher', {
-                identity: document.getElementById('login-identity').value.trim(),
-                password: document.getElementById('login-password').value
+                username: username,
+                password: password
             });
         });
 
@@ -907,6 +924,7 @@
             if (data.success) {
                 if (data.action === "login") {
                     currentTeacherUser = data.username;
+                    myUsername = data.username;
                     isTeacherUser = true;
                     document.getElementById('dual-portal').classList.add('hidden');
                     document.getElementById('teacher-dashboard').classList.remove('hidden');
@@ -917,13 +935,13 @@
         });
 
         document.getElementById('create-class-btn').addEventListener('click', () => {
-            socket.emit('create_class', { username: currentTeacherUser, classname: document.getElementById('create-classname').value.trim() });
+            const name = document.getElementById('create-classname').value.trim();
+            socket.emit('create_class', { username: currentTeacherUser, classname: name });
         });
 
         socket.on('class_created', (data) => {
             document.getElementById('generated-code-box').classList.remove('hidden');
             document.getElementById('display-class-code').innerText = data.class_code;
-            myUsername = currentTeacherUser;
             classCodeRoom = data.class_code;
         });
 
@@ -941,9 +959,13 @@
             myUsername = document.getElementById('join-name').value.trim();
             classCodeRoom = document.getElementById('join-code').value.trim();
             isTeacherUser = false; 
-            if(myUsername && classCodeRoom) {
-                socket.emit('join_class_session', { name: myUsername, classCode: classCodeRoom });
+
+            if(!myUsername || !classCodeRoom) {
+                alert("Please enter your name and a valid Class Code.");
+                return;
             }
+
+            socket.emit('join_class_session', { name: myUsername, classCode: classCodeRoom });
         });
 
         socket.on('join_response', async (data) => {
@@ -966,7 +988,9 @@
                 socket.emit('register_user', { username: myUsername, role: isTeacherUser ? 'instructor' : 'student', room: classCodeRoom });
 
                 await startLocalCameraAndMic();
-                data.existing_members.forEach(p => initiatePeerConnection(p.socket_id, p.name, true));
+                if (data.existing_members) {
+                    data.existing_members.forEach(p => initiatePeerConnection(p.socket_id, p.name, true));
+                }
             } else { alert(data.message); }
         });
 
@@ -985,7 +1009,7 @@
                 if (cameraBlocked) {
                     localStream.getVideoTracks().forEach(t => t.enabled = false);
                 }
-            } catch (err) { alert("Camera and Microphone initialization failed. Please authorize permissions."); }
+            } catch (err) { alert("Camera/Microphone authorization is disabled or unavailable."); }
         }
 
         document.getElementById('local-mic-toggle').addEventListener('click', function() {
@@ -1060,7 +1084,9 @@
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
-            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+            if (localStream) {
+                localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+            }
             pc.onicecandidate = e => { if(e.candidate) socket.emit('webrtc_signal', { target_id: targetId, signal: { ice: e.candidate } }); };
             pc.ontrack = e => {
                 let card = document.getElementById(`peer-card-${targetId}`);
