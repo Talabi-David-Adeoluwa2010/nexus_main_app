@@ -59,7 +59,8 @@ def handle_register_teacher(data):
     is_valid = False
     try:
         response = requests.post(
-            f"{ADMIN_APP_URL}/api/verify_code", 
+            f"{https://nexus-admin-app-4.onrender.com
+}/api/verify_code", 
             json={"code": activation_code, "username": username}, 
             headers={"Content-Type": "application/json"},
             timeout=5
