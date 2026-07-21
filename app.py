@@ -52,14 +52,14 @@ def handle_register_teacher(data):
             f"{ADMIN_APP_URL}/api/verify_code", 
             json={"code": activation_code}, 
             headers={"Content-Type": "application/json"},
-            timeout=3
+            timeout=4
         )
         if response.status_code == 200 and response.json().get("valid"):
             is_valid = True
     except Exception as e:
-        print(f"Admin connection check fallback: {e}")
+        print(f"Admin connection failed/timed out: {e}")
 
-    # Fallback pattern validation for local dev environments
+    # Fallback: Allow validly formatted NEXUS keys or ADMIN123 if HTTP request failed/timed out
     if not is_valid and (activation_code.startswith("NEXUS-") or activation_code == "ADMIN123"):
         is_valid = True
 
@@ -69,16 +69,6 @@ def handle_register_teacher(data):
 
     teacher_accounts[username] = password
     emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
-
-@socketio.on('login_teacher')
-def handle_login_teacher(data):
-    identity = data.get('identity', '').strip()
-    password = data.get('password', '')
-
-    if identity in teacher_accounts and teacher_accounts[identity] == password:
-        emit('auth_response', {'success': True, 'action': 'login', 'username': identity, 'message': f'Welcome back, Instructor {identity}!'})
-    else:
-        emit('auth_response', {'success': False, 'message': 'Invalid instructor credentials.'})
 
 # --- CLASSROOM CREATION ---
 @socketio.on('create_class')
