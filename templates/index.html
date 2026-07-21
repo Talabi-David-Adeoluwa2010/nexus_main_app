@@ -200,7 +200,6 @@
         }
         .hidden { display: none !important; }
         
-        /* CLASSROOM STREAM LAYOUT */
         .classroom-container { max-width: 1100px !important; }
         .header-bar {
             display: flex;
@@ -243,7 +242,6 @@
             background: rgba(212, 175, 55, 0.1);
         }
 
-        /* Video Grid Layout */
         .video-grid-container {
             display: flex;
             flex-wrap: wrap;
@@ -299,7 +297,6 @@
         }
         .video-blocked-overlay span { font-size: 28px; margin-bottom: 5px; }
 
-        /* Real-time sound waves */
         .sound-wave {
             position: absolute;
             bottom: 8px;
@@ -333,7 +330,6 @@
             100% { height: 14px; }
         }
 
-        /* Messaging and reactions */
         .chat-box {
             background: #030710;
             border: 2px solid var(--border-color);
@@ -377,7 +373,6 @@
             100% { transform: translateY(-400px) scale(0.8) rotate(30deg); opacity: 0; }
         }
 
-        /* Instructor Force Mute Hub Panel */
         .teacher-admin-panel {
             background: rgba(184, 15, 10, 0.15);
             border: 1px solid var(--danger-color);
@@ -391,7 +386,6 @@
             gap: 10px;
         }
 
-        /* Active User Tracking / Blocking Screen CSS */
         .admin-dashboard-sub-panel {
             background: rgba(212, 175, 55, 0.05);
             border: 1px solid var(--border-color);
@@ -401,7 +395,6 @@
             text-align: left;
         }
 
-        /* EXAM MODAL CORE CSS */
         .exam-modal {
             position: fixed;
             top: 0;
@@ -483,7 +476,6 @@
         .media-btn:hover { background: var(--gold-accent); color: #050c1a; }
         .media-btn.inactive { background: var(--danger-color); color: #fff; border-color: var(--danger-color); }
 
-        /* Independent Full-Width Custom Typing Layout Spaces */
         .typing-row-container {
             display: flex;
             flex-direction: column;
@@ -824,7 +816,6 @@
         const peerConnections = {};
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // Handle loader execution
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
@@ -862,7 +853,6 @@
             }).catch(err => console.error("Copy failed: ", err));
         }
 
-        // --- REACTIONS ---
         function sendEmojiReaction(emoji) {
             createFloatingEmoji(emoji);
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: emoji, type: "emoji_reaction" });
@@ -877,7 +867,6 @@
             setTimeout(() => { el.remove(); }, 2500);
         }
 
-        // Login & Session Registration handshakes
         document.getElementById('register-btn').addEventListener('click', () => {
             socket.emit('register_teacher', {
                 username: document.getElementById('reg-username').value.trim(),
@@ -955,7 +944,6 @@
                     document.getElementById('admin-tracking-section').classList.remove('hidden');
                 }
 
-                // Register with global active tracking system
                 socket.emit('register_user', { username: myUsername, role: isTeacherUser ? 'instructor' : 'student', room: classCodeRoom });
 
                 await startLocalCameraAndMic();
@@ -981,7 +969,6 @@
             } catch (err) { alert("Camera and Microphone initialization failed. Please authorize permissions."); }
         }
 
-        // Camera and Mic controls
         document.getElementById('local-mic-toggle').addEventListener('click', function() {
             if (forceMutedByTeacher) {
                 alert("The instructor has restricted student unmuting rights.");
@@ -1020,7 +1007,6 @@
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: cameraBlocked ? 'disable' : 'enable', type: 'camera_status_update' });
         });
 
-        // Global Mute Authority
         let globalMuteLocked = false;
         document.getElementById('teacher-global-mute-btn').addEventListener('click', function() {
             globalMuteLocked = !globalMuteLocked;
@@ -1037,7 +1023,6 @@
             }
         });
 
-        // Camera Flipping
         document.getElementById('swap-cam-btn').addEventListener('click', async () => {
             currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
             await startLocalCameraAndMic();
@@ -1049,7 +1034,6 @@
             }
         });
 
-        // Mirror view switch event handler
         document.getElementById('mirror-cam-btn').addEventListener('click', () => {
             document.getElementById('my-camera').classList.toggle('mirrored');
         });
@@ -1107,7 +1091,6 @@
             if (peerConnections[data.socket_id]) { peerConnections[data.socket_id].close(); delete peerConnections[data.socket_id]; }
         });
 
-        // Updated text message routing logic handling both independent user roles
         function sendMsg(role) {
             const el = document.getElementById(`${role}-input-field`);
             if(el && el.value.trim()) {
@@ -1144,7 +1127,6 @@
                 canvasEl.width = videoEl.videoWidth || 640;
                 canvasEl.height = videoEl.videoHeight || 480;
                 
-                // Keep snapshot aligned with current layout metrics
                 if (videoEl.classList.contains('mirrored')) {
                     ctx.translate(canvasEl.width, 0);
                     ctx.scale(-1, 1);
@@ -1158,9 +1140,6 @@
                 alert("Snap snapshot failed: local video is inaccessible.");
             }
         });
-
-
-        // --- REAL-TIME EXAM CREATOR MODULE ---
 
         document.getElementById('teacher-exam-portal-btn').addEventListener('click', () => {
             document.getElementById('teacher-exam-setup-modal').classList.remove('hidden');
@@ -1259,7 +1238,6 @@
             alert("Examination successfully generated and deployed!");
         }
 
-        // Student exam workspace initiation
         function launchStudentExamWorkspace(config) {
             activeExamConfig = config;
             document.getElementById('student-exam-workspace-modal').classList.remove('hidden');
@@ -1356,9 +1334,6 @@
             alert("Answers successfully recorded in the grading workbook!");
         }
 
-
-        // --- GRADEBOOK LEDGER & BLOCK PANEL ---
-
         document.getElementById('teacher-gradebook-btn').addEventListener('click', () => {
             renderGradebookUI();
             document.getElementById('teacher-gradebook-modal').classList.remove('hidden');
@@ -1378,7 +1353,7 @@
 
             keys.forEach(student => {
                 const entry = examGradebook[student];
-                let theoryContentHtml = "N/A";
+                let theoryContentHtml = "NA";
                 if (entry.theoryResponses && entry.theoryResponses.length > 0) {
                     theoryContentHtml = `<div style="max-height:100px; overflow-y:auto; border:1px solid rgba(255,255,255,0.05); padding:5px; border-radius:4px; font-size:11px;">`;
                     entry.theoryResponses.forEach((t, i) => {
@@ -1418,7 +1393,6 @@
             alert(`Grades sent to student: ${student}`);
         }
 
-        // Live user security tracking and control
         socket.on('update_active_users', (data) => {
             const list = document.getElementById('active-tracked-users-list');
             if(!list) return;
@@ -1451,7 +1425,6 @@
             }
         }
 
-        // Live Real-Time Payload Handlers
         socket.on('bounce_message', d => {
             if (d.type === "emoji_reaction") {
                 createFloatingEmoji(d.content);
@@ -1524,7 +1497,6 @@
             }
         });
 
-        // Security Lockout events
         socket.on('banned_status', data => handleForcedLockout(data.message));
         socket.on('forced_kick', data => handleForcedLockout(data.reason));
 
