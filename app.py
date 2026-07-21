@@ -34,8 +34,12 @@ def handle_register_teacher(data):
     email = data.get('email', '').strip()
     password = data.get('password', '')
     
-    # Grab ticket from any possible key name
-    activation_code = data.get('activationCode') or data.get('activation_ticket') or data.get('activation') or ''
+    # Extract ticket from incoming payload
+    activation_code = (
+        data.get('activationCode') or 
+        data.get('activation_ticket') or 
+        data.get('activation') or ''
+    )
     activation_code = str(activation_code).strip().upper()
 
     if not username or not password or not activation_code:
@@ -46,29 +50,32 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    # GUARANTEED PASS for NEXUS- or ADMIN keys
-    is_valid = False
-    if activation_code.startswith("NEXUS-") or "ADMIN" in activation_code:
-        is_valid = True
-
-    # Try verifying with Admin app if available
-    if not is_valid:
-        try:
-            response = requests.post(
-                f"{ADMIN_APP_URL}/api/verify_code", 
-                json={"code": activation_code}, 
-                headers={"Content-Type": "application/json"},
-                timeout=3
-            )
-            if response.status_code == 200 and response.json().get("valid"):
-                is_valid = True
-        except Exception as e:
-            print(f"Admin verify error: {e}")
-
-    if not is_valid:
-        emit('auth_response', {'success': False, 'message': 'Invalid Admin Activation Ticket!'})
+    # Enforce exact 14-character format check before querying Admin server
+    if len(activation_code) != 14 or not activation_code.startswith("NEXUS-"):
+        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters long (NEXUS-XXXXXXXX).'})
         return
 
+    # Strictly verify ticket against Admin App API
+    is_valid = False
+    try:
+        response = requests.post(
+            f"{ADMIN_APP_URL}/api/verify_code", 
+            json={"code": activation_code, "username": username}, 
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        if response.status_code == 200 and response.json().get("valid"):
+            is_valid = True
+    except Exception as e:
+        print(f"Admin App verification failed: {e}")
+        emit('auth_response', {'success': False, 'message': 'Unable to connect to Admin verification service. Please try again in a moment.'})
+        return
+
+    if not is_valid:
+        emit('auth_response', {'success': False, 'message': 'Invalid or expired Admin Activation Ticket!'})
+        return
+
+    # Save registered account
     teacher_accounts[username] = password
     emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
 
