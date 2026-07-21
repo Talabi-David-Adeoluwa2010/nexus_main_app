@@ -27,7 +27,26 @@ teacher_accounts = {
 def home():
     return render_template('index.html')
 
-# --- TEACHER AUTH SYSTEM ---
+# --- TEACHER AUTH SYSTEM (LOGIN & REGISTRATION) ---
+@socketio.on('login_teacher')
+def handle_login_teacher(data):
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+
+    if not username or not password:
+        emit('auth_response', {'success': False, 'message': 'Username and password are required.'})
+        return
+
+    if username in teacher_accounts and teacher_accounts[username] == password:
+        emit('auth_response', {
+            'success': True, 
+            'action': 'login', 
+            'username': username, 
+            'message': 'Login successful!'
+        })
+    else:
+        emit('auth_response', {'success': False, 'message': 'Invalid username or password.'})
+
 @socketio.on('register_teacher')
 def handle_register_teacher(data):
     username = data.get('username', '').strip()
@@ -52,7 +71,7 @@ def handle_register_teacher(data):
 
     # Enforce exact 14-character format check before querying Admin server
     if len(activation_code) != 14 or not activation_code.startswith("NEXUS-"):
-        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters long (NEXUS-XXXXXXXX).'})
+        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters (NEXUS-XXXXXXXX).'})
         return
 
     # Strictly verify ticket against Admin App API
@@ -68,16 +87,16 @@ def handle_register_teacher(data):
             is_valid = True
     except Exception as e:
         print(f"Admin App verification failed: {e}")
-        emit('auth_response', {'success': False, 'message': 'Unable to connect to Admin verification service. Please try again in a moment.'})
+        emit('auth_response', {'success': False, 'message': 'Unable to connect to Admin verification service. Please try again.'})
         return
 
     if not is_valid:
         emit('auth_response', {'success': False, 'message': 'Invalid or expired Admin Activation Ticket!'})
         return
 
-    # Save registered account
+    # Save registered account to memory
     teacher_accounts[username] = password
-    emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! Please log in.'})
+    emit('auth_response', {'success': True, 'action': 'register', 'message': 'Registration successful! You can now log in.'})
 
 # --- CLASSROOM CREATION ---
 @socketio.on('create_class')
@@ -99,6 +118,10 @@ def handle_create_class(data):
 def handle_join_class(data):
     name = data.get('name', '').strip()
     class_code = data.get('classCode', '').strip()
+
+    if not name or not class_code:
+        emit('join_response', {'success': False, 'message': 'Name and Class Code are required.'})
+        return
 
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
