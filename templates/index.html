@@ -820,7 +820,16 @@
         let examGradebook = {}; 
 
         const peerConnections = {};
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const pendingCandidates = {};
+
+        // Added multiple public STUN servers for cross-network NAT traversal
+        const rtcConfig = { 
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ] 
+        };
 
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
@@ -1071,7 +1080,7 @@
             const videoTrack = localStream.getVideoTracks()[0];
             for (let targetId in peerConnections) {
                 const senders = peerConnections[targetId].getSenders();
-                const sender = senders.find(s => s.track.kind === 'video');
+                const sender = senders.find(s => s.track && s.track.kind === 'video');
                 if (sender) sender.replaceTrack(videoTrack);
             }
         });
@@ -1083,56 +1092,113 @@
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
+            pendingCandidates[targetId] = [];
+
             if (localStream) {
                 localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
             }
-            pc.onicecandidate = e => { if(e.candidate) socket.emit('webrtc_signal', { target_id: targetId, signal: { ice: e.candidate } }); };
+
+            pc.onicecandidate = e => { 
+                if(e.candidate) {
+                    socket.emit('webrtc_signal', { target_id: targetId, signal: { ice: e.candidate } }); 
+                }
+            };
+
             pc.ontrack = e => {
                 let card = document.getElementById(`peer-card-${targetId}`);
                 if (!card) {
-                    card = document.createElement('div'); card.className = 'video-card'; card.id = `peer-card-${targetId}`;
-                    const video = document.createElement('video'); video.autoplay = true; video.playsInline = true;
-                    video.srcObject = e.streams[0]; card.appendChild(video);
+                    card = document.createElement('div'); 
+                    card.className = 'video-card'; 
+                    card.id = `peer-card-${targetId}`;
+
+                    const video = document.createElement('video'); 
+                    video.autoplay = true; 
+                    video.playsInline = true;
+                    video.srcObject = e.streams[0]; 
                     
-                    const overlay = document.createElement('div'); overlay.className = 'video-blocked-overlay hidden';
+                    // Explicit play call to circumvent browser autoplay restrictions
+                    video.play().catch(err => console.log("Autoplay stream warning:", err));
+                    card.appendChild(video);
+                    
+                    const overlay = document.createElement('div'); 
+                    overlay.className = 'video-blocked-overlay hidden';
                     overlay.id = `peer-blocked-overlay-${targetId}`;
                     overlay.innerHTML = `<span>📷</span>Camera Closed`;
                     card.appendChild(overlay);
 
-                    const label = document.createElement('div'); label.className = 'video-label'; label.innerText = name;
+                    const label = document.createElement('div'); 
+                    label.className = 'video-label'; 
+                    label.innerText = name;
                     card.appendChild(label); 
 
-                    const wave = document.createElement('div'); wave.className = 'sound-wave active';
+                    const wave = document.createElement('div'); 
+                    wave.className = 'sound-wave active';
                     wave.id = `peer-wave-${targetId}`;
                     wave.innerHTML = `<div class="sound-bar"></div><div class="sound-bar"></div><div class="sound-bar"></div>`;
                     card.appendChild(wave);
 
                     document.getElementById('video-layout-grid').appendChild(card);
+                } else {
+                    const video = card.querySelector('video');
+                    if (video && video.srcObject !== e.streams[0]) {
+                        video.srcObject = e.streams[0];
+                        video.play().catch(err => console.log("Autoplay stream update warning:", err));
+                    }
                 }
             };
+
             if (isInitiator) {
-                pc.createOffer().then(o => pc.setLocalDescription(o)).then(() => socket.emit('webrtc_signal', { target_id: targetId, signal: { sdp: pc.localDescription } }));
+                pc.createOffer()
+                  .then(o => pc.setLocalDescription(o))
+                  .then(() => socket.emit('webrtc_signal', { target_id: targetId, signal: { sdp: pc.localDescription } }))
+                  .catch(err => console.error("Create offer error:", err));
             }
+
+            return pc; // Return PeerConnection instance
         }
 
         socket.on('webrtc_signal_received', async data => {
-            const pc = peerConnections[data.sender_id] || initiatePeerConnection(data.sender_id, "Peer Connection", false) || peerConnections[data.sender_id];
+            let pc = peerConnections[data.sender_id];
+            if (!pc) {
+                pc = initiatePeerConnection(data.sender_id, "Peer Connection", false);
+            }
+
             if (data.signal.sdp) {
                 await pc.setRemoteDescription(new RTCSessionDescription(data.signal.sdp));
+                
+                // Drain queued ICE candidates received prior to remote description configuration
+                if (pendingCandidates[data.sender_id]) {
+                    while (pendingCandidates[data.sender_id].length) {
+                        const cand = pendingCandidates[data.sender_id].shift();
+                        await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.log("Candidate error:", e));
+                    }
+                }
+
                 if (data.signal.sdp.type === 'offer') {
                     const ans = await pc.createAnswer();
                     await pc.setLocalDescription(ans);
                     socket.emit('webrtc_signal', { target_id: data.sender_id, signal: { sdp: pc.localDescription } });
                 }
             } else if (data.signal.ice) {
-                await pc.addIceCandidate(new RTCIceCandidate(data.signal.ice));
+                if (pc.remoteDescription && pc.remoteDescription.type) {
+                    await pc.addIceCandidate(new RTCIceCandidate(data.signal.ice)).catch(e => console.log("Candidate error:", e));
+                } else {
+                    if (!pendingCandidates[data.sender_id]) pendingCandidates[data.sender_id] = [];
+                    pendingCandidates[data.sender_id].push(data.signal.ice);
+                }
             }
         });
 
         socket.on('user_left', data => {
             const card = document.getElementById(`peer-card-${data.socket_id}`);
             if (card) card.remove();
-            if (peerConnections[data.socket_id]) { peerConnections[data.socket_id].close(); delete peerConnections[data.socket_id]; }
+            if (peerConnections[data.socket_id]) { 
+                peerConnections[data.socket_id].close(); 
+                delete peerConnections[data.socket_id]; 
+            }
+            if (pendingCandidates[data.socket_id]) {
+                delete pendingCandidates[data.socket_id];
+            }
         });
 
         function sendMsg(role) {
