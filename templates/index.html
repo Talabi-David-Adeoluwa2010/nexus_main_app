@@ -796,7 +796,6 @@
     </div>
 
     <script>
-        // Force WebSockets transport for instant connection on Render
         const socket = io({
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -892,7 +891,7 @@
                 return;
             }
             if(code.length !== 14 || !code.startsWith("NEXUS-")) {
-                alert("Key must be 14 characters long (NEXUS-XXXXXXXX).");
+                alert("Key must be 14 characters total and start with NEXUS- (e.g. NEXUS-XXXXXXXX).");
                 return;
             }
 
@@ -928,7 +927,7 @@
                     isTeacherUser = true;
                     document.getElementById('dual-portal').classList.add('hidden');
                     document.getElementById('teacher-dashboard').classList.remove('hidden');
-                } else {
+                } else if (data.action === "register") {
                     showInlineLogin();
                 }
             }
