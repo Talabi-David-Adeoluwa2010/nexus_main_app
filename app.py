@@ -53,7 +53,6 @@ def handle_register_teacher(data):
     email = data.get('email', '').strip()
     password = data.get('password', '')
     
-    # Extract ticket from incoming payload
     activation_code = (
         data.get('activationCode') or 
         data.get('activation_ticket') or 
@@ -69,12 +68,10 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    # Validate length and mandatory prefix criteria cleanly
     if len(activation_code) != 14 or not activation_code.startswith("NEXUS-"):
         emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters total (NEXUS-XXXXXXXX).'})
         return
 
-    # Strictly verify ticket against Admin App API
     is_valid = False
     try:
         response = requests.post(
@@ -94,7 +91,6 @@ def handle_register_teacher(data):
         emit('auth_response', {'success': False, 'message': 'Invalid or expired Admin Activation Ticket!'})
         return
 
-    # Save registered account to memory
     teacher_accounts[username] = password
     emit('auth_response', {
         'success': True, 
@@ -164,7 +160,6 @@ def handle_join_class(data):
         'existing_members': existing_members
     })
 
-    # Register active session with the admin panel
     try:
         requests.post(f"{ADMIN_APP_URL}/api/register_session_remote", json={
             "username": name,
@@ -189,6 +184,55 @@ def handle_register_user(data):
         "role": role
     }
     broadcast_active_users(room)
+
+# --- EXAM SUBMISSION & RESULT FORWARDING ---
+@socketio.on('submit_exam')
+def handle_submit_exam(data):
+    """
+    Handles exam submissions from students and forwards the score/answers 
+    to the Master Admin server.
+    """
+    student_name = data.get('student_name') or active_sockets.get(request.sid, {}).get('username', 'Anonymous')
+    room_code = data.get('room') or active_sockets.get(request.sid, {}).get('room', '')
+    score = data.get('score', 0)
+    total_questions = data.get('total_questions', 0)
+    answers = data.get('answers', {})
+
+    payload = {
+        "student_name": student_name,
+        "room_code": room_code,
+        "score": score,
+        "total_questions": total_questions,
+        "answers": answers
+    }
+
+    # Forward exam results directly to the Master Admin backend
+    admin_saved = False
+    try:
+        resp = requests.post(
+            f"{ADMIN_APP_URL}/api/receive_exam_result",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        if resp.status_code == 200:
+            admin_saved = True
+    except Exception as e:
+        print(f"Failed to submit results to Admin URL: {e}")
+
+    # Notify student that submission was successful without disconnecting
+    emit('exam_submitted_response', {
+        'success': True,
+        'message': 'Your exam was submitted successfully!',
+        'admin_saved': admin_saved
+    })
+
+    # Broadcast to room instructors if active
+    emit('bounce_message', {
+        'name': 'SYSTEM',
+        'content': f'{student_name} submitted their exam (Score: {score}/{total_questions}).',
+        'type': 'text'
+    }, room=room_code)
 
 # --- DISCONNECTION RECOVERY ---
 @socketio.on('disconnect')
