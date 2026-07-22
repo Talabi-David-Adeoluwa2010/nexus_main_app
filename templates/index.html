@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEXUS LEARN - Classroom Portal</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
@@ -18,28 +18,39 @@
             --success-color: #34a853;
         }
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        
+        /* Updated body and container styling to enable horizontal scrolling/shifting */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at center, #0a192f 0%, #030710 100%);
             color: var(--text-main);
-            margin: 0;
-            padding: 10px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: auto; /* Enables scrolling/shifting left and right */
+            overflow-y: auto;
+        }
+
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
+            justify-content: flex-start;
+            padding: 15px;
         }
+
         .container {
             width: 100%;
+            min-width: 320px;
             max-width: 1100px;
             text-align: center;
             padding: 10px;
             padding-bottom: 70px;
+            margin: 0 auto;
         }
+
         .portal-card {
             background-color: var(--card-bg);
             border: 2px solid var(--gold-accent);
@@ -208,6 +219,8 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 15px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .code-display-badge {
             display: inline-flex;
@@ -342,7 +355,6 @@
         }
         .msg { margin-bottom: 10px; font-size: 13px; line-height: 1.4; }
         
-        /* Interactive Chat Image & Zoom Button Layout */
         .chat-img-container {
             position: relative;
             display: inline-block;
@@ -374,7 +386,6 @@
             color: #050c1a;
         }
 
-        /* Image Zooming Modal View */
         .image-zoom-modal {
             display: none;
             position: fixed;
@@ -473,6 +484,7 @@
             padding: 15px;
             margin-top: 25px;
             text-align: left;
+            overflow-x: auto;
         }
 
         .exam-modal {
@@ -527,8 +539,13 @@
         }
         .option-input-wrapper { display: flex; align-items: center; gap: 8px; }
         
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
         .gradebook-table {
             width: 100%;
+            min-width: 600px;
             border-collapse: collapse;
             margin-top: 15px;
             font-size: 13px;
@@ -540,7 +557,7 @@
         }
         .gradebook-table th { background: rgba(212, 175, 55, 0.1); color: var(--gold-accent); }
 
-        .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
         .media-btn {
             background: rgba(10, 20, 38, 0.9);
             color: var(--gold-accent);
@@ -631,7 +648,7 @@
                         <input type="text" id="join-name" class="nexus-input" placeholder="Enter Your Full Name">
                         <input type="text" id="join-code" class="nexus-input" placeholder="Enter Class Code (e.g. XXXX-XXXX-XXXX)">
                     </div>
-                    <button class="btn" id="join-btn">Join Classroom</button>
+                    <button type="button" class="btn" id="join-btn">Join Classroom</button>
                 </div>
 
                 <div class="portal-column" id="teacher-side">
@@ -641,7 +658,7 @@
                             <input type="text" id="login-identity" class="nexus-input" placeholder="Username">
                             <input type="password" id="login-password" class="nexus-input" placeholder="Access Password">
                         </div>
-                        <button class="btn" id="login-btn">Secure Login</button>
+                        <button type="button" class="btn" id="login-btn">Secure Login</button>
                         <div class="register-link" onclick="showInlineRegister()">Need an account? Register as instructor</div>
                     </div>
 
@@ -653,7 +670,7 @@
                             <input type="password" id="reg-password" class="nexus-input" placeholder="Password">
                             <input type="text" id="reg-activation" class="nexus-input" maxlength="14" placeholder="14-Char Key (NEXUS-XXXXXXXX)" style="text-transform: uppercase;">
                         </div>
-                        <button class="btn" id="register-btn">Complete Registration</button>
+                        <button type="button" class="btn" id="register-btn">Complete Registration</button>
                         <div class="register-link" onclick="showInlineLogin()">Back to Login Portals</div>
                     </div>
                 </div>
@@ -664,15 +681,15 @@
                 <div class="input-group">
                     <input type="text" id="create-classname" class="nexus-input" placeholder="e.g. Mathematics 101">
                 </div>
-                <button class="btn" id="create-class-btn">Deploy New Class Session</button>
+                <button type="button" class="btn" id="create-class-btn">Deploy New Class Session</button>
                 
                 <div id="generated-code-box" class="hidden" style="margin-top: 20px;">
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 5px;">Class Code Generated:</p>
                     <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px;">
                         <strong id="display-class-code" style="font-size: 20px; color: var(--gold-accent); letter-spacing: 1px;"></strong>
-                        <button class="copy-icon-btn" id="copy-lobby-code-btn">📋 Copy</button>
+                        <button type="button" class="copy-icon-btn" id="copy-lobby-code-btn">📋 Copy</button>
                     </div>
-                    <button class="btn" id="enter-classroom-btn" style="background: transparent; color: var(--gold-accent); border: 1px solid var(--gold-accent);">Enter Deploy Session</button>
+                    <button type="button" class="btn" id="enter-classroom-btn" style="background: transparent; color: var(--gold-accent); border: 1px solid var(--gold-accent);">Enter Deploy Session</button>
                 </div>
             </div>
         </div>
@@ -686,13 +703,13 @@
                     <div class="code-display-badge">
                         <span style="font-size: 11px; color: var(--text-muted);">CODE:</span>
                         <span id="classroom-code-label">XXXX-XXXX-XXXX</span>
-                        <button class="copy-icon-btn" id="copy-class-code-btn">📋 Copy</button>
+                        <button type="button" class="copy-icon-btn" id="copy-class-code-btn">📋 Copy</button>
                     </div>
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
-                    <button class="btn" id="swap-cam-btn" style="width: auto; padding: 8px 12px;">Flip Cam</button>
-                    <button class="btn btn-secondary" id="mirror-cam-btn" style="width: auto; background:#374151; color:#fff; padding: 8px 12px; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; cursor:pointer;">Mirror view</button>
-                    <button class="btn" style="background: #ea4335; color: #fff; width: auto; padding: 8px 12px;" onclick="location.reload();">Leave</button>
+                    <button type="button" class="btn" id="swap-cam-btn" style="width: auto; padding: 8px 12px;">Flip Cam</button>
+                    <button type="button" class="btn btn-secondary" id="mirror-cam-btn" style="width: auto; background:#374151; color:#fff; padding: 8px 12px; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; cursor:pointer;">Mirror view</button>
+                    <button type="button" class="btn" style="background: #ea4335; color: #fff; width: auto; padding: 8px 12px;" onclick="location.reload();">Leave</button>
                 </div>
             </div>
 
@@ -702,9 +719,9 @@
                     <p style="margin: 3px 0 0 0; color: var(--text-muted); font-size: 11px;">Exclusively manage classroom microphone constraints, user tracking, and dynamic examinations.</p>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <button class="media-btn" id="teacher-global-mute-btn" style="background: var(--danger-color); color: white; border: none; padding: 8px 15px;">🔇 Force Mute Students</button>
-                    <button class="media-btn" id="teacher-exam-portal-btn" style="background: var(--gold-accent); color: #050c1a; border: none; padding: 8px 15px;">📝 Setup Class Exam</button>
-                    <button class="media-btn" id="teacher-gradebook-btn" style="background: #007bff; color: white; border: none; padding: 8px 15px;">📊 Gradebook Records</button>
+                    <button type="button" class="media-btn" id="teacher-global-mute-btn" style="background: var(--danger-color); color: white; border: none; padding: 8px 15px;">🔇 Force Mute Students</button>
+                    <button type="button" class="media-btn" id="teacher-exam-portal-btn" style="background: var(--gold-accent); color: #050c1a; border: none; padding: 8px 15px;">📝 Setup Class Exam</button>
+                    <button type="button" class="media-btn" id="teacher-gradebook-btn" style="background: #007bff; color: white; border: none; padding: 8px 15px;">📊 Gradebook Records</button>
                 </div>
             </div>
 
@@ -735,41 +752,43 @@
             </div>
 
             <div class="controls-row">
-                <button class="media-btn" id="local-mic-toggle">🎙️ Mute Mic</button>
-                <button class="media-btn" id="local-video-toggle">📷 Stop Cam</button>
+                <button type="button" class="media-btn" id="local-mic-toggle">🎙️ Mute Mic</button>
+                <button type="button" class="media-btn" id="local-video-toggle">📷 Stop Cam</button>
                 <input type="file" id="file-import-input" style="display: none;">
-                <button class="media-btn" onclick="document.getElementById('file-import-input').click();">📁 Import File</button>
-                <button class="media-btn" id="snap-cam-btn">📷 Snap Pic</button>
+                <button type="button" class="media-btn" onclick="document.getElementById('file-import-input').click();">📁 Import File</button>
+                <button type="button" class="media-btn" id="snap-cam-btn">📷 Snap Pic</button>
             </div>
 
             <div class="typing-row-container">
                 <div class="independent-typing-block">
                     <div class="role-badge student-badge">Student</div>
                     <input type="text" id="student-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message as Student..." onkeypress="handleKeyPress(event, 'student')">
-                    <button class="btn" id="send-student-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('student')">Send</button>
+                    <button type="button" class="btn" id="send-student-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('student')">Send</button>
                 </div>
 
                 <div class="independent-typing-block">
                     <div class="role-badge teacher-badge">Teacher</div>
                     <input type="text" id="teacher-input-field" class="nexus-input" style="flex: 1;" placeholder="Write message as Teacher..." onkeypress="handleKeyPress(event, 'teacher')">
-                    <button class="btn" id="send-teacher-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('teacher')">Send</button>
+                    <button type="button" class="btn" id="send-teacher-btn" style="width: auto; padding: 12px 20px;" onclick="sendMsg('teacher')">Send</button>
                 </div>
             </div>
 
             <div class="admin-dashboard-sub-panel hidden" id="admin-tracking-section">
                 <h4 style="color: var(--gold-accent); margin: 0 0 10px 0; text-transform: uppercase;">🛡️ Live Users Security Console</h4>
-                <table class="gradebook-table">
-                    <thead>
-                        <tr>
-                            <th>User Name</th>
-                            <th>Role Status</th>
-                            <th>Control Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="active-tracked-users-list">
-                        <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Syncing online network registry...</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive-wrapper">
+                    <table class="gradebook-table">
+                        <thead>
+                            <tr>
+                                <th>User Name</th>
+                                <th>Role Status</th>
+                                <th>Control Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-tracked-users-list">
+                            <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Syncing online network registry...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -780,9 +799,9 @@
             <img id="zoomModalImg" class="zoom-modal-img" src="" alt="Zoomed view" />
         </div>
         <div class="zoom-controls-bar">
-            <button class="media-btn" id="zoomInBtn">Zoom In (+)</button>
-            <button class="media-btn" id="zoomOutBtn">Zoom Out (-)</button>
-            <button class="media-btn" id="resetZoomBtn">Reset</button>
+            <button type="button" class="media-btn" id="zoomInBtn">Zoom In (+)</button>
+            <button type="button" class="media-btn" id="zoomOutBtn">Zoom Out (-)</button>
+            <button type="button" class="media-btn" id="resetZoomBtn">Reset</button>
         </div>
     </div>
 
@@ -792,7 +811,7 @@
         <div class="exam-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h2 style="color:var(--gold-accent); margin:0;">EXAMINATION SETUP CREATOR</h2>
-                <button class="copy-icon-btn" style="font-size:14px; padding: 5px 10px;" onclick="closeExamSetup()">✕ Close</button>
+                <button type="button" class="copy-icon-btn" style="font-size:14px; padding: 5px 10px;" onclick="closeExamSetup()">✕ Close</button>
             </div>
             
             <div class="exam-section-title">General Settings</div>
@@ -814,7 +833,7 @@
                 <div class="exam-section-title">Objective Questions (OBJ)</div>
                 <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
                     <label style="font-size:13px;">Build dynamic questions:</label>
-                    <button class="btn" onclick="addOBJQuestionBlock()" style="width:auto; padding:8px 15px; font-size:12px;">＋ Add Question</button>
+                    <button type="button" class="btn" onclick="addOBJQuestionBlock()" style="width:auto; padding:8px 15px; font-size:12px;">＋ Add Question</button>
                 </div>
                 <div id="obj-questions-list"></div>
             </div>
@@ -823,12 +842,12 @@
                 <div class="exam-section-title">Theory Questions</div>
                 <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
                     <label style="font-size:13px;">Add open essay prompts:</label>
-                    <button class="btn" onclick="addTheoryQuestionBlock()" style="width:auto; padding:8px 15px; font-size:12px;">＋ Add Theory Prompt</button>
+                    <button type="button" class="btn" onclick="addTheoryQuestionBlock()" style="width:auto; padding:8px 15px; font-size:12px;">＋ Add Theory Prompt</button>
                 </div>
                 <div id="theory-questions-list"></div>
             </div>
 
-            <button class="btn" onclick="deployClassExam()" style="margin-top:25px; background:var(--success-color); color:white;">🚀 DEPLOY EXAM TO LIVE CLASS</button>
+            <button type="button" class="btn" onclick="deployClassExam()" style="margin-top:25px; background:var(--success-color); color:white;">🚀 DEPLOY EXAM TO LIVE CLASS</button>
         </div>
     </div>
 
@@ -856,7 +875,7 @@
                     <div id="student-theory-questions-container"></div>
                 </div>
 
-                <button class="btn" onclick="submitStudentExamAnswers()" style="margin-top:30px; background:var(--success-color); color:white;">📝 COMPLETE & SUBMIT EXAM</button>
+                <button type="button" class="btn" onclick="submitStudentExamAnswers()" style="margin-top:30px; background:var(--success-color); color:white;">📝 COMPLETE & SUBMIT EXAM</button>
             </div>
         </div>
     </div>
@@ -865,25 +884,27 @@
         <div class="exam-card" style="max-width: 900px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="color:var(--gold-accent); margin:0;">CLASSROOM RECORD GRADEBOOK</h2>
-                <button class="copy-icon-btn" style="font-size:14px; padding: 5px 10px;" onclick="closeGradebookModal()">✕ Close</button>
+                <button type="button" class="copy-icon-btn" style="font-size:14px; padding: 5px 10px;" onclick="closeGradebookModal()">✕ Close</button>
             </div>
             <p style="font-size:12px; color:var(--text-muted); margin-top:0;">Grade written theoretical essays, adjust remarks, and publish student scores in real-time.</p>
 
-            <table class="gradebook-table">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>OBJ Score</th>
-                        <th>Theory Answers</th>
-                        <th>Manual Essay Score</th>
-                        <th>Remarks Feedback</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="gradebook-table-rows">
-                    <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No submissions received yet.</td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table class="gradebook-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>OBJ Score</th>
+                            <th>Theory Answers</th>
+                            <th>Manual Essay Score</th>
+                            <th>Remarks Feedback</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradebook-table-rows">
+                        <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No submissions received yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -914,7 +935,6 @@
         const peerConnections = {};
         const pendingCandidates = {};
 
-        // Multiple public STUN servers for cross-network NAT traversal
         const rtcConfig = { 
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -923,7 +943,6 @@
             ] 
         };
 
-        // Optimized Media Constraints (Crystal Clear Audio Processing + Low Data Video Stream)
         const optimizedConstraints = {
             audio: {
                 echoCancellation: true,
@@ -939,7 +958,6 @@
             }
         };
 
-        // Image Zoom Modal Handling
         let currentZoomScale = 1;
         const zoomModal = document.getElementById('imageZoomModal');
         const zoomModalImg = document.getElementById('zoomModalImg');
@@ -1418,7 +1436,7 @@
             block.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <strong style="color:var(--gold-accent);">OBJ Question #${qId}</strong>
-                    <button class="copy-icon-btn" onclick="document.getElementById('obj-block-${qId}').remove()" style="border-color:var(--danger-color); color:var(--danger-color);">Delete</button>
+                    <button type="button" class="copy-icon-btn" onclick="document.getElementById('obj-block-${qId}').remove()" style="border-color:var(--danger-color); color:var(--danger-color);">Delete</button>
                 </div>
                 <input type="text" class="nexus-input obj-prompt" placeholder="Write Question Prompt..." style="margin-bottom:10px; padding:10px;">
                 <div class="option-grid">
@@ -1446,7 +1464,7 @@
             block.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <strong style="color:var(--gold-accent);">Theory Question #${qId}</strong>
-                    <button class="copy-icon-btn" onclick="document.getElementById('theory-block-${qId}').remove()" style="border-color:var(--danger-color); color:var(--danger-color);">Delete</button>
+                    <button type="button" class="copy-icon-btn" onclick="document.getElementById('theory-block-${qId}').remove()" style="border-color:var(--danger-color); color:var(--danger-color);">Delete</button>
                 </div>
                 <textarea class="nexus-input theory-prompt" placeholder="Type Essay prompt here..." style="height:80px; padding:10px; resize:none;"></textarea>
             `;
@@ -1553,12 +1571,13 @@
             document.getElementById('exam-timer-display').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
+        /* Fixed exam submission logic to talk with Python backend & stay connected */
         function submitStudentExamAnswers() {
             clearInterval(examIntervalTimer);
             
             let totalCorrectObj = 0;
             let possibleObj = 0;
-            if (activeExamConfig.objQuestions && activeExamConfig.objQuestions.length > 0) {
+            if (activeExamConfig && activeExamConfig.objQuestions && activeExamConfig.objQuestions.length > 0) {
                 possibleObj = activeExamConfig.objQuestions.length;
                 activeExamConfig.objQuestions.forEach((q, idx) => {
                     const checkedOption = document.querySelector(`input[name="student-q-${idx}"]:checked`);
@@ -1569,22 +1588,40 @@
             const theorySubmissions = [];
             document.querySelectorAll('.student-theory-response').forEach(t => {
                 const idx = parseInt(t.getAttribute('data-idx'));
+                const promptText = (activeExamConfig.theoryQuestions && activeExamConfig.theoryQuestions[idx]) ? activeExamConfig.theoryQuestions[idx].prompt : "";
                 theorySubmissions.push({
-                    prompt: activeExamConfig.theoryQuestions[idx].prompt,
+                    prompt: promptText,
                     answer: t.value.trim()
                 });
             });
 
+            // 1. Emit direct exam submission event to Python Backend
+            socket.emit('submit_exam', {
+                student_name: myUsername,
+                room: classCodeRoom,
+                score: totalCorrectObj,
+                total_questions: possibleObj,
+                answers: {
+                    obj_score: `${totalCorrectObj}/${possibleObj}`,
+                    theory: theorySubmissions
+                }
+            });
+
+            // 2. Broadcast exam submission to instructor room channel
             const examPackage = {
                 studentName: myUsername,
                 objScore: possibleObj > 0 ? `${totalCorrectObj}/${possibleObj}` : "N/A",
                 theoryResponses: theorySubmissions
             };
-
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(examPackage), type: 'exam_submission' });
+
             document.getElementById('student-exam-workspace-modal').classList.add('hidden');
-            alert("Answers successfully recorded in the grading workbook!");
+            alert("Answers successfully recorded and sent to the instructor & admin portal!");
         }
+
+        socket.on('exam_submitted_response', (resp) => {
+            console.log("Exam submission acknowledged by server:", resp);
+        });
 
         document.getElementById('teacher-gradebook-btn').addEventListener('click', () => {
             renderGradebookUI();
@@ -1621,7 +1658,7 @@
                     <td>${theoryContentHtml}</td>
                     <td><input type="text" class="nexus-input theory-grade-val-${student}" value="${entry.theoryGrade || ''}" placeholder="e.g. A, 85%" style="padding:6px; font-size:12px;"></td>
                     <td><input type="text" class="nexus-input remarks-val-${student}" value="${entry.remarks || ''}" placeholder="Excellent..." style="padding:6px; font-size:12px;"></td>
-                    <td><button class="btn" onclick="publishStudentScores('${student}')" style="font-size:11px; padding:6px 12px; background:var(--success-color); color:white; width:auto;">Publish</button></td>
+                    <td><button type="button" class="btn" onclick="publishStudentScores('${student}')" style="font-size:11px; padding:6px 12px; background:var(--success-color); color:white; width:auto;">Publish</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1660,7 +1697,7 @@
                 const isTargetInstructor = (u.role === 'instructor');
                 const actionBtn = isTargetInstructor ? 
                     `<span style="color:var(--text-muted); font-size:11px;">Protected</span>` :
-                    `<button class="btn" onclick="forceBlockUser('${u.username}')" style="background:var(--danger-color); color:white; padding:4px 8px; font-size:11px; width:auto;">🚫 Block User</button>`;
+                    `<button type="button" class="btn" onclick="forceBlockUser('${u.username}')" style="background:var(--danger-color); color:white; padding:4px 8px; font-size:11px; width:auto;">🚫 Block User</button>`;
 
                 tr.innerHTML = `
                     <td><strong>${u.username}</strong></td>
@@ -1759,7 +1796,7 @@
                     <span style="font-size:75px; color:#ea4335;">🚫</span>
                     <h1 style="letter-spacing:1px; margin:15px 0 5px 0;">NEXUS PORTAL LOCKOUT</h1>
                     <p style="color:#8fa0b5; max-width:450px; line-height:1.5;">${msg || 'You have been disconnected from this portal by the security administrator.'}</p>
-                    <button onclick="location.reload();" style="background:transparent; border:1px solid #d4af37; color:#d4af37; padding:10px 20px; cursor:pointer; margin-top:20px; text-transform:uppercase;">Re-authenticate</button>
+                    <button type="button" onclick="location.reload();" style="background:transparent; border:1px solid #d4af37; color:#d4af37; padding:10px 20px; cursor:pointer; margin-top:20px; text-transform:uppercase;">Re-authenticate</button>
                 </div>
             `;
         }
@@ -1777,6 +1814,7 @@
                 img.src = content;
 
                 const zoomBtn = document.createElement('button');
+                zoomBtn.type = 'button';
                 zoomBtn.className = 'chat-zoom-btn';
                 zoomBtn.innerText = '🔍 Zoom';
                 zoomBtn.onclick = () => openZoomModal(content);
