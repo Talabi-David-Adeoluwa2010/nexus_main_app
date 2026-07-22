@@ -5,6 +5,7 @@ monkey.patch_all()
 import os
 import json
 import uuid
+import logging
 import requests
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
@@ -12,7 +13,20 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
-socketio = SocketIO(app, async_mode='gevent', cors_allowed_origins="*")
+# Disable noisy debug logs to save system resources during image streaming
+logging.getLogger('engineio').setLevel(logging.ERROR)
+
+# OPTIMIZED SOCKET.IO CONFIGURATION
+# 1. max_http_buffer_size: Set to 10MB to prevent disconnects on base64 image uploads.
+# 2. ping_timeout & ping_interval: Extended timeouts so client networks stay connected.
+socketio = SocketIO(
+    app, 
+    async_mode='gevent', 
+    cors_allowed_origins="*",
+    max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
+    ping_timeout=60,                       # 60s timeout before dropping client
+    ping_interval=25                       # 25s ping interval
+)
 
 # MASTER ADMIN CONFIGURATION (Defaults to your live Admin Render App)
 ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
@@ -188,10 +202,6 @@ def handle_register_user(data):
 # --- EXAM SUBMISSION & RESULT FORWARDING ---
 @socketio.on('submit_exam')
 def handle_submit_exam(data):
-    """
-    Handles exam submissions from students and forwards the score/answers 
-    to the Master Admin server.
-    """
     student_name = data.get('student_name') or active_sockets.get(request.sid, {}).get('username', 'Anonymous')
     room_code = data.get('room') or active_sockets.get(request.sid, {}).get('room', '')
     score = data.get('score', 0)
@@ -206,7 +216,6 @@ def handle_submit_exam(data):
         "answers": answers
     }
 
-    # Forward exam results directly to the Master Admin backend
     admin_saved = False
     try:
         resp = requests.post(
@@ -220,14 +229,12 @@ def handle_submit_exam(data):
     except Exception as e:
         print(f"Failed to submit results to Admin URL: {e}")
 
-    # Notify student that submission was successful without disconnecting
     emit('exam_submitted_response', {
         'success': True,
         'message': 'Your exam was submitted successfully!',
         'admin_saved': admin_saved
     })
 
-    # Broadcast to room instructors if active
     emit('bounce_message', {
         'name': 'SYSTEM',
         'content': f'{student_name} submitted their exam (Score: {score}/{total_questions}).',
