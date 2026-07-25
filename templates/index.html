@@ -712,7 +712,7 @@
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <button type="button" class="btn" id="swap-cam-btn" style="width: auto; padding: 8px 12px;">Flip Cam</button>
                     <button type="button" class="btn btn-secondary" id="mirror-cam-btn" style="width: auto; background:#374151; color:#fff; padding: 8px 12px; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; cursor:pointer;">Mirror view</button>
-                    <button type="button" class="btn" style="background: #ea4335; color: #fff; width: auto; padding: 8px 12px;" onclick="location.reload();">Leave</button>
+                    <button type="button" class="btn" style="background: #ea4335; color: #fff; width: auto; padding: 8px 12px;" onclick="leaveClassroom()">Leave</button>
                 </div>
             </div>
 
@@ -928,7 +928,7 @@
         let localStream = null;
         let currentFacingMode = "user";
         let micMuted = false;
-        let cameraBlocked = false;
+        let cameraBlocked = false; 
         let forceMutedByTeacher = false; 
 
         let activeExamConfig = null;
@@ -939,28 +939,38 @@
         const peerConnections = {};
         const pendingCandidates = {};
 
+        // INCLUDES FREE OPENRELAY TURN SERVERS FOR CELLULAR / STRICT MOBILE NAT CONNECTIONS
         const rtcConfig = { 
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:openrelay.metered.ca:80' },
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelay',
+                    credential: 'openrelay'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelay',
+                    credential: 'openrelay'
+                }
             ] 
         };
 
-        // FIXED: High-compatibility audio settings so teacher/peers always receive microphone input
-        const optimizedConstraints = {
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            },
-            video: {
-                facingMode: "user",
-                width: { ideal: 320, max: 640 },
-                height: { ideal: 240, max: 480 },
-                frameRate: { max: 15 }
-            }
-        };
+        // UNLOCK BROWSER AUDIO OUTPUT
+        let audioUnlocked = false;
+        function unlockAudioContext() {
+            if (audioUnlocked) return;
+            const dummyAudio = new Audio();
+            dummyAudio.play().then(() => {
+                audioUnlocked = true;
+                console.log("Browser audio output unlocked.");
+            }).catch(() => {});
+        }
+        window.addEventListener('click', unlockAudioContext, { once: true });
+        window.addEventListener('touchstart', unlockAudioContext, { once: true });
 
         let currentZoomScale = 1;
         const zoomModal = document.getElementById('imageZoomModal');
@@ -994,7 +1004,7 @@
             zoomModalImg.style.transform = `scale(${currentZoomScale})`;
         });
 
-        // PERSISTENT LOGIN CHECK ON INITIAL PAGE LOAD
+        // PAGE LOAD INITIALIZATION (Only teachers persist across page reloads)
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
@@ -1021,7 +1031,6 @@
                 });
             }
 
-            // AUTO-LOGIN: Check if teacher session is saved on this device
             const savedTeacher = localStorage.getItem('nexus_teacher_username');
             if (savedTeacher) {
                 currentTeacherUser = savedTeacher;
@@ -1039,6 +1048,10 @@
             currentTeacherUser = "";
             myUsername = "";
             isTeacherUser = false;
+            location.reload();
+        }
+
+        function leaveClassroom() {
             location.reload();
         }
 
@@ -1119,7 +1132,6 @@
                     myUsername = data.username;
                     isTeacherUser = true;
 
-                    // PERSIST LOGGED IN ACCOUNT TO DEVICE
                     localStorage.setItem('nexus_teacher_username', data.username);
 
                     document.getElementById('dual-portal').classList.add('hidden');
@@ -1188,30 +1200,65 @@
                 if (data.existing_members) {
                     data.existing_members.forEach(p => initiatePeerConnection(p.socket_id, p.name, true));
                 }
-            } else { alert(data.message); }
+            } else { 
+                alert(data.message); 
+            }
         });
 
         document.getElementById('copy-class-code-btn').addEventListener('click', function() {
             copyToClipboard(classCodeRoom, this);
         });
 
+        // HIGH-EFFICIENCY LOCAL MEDIA ACQUISITION (10-PERSON OPTIMIZED)
         async function startLocalCameraAndMic() {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             try {
-                const constraints = JSON.parse(JSON.stringify(optimizedConstraints));
-                constraints.video.facingMode = currentFacingMode;
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    },
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 320, max: 480 },
+                        height: { ideal: 240, max: 360 },
+                        frameRate: { max: 10 } // Lowered frame rate reduces network CPU load significantly
+                    }
+                });
 
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                document.getElementById('my-camera').srcObject = localStream;
+                const myVideo = document.getElementById('my-camera');
+                myVideo.srcObject = localStream;
+                myVideo.muted = true; // Mute local audio to prevent feedback loop
 
-                // Explicit audio track status verification
+                // STUDENT CAMERAS DEFAULT TO OFF TO KEEP 10-PERSON ROOMS LAG-FREE
+                if (!isTeacherUser) {
+                    cameraBlocked = true;
+                    if (localStream.getVideoTracks().length > 0) {
+                        localStream.getVideoTracks()[0].enabled = false;
+                    }
+                    const overlay = document.getElementById('local-video-blocked');
+                    if (overlay) overlay.classList.remove('hidden');
+                    
+                    const videoBtn = document.getElementById('local-video-toggle');
+                    if (videoBtn) {
+                        videoBtn.innerText = "📷 Start Cam";
+                        videoBtn.classList.add('inactive');
+                    }
+                } else {
+                    cameraBlocked = false;
+                    if (localStream.getVideoTracks().length > 0) {
+                        localStream.getVideoTracks()[0].enabled = true;
+                    }
+                }
+
                 if (localStream.getAudioTracks().length > 0) {
                     localStream.getAudioTracks()[0].enabled = (!micMuted && !forceMutedByTeacher);
                 }
-                if (localStream.getVideoTracks().length > 0) {
-                    localStream.getVideoTracks()[0].enabled = !cameraBlocked;
-                }
-            } catch (err) { alert("Camera/Microphone authorization is disabled or unavailable."); }
+            } catch (err) { 
+                console.error("Local media error:", err);
+                alert("Camera/Microphone authorization failed. Please allow permissions in browser settings."); 
+            }
         }
 
         document.getElementById('local-mic-toggle').addEventListener('click', function() {
@@ -1283,12 +1330,12 @@
             document.getElementById('my-camera').classList.toggle('mirrored');
         });
 
+        // WEBRTC PEER CONNECTION AND AUDIO TRACK BINDING
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
             pendingCandidates[targetId] = [];
 
-            // Explicitly force audio and video tracks onto peer connection
             if (localStream) {
                 localStream.getTracks().forEach(track => {
                     pc.addTrack(track, localStream);
@@ -1303,17 +1350,20 @@
 
             pc.ontrack = e => {
                 let card = document.getElementById(`peer-card-${targetId}`);
+                let video;
+                const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+
                 if (!card) {
                     card = document.createElement('div'); 
                     card.className = 'video-card'; 
                     card.id = `peer-card-${targetId}`;
 
-                    const video = document.createElement('video'); 
+                    video = document.createElement('video'); 
                     video.autoplay = true; 
                     video.playsInline = true;
-                    video.srcObject = e.streams[0]; 
-                    
-                    video.play().catch(err => console.log("Autoplay stream warning:", err));
+                    video.muted = false; 
+                    video.volume = 1.0;
+
                     card.appendChild(video);
                     
                     const overlay = document.createElement('div'); 
@@ -1335,11 +1385,16 @@
 
                     document.getElementById('video-layout-grid').appendChild(card);
                 } else {
-                    const video = card.querySelector('video');
-                    if (video && video.srcObject !== e.streams[0]) {
-                        video.srcObject = e.streams[0];
-                        video.play().catch(err => console.log("Autoplay stream update warning:", err));
+                    video = card.querySelector('video');
+                }
+
+                if (video) {
+                    if (video.srcObject !== remoteStream) {
+                        video.srcObject = remoteStream;
                     }
+                    video.muted = false;
+                    video.volume = 1.0;
+                    video.play().catch(err => console.log("Autoplay playback check:", err));
                 }
             };
 
@@ -1898,3 +1953,4 @@
     </script>
 </body>
 </html>
+
