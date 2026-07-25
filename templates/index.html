@@ -19,7 +19,6 @@
         }
         * { box-sizing: border-box; }
         
-        /* Updated body and container styling to enable horizontal scrolling/shifting */
         html, body {
             margin: 0;
             padding: 0;
@@ -29,7 +28,7 @@
             background-image: radial-gradient(circle at center, #0a192f 0%, #030710 100%);
             color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: auto; /* Enables scrolling/shifting left and right */
+            overflow-x: auto;
             overflow-y: auto;
         }
 
@@ -677,7 +676,11 @@
             </div>
 
             <div id="teacher-dashboard" class="hidden" style="max-width: 500px; margin: 25px auto 0 auto; padding: 25px; border: 2px solid var(--gold-accent); border-radius: 12px; background: var(--card-bg);">
-                <h3 style="color: var(--gold-accent); margin-top: 0;">Instructor Hub</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: var(--gold-accent); margin: 0;">Instructor Hub</h3>
+                    <button type="button" class="copy-icon-btn" onclick="logoutTeacher()" style="border-color: var(--danger-color); color: var(--danger-color);">Logout Session</button>
+                </div>
+                <p id="saved-teacher-welcome" style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;"></p>
                 <div class="input-group">
                     <input type="text" id="create-classname" class="nexus-input" placeholder="e.g. Mathematics 101">
                 </div>
@@ -754,7 +757,7 @@
             <div class="controls-row">
                 <button type="button" class="media-btn" id="local-mic-toggle">🎙️ Mute Mic</button>
                 <button type="button" class="media-btn" id="local-video-toggle">📷 Stop Cam</button>
-                <input type="file" id="file-import-input" style="display: none;">
+                <input type="file" id="file-import-input" accept="image/*" style="display: none;">
                 <button type="button" class="media-btn" onclick="document.getElementById('file-import-input').click();">📁 Import File</button>
                 <button type="button" class="media-btn" id="snap-cam-btn">📷 Snap Pic</button>
             </div>
@@ -912,8 +915,9 @@
         const socket = io({
             transports: ['websocket', 'polling'],
             reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 1000
+            reconnectionAttempts: 20,
+            reconnectionDelay: 1000,
+            timeout: 20000
         });
 
         let myUsername = "";
@@ -943,12 +947,12 @@
             ] 
         };
 
+        // FIXED: High-compatibility audio settings so teacher/peers always receive microphone input
         const optimizedConstraints = {
             audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1
+                autoGainControl: true
             },
             video: {
                 facingMode: "user",
@@ -990,6 +994,7 @@
             zoomModalImg.style.transform = `scale(${currentZoomScale})`;
         });
 
+        // PERSISTENT LOGIN CHECK ON INITIAL PAGE LOAD
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
@@ -1015,7 +1020,27 @@
                     e.target.value = e.target.value.toUpperCase();
                 });
             }
+
+            // AUTO-LOGIN: Check if teacher session is saved on this device
+            const savedTeacher = localStorage.getItem('nexus_teacher_username');
+            if (savedTeacher) {
+                currentTeacherUser = savedTeacher;
+                myUsername = savedTeacher;
+                isTeacherUser = true;
+                
+                document.getElementById('dual-portal').classList.add('hidden');
+                document.getElementById('teacher-dashboard').classList.remove('hidden');
+                document.getElementById('saved-teacher-welcome').innerText = `Logged in as: ${savedTeacher}`;
+            }
         });
+
+        function logoutTeacher() {
+            localStorage.removeItem('nexus_teacher_username');
+            currentTeacherUser = "";
+            myUsername = "";
+            isTeacherUser = false;
+            location.reload();
+        }
 
         function showInlineRegister() {
             document.getElementById('teacher-login-container').classList.add('hidden');
@@ -1093,8 +1118,13 @@
                     currentTeacherUser = data.username;
                     myUsername = data.username;
                     isTeacherUser = true;
+
+                    // PERSIST LOGGED IN ACCOUNT TO DEVICE
+                    localStorage.setItem('nexus_teacher_username', data.username);
+
                     document.getElementById('dual-portal').classList.add('hidden');
                     document.getElementById('teacher-dashboard').classList.remove('hidden');
+                    document.getElementById('saved-teacher-welcome').innerText = `Logged in as: ${data.username}`;
                 } else if (data.action === "register") {
                     showInlineLogin();
                 }
@@ -1173,11 +1203,13 @@
 
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
                 document.getElementById('my-camera').srcObject = localStream;
-                if (micMuted || forceMutedByTeacher) {
-                    localStream.getAudioTracks().forEach(t => t.enabled = false);
+
+                // Explicit audio track status verification
+                if (localStream.getAudioTracks().length > 0) {
+                    localStream.getAudioTracks()[0].enabled = (!micMuted && !forceMutedByTeacher);
                 }
-                if (cameraBlocked) {
-                    localStream.getVideoTracks().forEach(t => t.enabled = false);
+                if (localStream.getVideoTracks().length > 0) {
+                    localStream.getVideoTracks()[0].enabled = !cameraBlocked;
                 }
             } catch (err) { alert("Camera/Microphone authorization is disabled or unavailable."); }
         }
@@ -1256,8 +1288,11 @@
             peerConnections[targetId] = pc;
             pendingCandidates[targetId] = [];
 
+            // Explicitly force audio and video tracks onto peer connection
             if (localStream) {
-                localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
             }
 
             pc.onicecandidate = e => { 
@@ -1377,15 +1412,48 @@
             }
         }
 
-        document.getElementById('file-import-input').addEventListener('change', function() {
-            const f = this.files[0];
-            if (f) {
-                const r = new FileReader();
-                r.onload = function(e) {
-                    socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: e.target.result });
-                    appendMsg(myUsername, e.target.result, "image");
+        function compressAndSendImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const maxDimension = 800;
+
+                    if (width > height) {
+                        if (width > maxDimension) {
+                            height = Math.round((height * maxDimension) / width);
+                            width = maxDimension;
+                        }
+                    } else {
+                        if (height > maxDimension) {
+                            width = Math.round((width * maxDimension) / height);
+                            height = maxDimension;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: compressedBase64 });
+                    appendMsg(myUsername, compressedBase64, "image");
                 };
-                r.readAsDataURL(f);
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('file-import-input').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                compressAndSendImage(file);
+                this.value = '';
             }
         });
 
@@ -1403,7 +1471,7 @@
                 }
                 
                 ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
-                const snapData = canvasEl.toDataURL('image/jpeg', 0.8);
+                const snapData = canvasEl.toDataURL('image/jpeg', 0.7);
                 socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: snapData });
                 appendMsg(myUsername, snapData, "image");
             } else {
@@ -1571,7 +1639,6 @@
             document.getElementById('exam-timer-display').innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
-        /* Fixed exam submission logic to talk with Python backend & stay connected */
         function submitStudentExamAnswers() {
             clearInterval(examIntervalTimer);
             
@@ -1595,7 +1662,6 @@
                 });
             });
 
-            // 1. Emit direct exam submission event to Python Backend
             socket.emit('submit_exam', {
                 student_name: myUsername,
                 room: classCodeRoom,
@@ -1607,7 +1673,6 @@
                 }
             });
 
-            // 2. Broadcast exam submission to instructor room channel
             const examPackage = {
                 studentName: myUsername,
                 objScore: possibleObj > 0 ? `${totalCorrectObj}/${possibleObj}` : "N/A",
@@ -1833,4 +1898,3 @@
     </script>
 </body>
 </html>
-
