@@ -26,7 +26,7 @@ socketio = SocketIO(
     ping_interval=25                       # 25s ping interval
 )
 
-# MASTER ADMIN CONFIGURATION (Defaults to your live Admin Render App)
+# MASTER ADMIN CONFIGURATION
 ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
 
 classrooms = {}       
