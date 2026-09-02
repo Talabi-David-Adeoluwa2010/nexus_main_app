@@ -38,6 +38,27 @@
             align-items: center;
             justify-content: flex-start;
             padding: 15px;
+            position: relative;
+        }
+
+        /* Background Animated Particles/Glow */
+        .bg-animation {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .bg-particle {
+            position: absolute;
+            background: rgba(212, 175, 55, 0.15);
+            border-radius: 50%;
+            animation: float-particle 10s infinite linear;
+        }
+        @keyframes float-particle {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
         }
 
         .container {
@@ -48,6 +69,21 @@
             padding: 10px;
             padding-bottom: 70px;
             margin: 0 auto;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* Pro Theme Overrides */
+        body.pro-active {
+            --bg-color: #120803;
+            background-image: radial-gradient(circle at center, #2a1505 0%, #080301 100%);
+            --gold-accent: #ff9900;
+            --gold-hover: #ffbb33;
+            --border-color: rgba(255, 153, 0, 0.5);
+        }
+        body.pro-active .portal-card {
+            border-color: #ff9900;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 153, 0, 0.3);
         }
 
         .portal-card {
@@ -209,7 +245,110 @@
             text-decoration: underline;
         }
         .hidden { display: none !important; }
-        
+
+        /* Homepage & AI Bot Styles */
+        .home-dashboard-card {
+            background: var(--card-bg);
+            border: 2px solid var(--gold-accent);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .home-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        .home-btn {
+            padding: 15px 30px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            text-transform: uppercase;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        .home-btn:hover { transform: scale(1.05); }
+        .btn-student-login { background: var(--gold-accent); color: #050c1a; }
+        .btn-teacher-login { background: transparent; color: var(--gold-accent); border: 2px solid var(--gold-accent); }
+        .btn-pro-upgrade { background: linear-gradient(135deg, #ff9900, #ffbb33); color: #000; box-shadow: 0 0 15px rgba(255,153,0,0.5); }
+
+        .about-section {
+            background: rgba(3, 7, 16, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .ai-bot-container {
+            background: rgba(10, 20, 38, 0.9);
+            border: 1px solid var(--gold-accent);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: left;
+        }
+        .ai-questions-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .ai-question-chip {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--gold-accent);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .ai-question-chip:hover {
+            background: var(--gold-accent);
+            color: #050c1a;
+        }
+        .ai-response-box {
+            background: #030710;
+            border: 1px solid rgba(212,175,55,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            min-height: 60px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        /* Modal Overlay for Pro and Lockdowns */
+        .nexus-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 7, 16, 0.95);
+            z-index: 30000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .nexus-modal-card {
+            background: var(--card-bg);
+            border: 2px solid var(--gold-accent);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 550px;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            text-align: left;
+        }
+
         .classroom-container { max-width: 1100px !important; }
         .header-bar {
             display: flex;
@@ -294,10 +433,7 @@
         }
         .video-blocked-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: #030710;
             display: flex;
             flex-direction: column;
@@ -311,20 +447,14 @@
 
         .sound-wave {
             position: absolute;
-            bottom: 8px;
-            right: 8px;
-            display: flex;
-            align-items: flex-end;
-            gap: 2px;
-            height: 15px;
-            z-index: 5;
+            bottom: 8px; right: 8px;
+            display: flex; align-items: flex-end; gap: 2px;
+            height: 15px; z-index: 5;
             background: rgba(5, 12, 26, 0.7);
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 4px 6px; border-radius: 4px;
         }
         .sound-bar {
-            width: 2px;
-            height: 3px;
+            width: 2px; height: 3px;
             background-color: var(--gold-accent);
             border-radius: 1px;
             animation: bounce-quiet 0.1s ease-in-out infinite alternate;
@@ -368,93 +498,44 @@
         }
         .chat-zoom-btn {
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: 6px; right: 6px;
             background: rgba(5, 12, 26, 0.85);
             color: var(--gold-accent);
             border: 1px solid var(--border-color);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
+            padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; font-weight: bold; cursor: pointer;
             transition: all 0.2s;
         }
-        .chat-zoom-btn:hover {
-            background: var(--gold-accent);
-            color: #050c1a;
-        }
+        .chat-zoom-btn:hover { background: var(--gold-accent); color: #050c1a; }
 
         .image-zoom-modal {
             display: none;
-            position: fixed;
-            z-index: 20000;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: fixed; z-index: 20000;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(3, 7, 16, 0.95);
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            justify-content: center; align-items: center; flex-direction: column;
         }
-        .image-zoom-modal.active {
-            display: flex;
-        }
+        .image-zoom-modal.active { display: flex; }
         .zoom-content-wrapper {
-            overflow: hidden;
-            max-width: 85vw;
-            max-height: 75vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background: #000;
+            overflow: hidden; max-width: 85vw; max-height: 75vh;
+            display: flex; justify-content: center; align-items: center;
+            border: 1px solid var(--border-color); border-radius: 8px; background: #000;
         }
-        .zoom-modal-img {
-            max-width: 100%;
-            max-height: 100%;
-            transition: transform 0.15s ease-out;
-            transform-origin: center center;
-        }
-        .zoom-controls-bar {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        .close-zoom-modal {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-size: 2rem;
-            color: var(--gold-accent);
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .zoom-modal-img { max-width: 100%; max-height: 100%; transition: transform 0.15s ease-out; transform-origin: center center; }
+        .zoom-controls-bar { margin-top: 15px; display: flex; gap: 10px; }
+        .close-zoom-modal { position: absolute; top: 20px; right: 25px; font-size: 2rem; color: var(--gold-accent); cursor: pointer; font-weight: bold; }
         
         .emoji-bar {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            background: rgba(10, 20, 38, 0.85);
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            border-radius: 30px;
-            margin-bottom: 15px;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
+            display: flex; gap: 12px; justify-content: center;
+            background: rgba(10, 20, 38, 0.85); border: 1px solid var(--border-color);
+            padding: 8px; border-radius: 30px; margin-bottom: 15px;
+            width: fit-content; margin-left: auto; margin-right: auto;
         }
         .emoji-reaction-btn { font-size: 20px; cursor: pointer; transition: transform 0.2s; user-select: none; }
         .emoji-reaction-btn:hover { transform: scale(1.3); }
 
         .floating-emoji {
-            position: fixed;
-            bottom: 10%;
-            font-size: 38px;
-            pointer-events: none;
-            z-index: 10000;
+            position: fixed; bottom: 10%; font-size: 38px; pointer-events: none; z-index: 10000;
             animation: float-up-fade 2.5s ease-out forwards;
         }
         @keyframes float-up-fade {
@@ -466,165 +547,79 @@
         .teacher-admin-panel {
             background: rgba(184, 15, 10, 0.15);
             border: 1px solid var(--danger-color);
-            border-radius: 10px;
-            padding: 12px 18px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
+            border-radius: 10px; padding: 12px 18px; margin-bottom: 20px;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
         }
 
         .admin-dashboard-sub-panel {
             background: rgba(212, 175, 55, 0.05);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 25px;
-            text-align: left;
-            overflow-x: auto;
+            border-radius: 10px; padding: 15px; margin-top: 25px; text-align: left; overflow-x: auto;
         }
 
         .exam-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(3, 7, 16, 0.98);
-            z-index: 10005;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-y: auto;
-            padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 7, 16, 0.98); z-index: 10005;
+            display: flex; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;
         }
         .exam-card {
-            background: var(--card-bg);
-            border: 2px solid var(--gold-accent);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 800px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: left;
+            background: var(--card-bg); border: 2px solid var(--gold-accent); border-radius: 16px;
+            width: 100%; max-width: 800px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            max-height: 90vh; overflow-y: auto; text-align: left;
         }
         .exam-section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--gold-accent);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 6px;
-            margin-top: 25px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 18px; font-weight: bold; color: var(--gold-accent);
+            border-bottom: 1px solid var(--border-color); padding-bottom: 6px;
+            margin-top: 25px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
         }
         .exam-question-block {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(212,175,55,0.15);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(212,175,55,0.15);
+            padding: 15px; border-radius: 8px; margin-bottom: 15px;
         }
-        .option-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
-        }
+        .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .option-input-wrapper { display: flex; align-items: center; gap: 8px; }
         
-        .table-responsive-wrapper {
-            width: 100%;
-            overflow-x: auto;
-        }
-        .gradebook-table {
-            width: 100%;
-            min-width: 600px;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 13px;
-        }
-        .gradebook-table th, .gradebook-table td {
-            border: 1px solid var(--border-color);
-            padding: 10px;
-            text-align: left;
-        }
+        .table-responsive-wrapper { width: 100%; overflow-x: auto; }
+        .gradebook-table { width: 100%; min-width: 600px; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .gradebook-table th, .gradebook-table td { border: 1px solid var(--border-color); padding: 10px; text-align: left; }
         .gradebook-table th { background: rgba(212, 175, 55, 0.1); color: var(--gold-accent); }
 
         .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
         .media-btn {
-            background: rgba(10, 20, 38, 0.9);
-            color: var(--gold-accent);
-            border: 1px solid var(--border-color);
-            padding: 13px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-            white-space: nowrap;
-            transition: all 0.2s;
+            background: rgba(10, 20, 38, 0.9); color: var(--gold-accent); border: 1px solid var(--border-color);
+            padding: 13px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; transition: all 0.2s;
         }
         .media-btn:hover { background: var(--gold-accent); color: #050c1a; }
         .media-btn.inactive { background: var(--danger-color); color: #fff; border-color: var(--danger-color); }
 
-        .typing-row-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            margin-top: 15px;
-        }
+        .typing-row-container { display: flex; flex-direction: column; gap: 15px; width: 100%; margin-top: 15px; }
         .independent-typing-block {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            background: rgba(10, 20, 38, 0.4);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            padding: 10px;
-            border-radius: 8px;
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            background: rgba(10, 20, 38, 0.4); border: 1px solid rgba(212, 175, 55, 0.15); padding: 10px; border-radius: 8px;
         }
         .role-badge {
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 6px 10px;
-            border-radius: 4px;
-            white-space: nowrap;
-            min-width: 90px;
-            text-align: center;
+            font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+            padding: 6px 10px; border-radius: 4px; white-space: nowrap; min-width: 90px; text-align: center;
         }
         .student-badge { background: rgba(143, 160, 181, 0.2); color: var(--text-main); border: 1px solid var(--text-muted); }
         .teacher-badge { background: rgba(212, 175, 55, 0.15); color: var(--gold-accent); border: 1px solid var(--gold-accent); }
 
         .corner-founder-credit {
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 0.8px;
-            z-index: 1000;
-            background: rgba(5, 12, 26, 0.9);
-            padding: 6px 12px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            pointer-events: none;
+            position: fixed; bottom: 15px; left: 15px; font-size: 11px; color: var(--text-muted);
+            letter-spacing: 0.8px; z-index: 1000; background: rgba(5, 12, 26, 0.9);
+            padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border-color); pointer-events: none;
         }
         .corner-founder-credit strong { color: var(--gold-accent); }
     </style>
 </head>
 <body>
 
+    <!-- Background Animation Particles -->
+    <div class="bg-animation" id="bgParticles"></div>
+
     <div id="loader-screen">
         <div class="loader-title">NEXUS LEARN</div>
-        <div class="loader-desc">Setting up classroom environment, dynamic exam engines, and moderator consoles...</div>
+        <div class="loader-desc">Setting up free classroom environment, dynamic AI bot, and moderator consoles...</div>
         <div class="progress-container"><div class="progress-bar" id="load-bar"></div></div>
         <div class="progress-percentage" id="load-text">0%</div>
     </div>
@@ -634,12 +629,66 @@
     </div>
 
     <div class="container" id="app-container">
-        <div id="lobby-header">
+        
+        <!-- NEW HOMEPAGE SECTION -->
+        <div id="homepage-section">
             <h1 class="main-logo-title">NEXUS LEARN</h1>
-            <p class="main-logo-subtitle">Virtual Educational Classroom Portal</p>
+            <p class="main-logo-subtitle">Virtual Educational Classroom Portal - Free & Pro Edition</p>
+
+            <div class="home-dashboard-card">
+                <h2 style="color: var(--gold-accent); margin-top: 0;">Welcome to the Future of Education</h2>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                    Nexus Learn provides world-class virtual classroom hosting, interactive real-time video streaming, automated exams, and AI-powered assistance completely free of charge. Unlock Nexus Pro for advanced capabilities!
+                </p>
+
+                <div class="home-btn-group">
+                    <button type="button" class="home-btn btn-student-login" onclick="switchView('student')">Login as Student</button>
+                    <button type="button" class="home-btn btn-teacher-login" onclick="switchView('teacher')">Login as Teacher</button>
+                    <button type="button" class="home-btn btn-pro-upgrade" onclick="openProModal()">⭐ Activate Nexus Pro</button>
+                </div>
+
+                <!-- Activation Code Input below Pro Button -->
+                <div style="max-width: 400px; margin: 20px auto 0 auto; display: flex; gap: 10px;">
+                    <input type="text" id="homepage-pro-code-input" class="nexus-input" placeholder="NEXUS-XXXXXXXX" maxlength="14" style="text-transform: uppercase;">
+                    <button type="button" class="btn" style="width: auto; padding: 0 20px;" onclick="processHomepageProCode()">Submit Code</button>
+                </div>
+            </div>
+
+            <div class="about-section">
+                <h3 style="color: var(--gold-accent); margin-top: 0;">About the App & Goal</h3>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 0;">
+                    Nexus Learn was built to bridge the educational gap by enabling seamless remote classrooms, secure testing, and peer-to-peer collaboration without boundaries. Our goal is to empower teachers and inspire students globally.
+                </p>
+            </div>
+
+            <!-- AI Bot Section with 8 Specific Questions -->
+            <div class="ai-bot-container">
+                <h3 style="color: var(--gold-accent); margin-top: 0;">🤖 Nexus AI Assistant</h3>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Click any question below to get instant answers:</p>
+                
+                <div class="ai-questions-grid">
+                    <div class="ai-question-chip" onclick="askAIBot(1)">1. How to navigate?</div>
+                    <div class="ai-question-chip" onclick="askAIBot(2)">2. How to login as a teacher?</div>
+                    <div class="ai-question-chip" onclick="askAIBot(3)">3. How to login as a student?</div>
+                    <div class="ai-question-chip" onclick="askAIBot(4)">4. About the app</div>
+                    <div class="ai-question-chip" onclick="askAIBot(5)">5. The idea of the app</div>
+                    <div class="ai-question-chip" onclick="askAIBot(6)">6. Why the app is the best for you</div>
+                    <div class="ai-question-chip" onclick="askAIBot(7)">7. How to pay for the Nexus - Pro</div>
+                    <div class="ai-question-chip" onclick="askAIBot(8)">8. Features of the Nexus Pro</div>
+                </div>
+
+                <div class="ai-response-box" id="aiResponseOutput">
+                    Select a question above to speak with your virtual guide...
+                </div>
+            </div>
         </div>
 
-        <div id="lobby-section">
+        <!-- PORTAL LOGIN / ENTRY SECTION -->
+        <div id="lobby-section" class="hidden">
+            <div style="margin-bottom: 15px; text-align: left;">
+                <button type="button" class="copy-icon-btn" onclick="returnToHome()" style="padding: 6px 12px;">← Back to Home</button>
+            </div>
+            
             <div class="portal-card" id="dual-portal">
                 <div class="portal-column" id="student-side">
                     <div class="column-title">Student Entry</div>
@@ -796,6 +845,71 @@
         </div>
     </div>
 
+    <!-- NEXUS PRO ACTIVATION & PAYMENT MODAL -->
+    <div class="nexus-modal hidden" id="nexusProModal">
+        <div class="nexus-modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="color:var(--gold-accent); margin:0;">NEXUS PRO ACTIVATION</h2>
+                <button type="button" class="copy-icon-btn" onclick="closeProModal()">✕ Close</button>
+            </div>
+            
+            <div id="pro-step-1">
+                <p style="font-size:13px; color:var(--text-muted); line-height:1.5;">
+                    Nexus Pro unlocks elite educational tools: 6-hour daily usage, priority high-speed media channels, extended global picture sharing limits, and priority AI support.
+                </p>
+                <div class="input-group">
+                    <label style="font-size:12px; color:var(--gold-accent);">Your Full Name:</label>
+                    <input type="text" id="pro-name-input" class="nexus-input" placeholder="Enter Full Name">
+                    
+                    <label style="font-size:12px; color:var(--gold-accent);">Phone Number:</label>
+                    <input type="text" id="pro-phone-input" class="nexus-input" placeholder="Enter Phone Number">
+
+                    <label style="font-size:12px; color:var(--gold-accent);">Select Pro Duration:</label>
+                    <select id="pro-duration-select" class="nexus-input">
+                        <option value="1 Week">1 Week</option>
+                        <option value="2 Weeks">2 Weeks</option>
+                        <option value="4 Weeks">4 Weeks</option>
+                        <option value="2 Months">2 Months</option>
+                        <option value="6 Months">6 Months</option>
+                        <option value="1 Year">1 Year</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-pro-upgrade" onclick="proceedToPayment()">Continue to Payment</button>
+            </div>
+
+            <div id="pro-step-2" class="hidden">
+                <div style="background: rgba(212,175,55,0.08); border:1px solid var(--border-color); padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <p style="margin:0 0 8px 0; font-size:13px; color:var(--gold-accent); font-weight:bold;">Payment Instructions:</p>
+                    <p style="margin:4px 0; font-size:13px;"><strong>Bank Name:</strong> OPay</p>
+                    <p style="margin:4px 0; font-size:13px;"><strong>Account Number:</strong> <span id="bank-acc-num">8024300891</span> <button type="button" class="copy-icon-btn" onclick="copyToClipboard('8024300891', this)">📋 Copy</button></p>
+                    <p style="margin:4px 0; font-size:13px;"><strong>Account Name:</strong> Talabi Sunny Okunola</p>
+                </div>
+                <button type="button" class="btn btn-pro-upgrade" onclick="submitPaymentRequest()">Proceed Payment</button>
+            </div>
+
+            <div id="pro-step-3" class="hidden" style="text-align:center;">
+                <span style="font-size:50px;">⏳</span>
+                <h3 style="color:var(--gold-accent); margin:10px 0;">Request Pending</h3>
+                <p style="font-size:13px; color:var(--text-muted); line-height:1.6;" id="pendingMessageText">
+                    Dear valid customer your request is pending contact +2348024300891 immediately to receive your activation code and send your receipt to the number.
+                </p>
+                <button type="button" class="btn" onclick="closeProModal()" style="margin-top:15px;">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCKDOWN MODAL (6-Hour Limit Triggered) -->
+    <div class="nexus-modal hidden" id="lockdownModal">
+        <div class="nexus-modal-card" style="text-align:center;">
+            <span style="font-size:60px;">🔒</span>
+            <h2 style="color:var(--danger-color); margin:10px 0;">DAILY USAGE LIMIT REACHED</h2>
+            <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+                You have exhausted your 6 hours use daily limit. Please wait for 24 hours before next use, or activate Nexus Pro for uninterrupted access.
+            </p>
+            <button type="button" class="btn btn-pro-upgrade" onclick="openProModal(); closeLockdownModal();" style="margin-top:15px;">Activate Nexus Pro Now</button>
+        </div>
+    </div>
+
     <div class="image-zoom-modal" id="imageZoomModal">
         <span class="close-zoom-modal" id="closeZoomModal">&times;</span>
         <div class="zoom-content-wrapper">
@@ -935,11 +1049,11 @@
         let examIntervalTimer = null;
         let currentExamTimeSecondsLeft = 0;
         let examGradebook = {}; 
+        let pictureUploadCount = 0;
 
         const peerConnections = {};
         const pendingCandidates = {};
 
-        // INCLUDES FREE OPENRELAY TURN SERVERS FOR CELLULAR / STRICT MOBILE NAT CONNECTIONS
         const rtcConfig = { 
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -959,14 +1073,95 @@
             ] 
         };
 
-        // UNLOCK BROWSER AUDIO OUTPUT
+        // Background Particles Generator
+        function createBackgroundParticles() {
+            const container = document.getElementById('bgParticles');
+            for(let i=0; i<15; i++) {
+                const p = document.createElement('div');
+                p.className = 'bg-particle';
+                const size = Math.floor(Math.random() * 6) + 3;
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.animationDuration = `${Math.random() * 8 + 6}s`;
+                p.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(p);
+            }
+        }
+
+        // AI Bot 8 Specific Answers
+        function askAIBot(qNum) {
+            const output = document.getElementById('aiResponseOutput');
+            const answers = {
+                1: "<strong>How to navigate:</strong> Use the homepage buttons to access Student Login, Teacher Login, or Nexus Pro. Once in a classroom, utilize the video controls, chat, file sharing, and interactive emoji reactions at the bottom.",
+                2: "<strong>How to login as a teacher:</strong> Click 'Login as Teacher' on the homepage, enter your username and access password, or register a new instructor workspace using your 14-character admin activation key (NEXUS-XXXXXXXX).",
+                3: "<strong>How to login as a student:</strong> Click 'Login as Student' on the homepage, enter your full name and the unique class code provided by your teacher to instantly join the virtual classroom session.",
+                4: "<strong>About the app:</strong> Nexus Learn is an advanced virtual educational classroom portal equipped with real-time WebRTC video/audio streaming, collaborative whiteboarding/chat, automated examinations, and grading tools.",
+                5: "<strong>The idea of the app:</strong> To democratize education by connecting students and instructors seamlessly across any device with minimal bandwidth requirements and robust moderator security controls.",
+                6: "<strong>Why the app is the best for you:</strong> It offers ultra-low latency peer connections, built-in exam engines with automated OBJ scoring, manual essay grading, and strict anti-disruption controls tailored for modern educators.",
+                7: "<strong>How to pay for Nexus Pro:</strong> Click the 'Activate Nexus Pro' button on the homepage, fill in your details and duration, copy the OPay account details (8024300891 - Talabi Sunny Okunola), make the transfer, and send your receipt to get your activation code.",
+                8: "<strong>Features of Nexus Pro:</strong> Nexus Pro includes 6-hour daily usage limits, extended picture uploads in global chat (up to 5 pictures), priority server routing, exclusive theme layout customization, and unlimited exam eligibility!"
+            };
+            output.innerHTML = answers[qNum] || "Please select a valid question.";
+        }
+
+        // Pro Activation and Modal Functions
+        function openProModal() {
+            document.getElementById('nexusProModal').classList.remove('hidden');
+            document.getElementById('pro-step-1').classList.remove('hidden');
+            document.getElementById('pro-step-2').classList.add('hidden');
+            document.getElementById('pro-step-3').classList.add('hidden');
+        }
+        function closeProModal() {
+            document.getElementById('nexusProModal').classList.add('hidden');
+        }
+        function proceedToPayment() {
+            const name = document.getElementById('pro-name-input').value.trim();
+            const phone = document.getElementById('pro-phone-input').value.trim();
+            if(!name || !phone) {
+                alert("Please enter your name and phone number.");
+                return;
+            }
+            document.getElementById('pro-step-1').classList.add('hidden');
+            document.getElementById('pro-step-2').classList.remove('hidden');
+        }
+        function submitPaymentRequest() {
+            document.getElementById('pro-step-2').classList.add('hidden');
+            document.getElementById('pro-step-3').classList.remove('hidden');
+        }
+        function processHomepageProCode() {
+            const code = document.getElementById('homepage-pro-code-input').value.trim().toUpperCase();
+            if(code.length !== 14 || !code.startsWith("NEXUS-")) {
+                alert("Invalid code format. Key must be 14 characters total and start with NEXUS-.");
+                return;
+            }
+            // Verify code or activate pro theme
+            document.body.classList.add('pro-active');
+            localStorage.setItem('nexus_pro_activated', 'true');
+            alert("Nexus Pro successfully activated! Enjoy enhanced privileges.");
+            document.getElementById('homepage-pro-code-input').value = "";
+        }
+
+        function switchView(type) {
+            document.getElementById('homepage-section').classList.add('hidden');
+            document.getElementById('lobby-section').classList.remove('hidden');
+            if(type === 'student') {
+                document.getElementById('student-side').style.display = 'flex';
+            } else {
+                document.getElementById('teacher-side').style.display = 'flex';
+            }
+        }
+        function returnToHome() {
+            document.getElementById('lobby-section').classList.add('hidden');
+            document.getElementById('homepage-section').classList.remove('hidden');
+        }
+
         let audioUnlocked = false;
         function unlockAudioContext() {
             if (audioUnlocked) return;
             const dummyAudio = new Audio();
             dummyAudio.play().then(() => {
                 audioUnlocked = true;
-                console.log("Browser audio output unlocked.");
             }).catch(() => {});
         }
         window.addEventListener('click', unlockAudioContext, { once: true });
@@ -1004,8 +1199,8 @@
             zoomModalImg.style.transform = `scale(${currentZoomScale})`;
         });
 
-        // PAGE LOAD INITIALIZATION (Only teachers persist across page reloads)
         window.addEventListener('DOMContentLoaded', () => {
+            createBackgroundParticles();
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
             const loader = document.getElementById('loader-screen');
@@ -1024,6 +1219,10 @@
                 text.innerText = progress + '%';
             }, 50);
 
+            if(localStorage.getItem('nexus_pro_activated') === 'true') {
+                document.body.classList.add('pro-active');
+            }
+
             const activationInput = document.getElementById('reg-activation');
             if (activationInput) {
                 activationInput.addEventListener('input', (e) => {
@@ -1037,6 +1236,8 @@
                 myUsername = savedTeacher;
                 isTeacherUser = true;
                 
+                document.getElementById('homepage-section').classList.add('hidden');
+                document.getElementById('lobby-section').classList.remove('hidden');
                 document.getElementById('dual-portal').classList.add('hidden');
                 document.getElementById('teacher-dashboard').classList.remove('hidden');
                 document.getElementById('saved-teacher-welcome').innerText = `Logged in as: ${savedTeacher}`;
@@ -1179,7 +1380,7 @@
 
         socket.on('join_response', async (data) => {
             if (data.success) {
-                document.getElementById('lobby-header').classList.add('hidden');
+                document.getElementById('homepage-section').classList.add('hidden');
                 document.getElementById('lobby-section').classList.add('hidden');
                 document.getElementById('app-container').classList.add('classroom-container');
                 document.getElementById('classroom-section').classList.remove('hidden');
@@ -1209,7 +1410,6 @@
             copyToClipboard(classCodeRoom, this);
         });
 
-        // HIGH-EFFICIENCY LOCAL MEDIA ACQUISITION (10-PERSON OPTIMIZED)
         async function startLocalCameraAndMic() {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             try {
@@ -1223,15 +1423,14 @@
                         facingMode: currentFacingMode,
                         width: { ideal: 320, max: 480 },
                         height: { ideal: 240, max: 360 },
-                        frameRate: { max: 10 } // Lowered frame rate reduces network CPU load significantly
+                        frameRate: { max: 10 }
                     }
                 });
 
                 const myVideo = document.getElementById('my-camera');
                 myVideo.srcObject = localStream;
-                myVideo.muted = true; // Mute local audio to prevent feedback loop
+                myVideo.muted = true;
 
-                // STUDENT CAMERAS DEFAULT TO OFF TO KEEP 10-PERSON ROOMS LAG-FREE
                 if (!isTeacherUser) {
                     cameraBlocked = true;
                     if (localStream.getVideoTracks().length > 0) {
@@ -1330,7 +1529,6 @@
             document.getElementById('my-camera').classList.toggle('mirrored');
         });
 
-        // WEBRTC PEER CONNECTION AND AUDIO TRACK BINDING
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
@@ -1468,6 +1666,14 @@
         }
 
         function compressAndSendImage(file) {
+            if(localStorage.getItem('nexus_pro_activated') !== 'true') {
+                if(pictureUploadCount >= 5) {
+                    alert("Free tier limit reached: You can only send up to 5 pictures to global chat. Activate Nexus Pro for unlimited uploads!");
+                    return;
+                }
+                pictureUploadCount++;
+            }
+
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
@@ -1513,6 +1719,12 @@
         });
 
         document.getElementById('snap-cam-btn').addEventListener('click', () => {
+            if(localStorage.getItem('nexus_pro_activated') !== 'true' && pictureUploadCount >= 5) {
+                alert("Free tier limit reached: You can only send up to 5 pictures to global chat. Activate Nexus Pro!");
+                return;
+            }
+            pictureUploadCount++;
+
             const videoEl = document.getElementById('my-camera');
             const canvasEl = document.getElementById('screenshot-canvas');
             if (localStream && videoEl.srcObject) {
@@ -1535,6 +1747,17 @@
         });
 
         document.getElementById('teacher-exam-portal-btn').addEventListener('click', () => {
+            if(localStorage.getItem('nexus_pro_activated') !== 'true') {
+                const lastExamSet = localStorage.getItem('nexus_last_exam_set_time');
+                if(lastExamSet) {
+                    const elapsed = Date.now() - parseInt(lastExamSet);
+                    if(elapsed < 24 * 60 * 60 * 1000) {
+                        alert("Free tier limit: Setting exam is only once per 24 hours. Wait 24 hours or activate Nexus Pro!");
+                        return;
+                    }
+                }
+            }
+
             document.getElementById('teacher-exam-setup-modal').classList.remove('hidden');
             document.getElementById('obj-questions-list').innerHTML = '';
             document.getElementById('theory-questions-list').innerHTML = '';
@@ -1595,6 +1818,10 @@
         }
 
         function deployClassExam() {
+            if(localStorage.getItem('nexus_pro_activated') !== 'true') {
+                localStorage.setItem('nexus_last_exam_set_time', Date.now().toString());
+            }
+
             const minutes = parseInt(document.getElementById('exam-minutes').value) || 10;
             const hasOBJ = document.getElementById('exam-has-obj').checked;
             const hasTheory = document.getElementById('exam-has-theory').checked;
@@ -1953,4 +2180,3 @@
     </script>
 </body>
 </html>
-
