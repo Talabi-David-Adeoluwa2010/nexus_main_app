@@ -17,8 +17,6 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
 # OPTIMIZED SOCKET.IO CONFIGURATION
-# 1. max_http_buffer_size: Set to 10MB to prevent disconnects on base64 image uploads.
-# 2. ping_timeout & ping_interval: Extended timeouts so client networks stay connected.
 socketio = SocketIO(
     app, 
     async_mode='gevent', 
