@@ -106,34 +106,11 @@ def handle_register_teacher(data):
         'message': 'Registration successful! You can now log in.'
     })
 
-@socketio.on('verify_pro_code')
-def handle_verify_pro_code(data):
-    code = str(data.get('code', '')).strip().upper()
-    username = data.get('username', 'User')
-    
-    if len(code) != 14 or not code.startswith("NEXUS-"):
-        emit('pro_verification_response', {'success': False, 'message': 'Invalid activation code format.'})
-        return
-
-    try:
-        response = requests.post(
-            f"{ADMIN_APP_URL}/api/verify_code", 
-            json={"code": code, "username": username}, 
-            headers={"Content-Type": "application/json"},
-            timeout=5
-        )
-        if response.status_code == 200 and response.json().get("valid"):
-            emit('pro_verification_response', {'success': True, 'message': 'Nexus Pro Activated Successfully!'})
-            return
-    except Exception as e:
-        print(f"Pro code verification error: {e}")
-    
-    emit('pro_verification_response', {'success': False, 'message': 'Invalid or expired activation code.'})
-
 @socketio.on('create_class')
 def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
+    
     class_code = str(uuid.uuid4())[:13].upper()
 
     classrooms[class_code] = {
@@ -188,6 +165,15 @@ def handle_join_class(data):
         'teacher': classroom['teacher'],
         'existing_members': existing_members
     })
+
+    try:
+        requests.post(f"{ADMIN_APP_URL}/api/register_session_remote", json={
+            "username": name,
+            "ip": request.remote_addr,
+            "sid": request.sid
+        }, timeout=2)
+    except Exception:
+        pass
 
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
     broadcast_active_users(class_code)
