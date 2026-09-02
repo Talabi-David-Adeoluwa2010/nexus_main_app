@@ -13,20 +13,17 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
-# Disable noisy debug logs to save system resources during image streaming
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
-# OPTIMIZED SOCKET.IO CONFIGURATION
 socketio = SocketIO(
     app, 
     async_mode='gevent', 
     cors_allowed_origins="*",
-    max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
-    ping_timeout=60,                       # 60s timeout before dropping client
-    ping_interval=25                       # 25s ping interval
+    max_http_buffer_size=10 * 1024 * 1024,
+    ping_timeout=60,
+    ping_interval=25
 )
 
-# MASTER ADMIN CONFIGURATION
 ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
 
 classrooms = {}       
@@ -39,7 +36,6 @@ teacher_accounts = {
 def home():
     return render_template('index.html')
 
-# --- TEACHER AUTH SYSTEM (LOGIN & REGISTRATION) ---
 @socketio.on('login_teacher')
 def handle_login_teacher(data):
     username = data.get('username', '').strip()
@@ -110,12 +106,34 @@ def handle_register_teacher(data):
         'message': 'Registration successful! You can now log in.'
     })
 
-# --- CLASSROOM CREATION ---
+@socketio.on('verify_pro_code')
+def handle_verify_pro_code(data):
+    code = str(data.get('code', '')).strip().upper()
+    username = data.get('username', 'User')
+    
+    if len(code) != 14 or not code.startswith("NEXUS-"):
+        emit('pro_verification_response', {'success': False, 'message': 'Invalid activation code format.'})
+        return
+
+    try:
+        response = requests.post(
+            f"{ADMIN_APP_URL}/api/verify_code", 
+            json={"code": code, "username": username}, 
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        if response.status_code == 200 and response.json().get("valid"):
+            emit('pro_verification_response', {'success': True, 'message': 'Nexus Pro Activated Successfully!'})
+            return
+    except Exception as e:
+        print(f"Pro code verification error: {e}")
+    
+    emit('pro_verification_response', {'success': False, 'message': 'Invalid or expired activation code.'})
+
 @socketio.on('create_class')
 def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
-    
     class_code = str(uuid.uuid4())[:13].upper()
 
     classrooms[class_code] = {
@@ -125,7 +143,6 @@ def handle_create_class(data):
     }
     emit('class_created', {'class_code': class_code})
 
-# --- WORKSPACE LOGISTICS & ACTIVE MONITORING ---
 @socketio.on('join_class_session')
 def handle_join_class(data):
     name = data.get('name', '').strip()
@@ -172,15 +189,6 @@ def handle_join_class(data):
         'existing_members': existing_members
     })
 
-    try:
-        requests.post(f"{ADMIN_APP_URL}/api/register_session_remote", json={
-            "username": name,
-            "ip": request.remote_addr,
-            "sid": request.sid
-        }, timeout=2)
-    except Exception:
-        pass
-
     emit('bounce_message', {'name': 'SYSTEM', 'content': f'{name} joined the room.', 'type': 'text'}, room=class_code)
     broadcast_active_users(class_code)
 
@@ -197,7 +205,6 @@ def handle_register_user(data):
     }
     broadcast_active_users(room)
 
-# --- EXAM SUBMISSION & RESULT FORWARDING ---
 @socketio.on('submit_exam')
 def handle_submit_exam(data):
     student_name = data.get('student_name') or active_sockets.get(request.sid, {}).get('username', 'Anonymous')
@@ -239,7 +246,6 @@ def handle_submit_exam(data):
         'type': 'text'
     }, room=room_code)
 
-# --- DISCONNECTION RECOVERY ---
 @socketio.on('disconnect')
 def handle_disconnect():
     if request.sid in active_sockets:
@@ -263,7 +269,6 @@ def handle_disconnect():
         del active_sockets[request.sid]
         broadcast_active_users(room)
 
-# --- REAL-TIME DATA BRIDGES ---
 @socketio.on('text_message')
 def handle_text_message(data):
     room = data.get('room')
