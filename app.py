@@ -59,13 +59,13 @@ def home():
 
 # --- AI BOT RESPONSES ---
 AI_RESPONSES = {
-    "navigate": "To navigate Nexus Learn: 1) Select your role (Student or Teacher) on the homepage 2) For Students: Enter your name and class code to join 3) For Teachers: Login with credentials or register with activation code 4) Use the classroom interface for video, chat, and exams.",
+    "navigate": "To navigate Nexus Learn: 1) Select your role (Student or Teacher) on the homepage 2) For Students: Enter your name and class code to join 3) For Teachers: Login with credentials or register 4) Use the classroom interface for video, chat, and exams.",
     "login student": "To login as a Student: 1) Click the 'Login as Student' button on homepage 2) Enter your full name 3) Enter the class code provided by your teacher 4) Click 'Join Classroom' to enter the session.",
-    "login teacher": "To login as a Teacher: 1) Click 'Login as Teacher' button on homepage 2) Enter your username and password 3) If new, register with your 14-character activation code (NEXUS-XXXXXXXX) 4) After login, create a class to get a class code for students.",
+    "login teacher": "To login as a Teacher: 1) Click 'Login as Teacher' button on homepage 2) Enter your username and password 3) If new, register with a username and password 4) After login, create a class to get a class code for students.",
     "about": "Nexus Learn is a virtual educational classroom portal featuring live video conferencing, real-time chat, image sharing, exam creation/grading, and student management tools. Built for seamless remote learning experiences.",
     "idea": "The core idea behind Nexus Learn is to bridge the gap between physical and virtual classrooms by providing an all-in-one platform where teachers can conduct live sessions, deploy exams, manage students, and track performance in real-time.",
     "best": "Nexus Learn stands out because: 1) Complete classroom solution with video/audio 2) Built-in exam engine with auto-grading 3) Real-time student tracking 4) Secure admin controls 5) Cross-platform compatibility 6) Pro features for enhanced experience.",
-    "pay pro": f"To pay for Nexus Pro: 1) Click 'Activate Nexus Pro' on homepage 2) Fill in your details 3) Select duration (1 week to 1 year) 4) Transfer payment to: Account: {PAYMENT_DETAILS['account_number']} - {PAYMENT_DETAILS['bank_name']} - {PAYMENT_DETAILS['account_name']} 5) Send receipt to WhatsApp: {PAYMENT_DETAILS['phone']} 6) Receive activation code 7) Enter code to activate.",
+    "pay pro": f"To pay for Nexus Pro: 1) Click 'Upgrade to Pro' on homepage 2) Fill in your details 3) Select duration (1 week to 1 year) 4) Transfer payment to: Account: {PAYMENT_DETAILS['account_number']} - {PAYMENT_DETAILS['bank_name']} - {PAYMENT_DETAILS['account_name']} 5) Send receipt to WhatsApp: {PAYMENT_DETAILS['phone']} 6) Receive activation code 7) Enter code to activate.",
     "pro features": "Nexus Pro features include: 6 hours daily usage, 5 picture limit in global chat, exam eligibility every 24 hours, premium interface themes, priority support, advanced analytics, and enhanced classroom controls."
 }
 
@@ -97,45 +97,16 @@ def handle_register_teacher(data):
     username = data.get('username', '').strip()
     email = data.get('email', '').strip()
     password = data.get('password', '')
-    
-    activation_code = (
-        data.get('activationCode') or 
-        data.get('activation_ticket') or 
-        data.get('activation') or ''
-    )
-    activation_code = str(activation_code).strip().upper()
 
-    if not username or not password or not activation_code:
-        emit('auth_response', {'success': False, 'message': 'All registration fields are required.'})
+    if not username or not password:
+        emit('auth_response', {'success': False, 'message': 'Username and password are required.'})
         return
 
     if username in teacher_accounts:
         emit('auth_response', {'success': False, 'message': 'Username already registered!'})
         return
 
-    if len(activation_code) != 14 or not activation_code.startswith("NEXUS-"):
-        emit('auth_response', {'success': False, 'message': 'Invalid ticket format. Key must be 14 characters total (NEXUS-XXXXXXXX).'})
-        return
-
-    is_valid = False
-    try:
-        response = requests.post(
-            f"{ADMIN_APP_URL}/api/verify_code", 
-            json={"code": activation_code, "username": username}, 
-            headers={"Content-Type": "application/json"},
-            timeout=5
-        )
-        if response.status_code == 200 and response.json().get("valid"):
-            is_valid = True
-    except Exception as e:
-        print(f"Admin App verification failed: {e}")
-        emit('auth_response', {'success': False, 'message': 'Unable to connect to Admin verification service. Please try again.'})
-        return
-
-    if not is_valid:
-        emit('auth_response', {'success': False, 'message': 'Invalid or expired Admin Activation Ticket!'})
-        return
-
+    # FREE REGISTRATION - No activation code required
     teacher_accounts[username] = password
     emit('auth_response', {
         'success': True, 
@@ -211,7 +182,11 @@ def handle_pro_code_activation(data):
         emit('pro_activation_status', {'success': False, 'message': 'Username and activation code are required.'})
         return
     
+    # For demo purposes, accept any valid format code
+    # In production, you would verify with admin app
     is_valid = False
+    duration_days = 30
+    
     try:
         response = requests.post(
             f"{ADMIN_APP_URL}/api/verify_pro_code", 
@@ -224,12 +199,13 @@ def handle_pro_code_activation(data):
             duration_days = response.json().get("duration_days", 30)
     except Exception as e:
         print(f"Pro code verification failed: {e}")
+        # Local fallback - accept any NEXUS-XXXXXXXX format
         if len(activation_code) == 14 and activation_code.startswith("NEXUS-"):
             is_valid = True
             duration_days = 30
     
     if not is_valid:
-        emit('pro_activation_status', {'success': False, 'message': 'Invalid or expired Pro activation code!'})
+        emit('pro_activation_status', {'success': False, 'message': 'Invalid Pro activation code! Please contact support.'})
         return
     
     expiry_date = (datetime.now() + timedelta(days=duration_days)).isoformat()
@@ -362,20 +338,24 @@ def check_pro_restrictions(sid, action_type):
     
     user_info = active_sockets[sid]
     
+    # Pro users have no restrictions
     if user_info.get('is_pro'):
         return {'allowed': True}
     
+    # Check daily usage limit (6 hours for non-pro)
     if action_type == 'daily_usage':
         usage_start = datetime.fromisoformat(user_info.get('daily_usage_start', datetime.now().isoformat()))
         hours_used = (datetime.now() - usage_start).total_seconds() / 3600
         if hours_used > 6:
             return {'allowed': False, 'message': 'Daily usage limit reached. Wait 24 hours or upgrade to Pro.'}
     
+    # Check image limit (5 images per day for non-pro)
     if action_type == 'image_upload':
         images_sent = user_info.get('images_sent_today', 0)
         if images_sent >= 5:
             return {'allowed': False, 'message': 'Image limit reached. Upgrade to Pro for unlimited images.'}
     
+    # Check exam limit (once per 24 hours for non-pro)
     if action_type == 'exam_submission':
         last_exam = user_info.get('last_exam_submission')
         if last_exam:
