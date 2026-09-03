@@ -69,7 +69,7 @@ AI_RESPONSES = {
     "pro features": "Nexus Pro features include: 6 hours daily usage, 5 picture limit in global chat, exam eligibility every 24 hours, premium interface themes, priority support, advanced analytics, and enhanced classroom controls."
 }
 
-# --- TEACHER AUTH SYSTEM ---
+# --- TEACHER AUTH SYSTEM (FREE REGISTRATION) ---
 @socketio.on('login_teacher')
 def handle_login_teacher(data):
     username = data.get('username', '').strip()
