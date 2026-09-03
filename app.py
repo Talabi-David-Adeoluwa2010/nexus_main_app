@@ -1,7 +1,3 @@
-# MUST BE THE FIRST TWO LINES IN THE FILE TO PREVENT DEADLOCKS
-from gevent import monkey
-monkey.patch_all()
-
 import os
 import json
 import uuid
@@ -17,10 +13,10 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 # Disable noisy debug logs to save system resources during image streaming
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
-# OPTIMIZED SOCKET.IO CONFIGURATION
+# OPTIMIZED SOCKET.IO CONFIGURATION - CHANGED TO threading
 socketio = SocketIO(
     app, 
-    async_mode='gevent', 
+    async_mode='threading', 
     cors_allowed_origins="*",
     max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
     ping_timeout=60,
