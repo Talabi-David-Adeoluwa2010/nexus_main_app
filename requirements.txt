@@ -6,8 +6,7 @@ requests
 gunicorn
 Flask-SocketIO
 gunicorn==21.2.0
-gevent==23.9.1
+eventlet==0.33.3
 gevent-websocket==0.10.1
-
 
 
