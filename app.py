@@ -13,17 +13,20 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
+# Disable noisy debug logs to save system resources during image streaming
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
+# OPTIMIZED SOCKET.IO CONFIGURATION
 socketio = SocketIO(
     app, 
     async_mode='gevent', 
     cors_allowed_origins="*",
-    max_http_buffer_size=10 * 1024 * 1024,
+    max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
     ping_timeout=60,
     ping_interval=25
 )
 
+# MASTER ADMIN CONFIGURATION
 ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
 
 classrooms = {}       
@@ -32,10 +35,52 @@ teacher_accounts = {
     "admin": "admin123"
 }
 
+# PRO SUBSCRIPTION STORAGE
+pro_subscribers = {}  # Format: {username: {"expiry": timestamp, "plan": "1year"}}
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
+@app.route('/api/check_pro/<username>')
+def check_pro_status(username):
+    """Check if a user has active Pro subscription"""
+    if username in pro_subscribers:
+        import time
+        if time.time() < pro_subscribers[username].get('expiry', 0):
+            return jsonify({"active": True, "expiry": pro_subscribers[username]['expiry'], "plan": pro_subscribers[username].get('plan', 'Unknown')})
+        else:
+            del pro_subscribers[username]
+    return jsonify({"active": False})
+
+@app.route('/api/activate_pro', methods=['POST'])
+def activate_pro():
+    """Activate Pro subscription with valid code"""
+    data = request.json
+    code = data.get('code', '').upper().strip()
+    username = data.get('username', '').strip()
+    
+    # Verify activation code with Admin App
+    try:
+        response = requests.post(
+            f"{ADMIN_APP_URL}/api/verify_code", 
+            json={"code": code, "username": username}, 
+            headers={"Content-Type": "application/json"},
+            timeout=5
+        )
+        if response.status_code == 200 and response.json().get("valid"):
+            import time
+            # Determine duration from code format (implement your logic here)
+            duration_days = 365  # Default 1 year
+            expiry = time.time() + (duration_days * 24 * 60 * 60)
+            pro_subscribers[username] = {"expiry": expiry, "plan": "1 Year"}
+            return jsonify({"success": True, "message": "Pro activated successfully!", "expiry": expiry})
+    except Exception as e:
+        print(f"Activation error: {e}")
+    
+    return jsonify({"success": False, "message": "Invalid activation code"})
+
+# --- TEACHER AUTH SYSTEM ---
 @socketio.on('login_teacher')
 def handle_login_teacher(data):
     username = data.get('username', '').strip()
@@ -46,10 +91,14 @@ def handle_login_teacher(data):
         return
 
     if username in teacher_accounts and teacher_accounts[username] == password:
+        # Check Pro status
+        import time
+        is_pro = username in pro_subscribers and time.time() < pro_subscribers[username].get('expiry', 0)
         emit('auth_response', {
             'success': True, 
             'action': 'login', 
             'username': username, 
+            'is_pro': is_pro,
             'message': 'Login successful!'
         })
     else:
@@ -106,6 +155,7 @@ def handle_register_teacher(data):
         'message': 'Registration successful! You can now log in.'
     })
 
+# --- CLASSROOM CREATION ---
 @socketio.on('create_class')
 def handle_create_class(data):
     username = data.get('username')
@@ -120,6 +170,7 @@ def handle_create_class(data):
     }
     emit('class_created', {'class_code': class_code})
 
+# --- WORKSPACE LOGISTICS & ACTIVE MONITORING ---
 @socketio.on('join_class_session')
 def handle_join_class(data):
     name = data.get('name', '').strip()
@@ -128,6 +179,10 @@ def handle_join_class(data):
     if not name or not class_code:
         emit('join_response', {'success': False, 'message': 'Name and Class Code are required.'})
         return
+
+    # Check Pro status for class joining
+    import time
+    is_pro = name in pro_subscribers and time.time() < pro_subscribers[name].get('expiry', 0)
 
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
@@ -147,7 +202,9 @@ def handle_join_class(data):
     active_sockets[request.sid] = {
         "username": name,
         "room": class_code,
-        "role": role
+        "role": role,
+        "is_pro": is_pro,
+        "join_time": time.time()
     }
 
     join_room(class_code)
@@ -155,7 +212,7 @@ def handle_join_class(data):
     existing_members = []
     for sid, info in active_sockets.items():
         if info['room'] == class_code and sid != request.sid:
-            existing_members.append({"socket_id": sid, "name": info["username"]})
+            existing_members.append({"socket_id": sid, "name": info["username"], "is_pro": info.get('is_pro', False)})
 
     classroom['members'].append({"socket_id": request.sid, "name": name})
 
@@ -163,7 +220,8 @@ def handle_join_class(data):
         'success': True,
         'classname': classroom['classname'],
         'teacher': classroom['teacher'],
-        'existing_members': existing_members
+        'existing_members': existing_members,
+        'is_pro': is_pro
     })
 
     try:
@@ -184,13 +242,19 @@ def handle_register_user(data):
     role = data.get('role', 'student')
     room = data.get('room')
     
+    # Check Pro status
+    import time
+    is_pro = username in pro_subscribers and time.time() < pro_subscribers[username].get('expiry', 0)
+    
     active_sockets[request.sid] = {
         "username": username,
         "room": room,
-        "role": role
+        "role": role,
+        "is_pro": is_pro
     }
     broadcast_active_users(room)
 
+# --- EXAM SUBMISSION & RESULT FORWARDING ---
 @socketio.on('submit_exam')
 def handle_submit_exam(data):
     student_name = data.get('student_name') or active_sockets.get(request.sid, {}).get('username', 'Anonymous')
@@ -232,6 +296,7 @@ def handle_submit_exam(data):
         'type': 'text'
     }, room=room_code)
 
+# --- DISCONNECTION RECOVERY ---
 @socketio.on('disconnect')
 def handle_disconnect():
     if request.sid in active_sockets:
@@ -255,6 +320,7 @@ def handle_disconnect():
         del active_sockets[request.sid]
         broadcast_active_users(room)
 
+# --- REAL-TIME DATA BRIDGES ---
 @socketio.on('text_message')
 def handle_text_message(data):
     room = data.get('room')
@@ -274,6 +340,12 @@ def handle_image_broadcast(data):
     room = data.get('room')
     name = data.get('name')
     image_data = data.get('image_data')
+
+    # Check image limit for non-pro users
+    is_pro = active_sockets.get(request.sid, {}).get('is_pro', False)
+    if not is_pro:
+        # Implement image limit logic here if needed
+        pass
 
     emit('bounce_message', {
         'sender_id': request.sid,
@@ -314,7 +386,11 @@ def broadcast_active_users(room_code):
     active_list = []
     for sid, info in active_sockets.items():
         if info['room'] == room_code:
-            active_list.append({"username": info["username"], "role": info["role"]})
+            active_list.append({
+                "username": info["username"], 
+                "role": info["role"],
+                "is_pro": info.get('is_pro', False)
+            })
     emit('update_active_users', {'users': active_list}, room=room_code)
 
 if __name__ == '__main__':
