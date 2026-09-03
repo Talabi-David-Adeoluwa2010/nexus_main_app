@@ -7,10 +7,10 @@
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         /* ============================================================
-           LIGHT BLUE & BEIGE PREMIUM THEME - WITH BIG DASHBOARD
+           ULTIMATE PREMIUM THEME - LIGHT BLUE & BEIGE
+           WITH MOVING EMOJIS BACKGROUND
            ============================================================ */
         
-        /* ---------- RESET & BASE ---------- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
             width: 100%;
@@ -18,20 +18,22 @@
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             overflow-x: hidden;
             position: relative;
+            background: #e8f0fe;
         }
 
-        /* ---------- ANIMATED BACKGROUND ---------- */
-        .animated-bg {
+        /* ---------- ANIMATED EMOJI BACKGROUND ---------- */
+        .emoji-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
             z-index: 0;
-            background: linear-gradient(135deg, #e8f0fe 0%, #f5efe6 40%, #d4e2f0 70%, #f0ebe3 100%);
-            background-size: 400% 400%;
-            animation: gradientMove 15s ease-in-out infinite;
+            pointer-events: none;
             overflow: hidden;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f5efe6 30%, #d4e2f0 60%, #f0ebe3 100%);
+            background-size: 400% 400%;
+            animation: gradientMove 20s ease-in-out infinite;
         }
         @keyframes gradientMove {
             0% { background-position: 0% 50%; }
@@ -39,33 +41,34 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Floating Particles */
-        .particle {
+        .floating-emoji-item {
             position: absolute;
-            border-radius: 50%;
-            background: rgba(180, 210, 240, 0.3);
+            font-size: 28px;
+            opacity: 0.15;
+            animation: floatEmoji linear infinite;
             pointer-events: none;
-            animation: floatParticle linear infinite;
+            user-select: none;
         }
-        @keyframes floatParticle {
-            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        @keyframes floatEmoji {
+            0% { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 0.05; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-10vh) rotate(720deg) scale(1.2); opacity: 0.05; }
         }
 
         /* Floating Shapes */
-        .shape {
+        .shape-bg {
             position: absolute;
             pointer-events: none;
-            opacity: 0.08;
-            animation: floatShape 25s ease-in-out infinite alternate;
+            opacity: 0.06;
+            font-size: 60px;
+            animation: floatShape 30s ease-in-out infinite alternate;
         }
         @keyframes floatShape {
             0% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            33% { transform: translate(30px, -40px) rotate(120deg) scale(1.1); }
-            66% { transform: translate(-20px, 30px) rotate(240deg) scale(0.9); }
-            100% { transform: translate(10px, -20px) rotate(360deg) scale(1.05); }
+            33% { transform: translate(40px, -50px) rotate(120deg) scale(1.1); }
+            66% { transform: translate(-30px, 40px) rotate(240deg) scale(0.9); }
+            100% { transform: translate(20px, -30px) rotate(360deg) scale(1.05); }
         }
 
         /* ---------- COLOR VARIABLES ---------- */
@@ -80,7 +83,6 @@
             --beige-warm: #f0ebe3;
             --brown-soft: #c4b5a5;
             --brown-medium: #8b7a6b;
-            --brown-dark: #5c4a3b;
             --text-primary: #2c3e50;
             --text-secondary: #5d6d7e;
             --text-muted: #85929e;
@@ -121,7 +123,7 @@
         }
         .loader-icon {
             font-size: 80px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             animation: pulseIcon 1.8s ease-in-out infinite;
         }
         @keyframes pulseIcon {
@@ -142,7 +144,7 @@
             font-size: 16px;
             color: var(--text-muted);
             letter-spacing: 4px;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             font-weight: 300;
         }
         .loader-progress {
@@ -167,24 +169,21 @@
             letter-spacing: 2px;
             font-weight: 300;
         }
-        .loader-dots {
+        .loader-emoji-row {
             display: flex;
-            gap: 10px;
-            margin-top: 18px;
+            gap: 16px;
+            margin-top: 20px;
+            font-size: 30px;
+            animation: loaderEmojiBounce 2s ease-in-out infinite;
         }
-        .loader-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--blue-accent);
-            animation: dotBounce 1.4s ease-in-out infinite;
+        @keyframes loaderEmojiBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        .loader-dot:nth-child(2) { animation-delay: 0.2s; background: var(--blue-mid); }
-        .loader-dot:nth-child(3) { animation-delay: 0.4s; background: var(--blue-soft); }
-        @keyframes dotBounce {
-            0%, 80%, 100% { transform: scale(0.5); opacity: 0.3; }
-            40% { transform: scale(1); opacity: 1; }
-        }
+        .loader-emoji-row span:nth-child(2) { animation-delay: 0.2s; }
+        .loader-emoji-row span:nth-child(3) { animation-delay: 0.4s; }
+        .loader-emoji-row span:nth-child(4) { animation-delay: 0.6s; }
+        .loader-emoji-row span:nth-child(5) { animation-delay: 0.8s; }
 
         /* ---------- TOP NAV - BIG DASHBOARD ---------- */
         .top-nav {
@@ -197,7 +196,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 2px solid rgba(180, 210, 240, 0.3);
-            padding: 16px 32px;
+            padding: 14px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -210,7 +209,11 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .nav-brand-icon { font-size: 36px; }
+        .nav-brand-icon { font-size: 36px; animation: brandPulse 3s ease-in-out infinite; }
+        @keyframes brandPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
         .nav-brand-text {
             font-size: 28px;
             font-weight: 800;
@@ -258,14 +261,6 @@
             border-color: var(--blue-dark);
         }
         .nav-btn .icon { font-size: 20px; }
-        .nav-btn .badge {
-            background: var(--blue-accent);
-            color: #fff;
-            border-radius: 50%;
-            padding: 1px 10px;
-            font-size: 12px;
-            margin-left: 2px;
-        }
         .nav-btn.pro-btn {
             border-color: var(--blue-mid);
             color: var(--blue-dark);
@@ -295,14 +290,14 @@
         .homepage {
             display: flex;
             flex-direction: column;
-            gap: 36px;
+            gap: 32px;
         }
 
-        /* HERO SECTION - WITH BIG LOGIN BUTTONS */
+        /* HERO SECTION */
         .hero {
             text-align: center;
             padding: 50px 30px 40px;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-radius: var(--radius);
@@ -319,6 +314,16 @@
             width: 70%;
             height: 200%;
             background: radial-gradient(circle, rgba(180, 210, 240, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero::after {
+            content: '📚 ✏️ 🎓 📝 📖 🏫';
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 40px;
+            opacity: 0.06;
+            letter-spacing: 10px;
             pointer-events: none;
         }
         .hero-title {
@@ -349,7 +354,7 @@
             z-index: 1;
         }
 
-        /* BIG LOGIN BUTTONS ON HERO */
+        /* BIG LOGIN BUTTONS */
         .hero-actions {
             display: flex;
             justify-content: center;
@@ -420,8 +425,44 @@
             align-items: center;
             gap: 6px;
             font-weight: 500;
+            animation: badgeFloat 4s ease-in-out infinite;
+        }
+        .hero-badge:nth-child(2) { animation-delay: 0.5s; }
+        .hero-badge:nth-child(3) { animation-delay: 1s; }
+        .hero-badge:nth-child(4) { animation-delay: 1.5s; }
+        .hero-badge:nth-child(5) { animation-delay: 2s; }
+        @keyframes badgeFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
         .hero-badge .icon { font-size: 16px; }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 16px 12px;
+            text-align: center;
+        }
+        .stat-item .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--blue-accent);
+        }
+        .stat-item .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
 
         /* FEATURES GRID */
         .features-grid {
@@ -439,22 +480,69 @@
             text-align: center;
             transition: var(--transition);
             box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(91, 155, 213, 0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
         .feature-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-6px);
             box-shadow: var(--shadow-hover);
             border-color: var(--blue-mid);
         }
-        .feature-card .icon { font-size: 36px; margin-bottom: 10px; }
+        .feature-card .icon { font-size: 40px; margin-bottom: 10px; display: block; }
         .feature-card h4 {
             font-size: 16px;
             color: var(--text-primary);
             margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
         }
         .feature-card p {
             font-size: 13px;
             color: var(--text-muted);
             line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* QUICK LINKS */
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            padding: 10px 0;
+        }
+        .quick-link {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quick-link:hover {
+            background: var(--blue-accent);
+            color: #fff;
+            border-color: var(--blue-accent);
+            transform: translateY(-2px);
         }
 
         /* PRO SECTION */
@@ -467,6 +555,17 @@
             padding: 32px 28px;
             text-align: center;
             box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .pro-section::before {
+            content: '⚡';
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            font-size: 120px;
+            opacity: 0.04;
+            pointer-events: none;
         }
         .pro-section h2 {
             font-size: 30px;
@@ -698,7 +797,6 @@
             color: #fff;
         }
 
-        /* Video Grid */
         .video-grid {
             display: flex;
             flex-wrap: wrap;
@@ -778,7 +876,6 @@
             100% { height: 14px; }
         }
 
-        /* Chat */
         .chat-box {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -824,7 +921,6 @@
             background: var(--blue-accent);
         }
 
-        /* Emoji Bar */
         .emoji-bar {
             display: flex;
             gap: 14px;
@@ -845,7 +941,6 @@
         }
         .emoji-bar span:hover { transform: scale(1.4); }
 
-        /* Controls */
         .controls-row {
             display: flex;
             gap: 10px;
@@ -883,7 +978,6 @@
             border-color: #c0392b;
         }
 
-        /* Typing Row */
         .typing-row {
             display: flex;
             flex-direction: column;
@@ -944,7 +1038,6 @@
             box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
         }
 
-        /* Teacher Panel */
         .teacher-panel {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -1172,6 +1265,7 @@
             .auth-section { padding: 28px 20px; margin: 20px auto; }
             .modal-content { padding: 24px 18px; }
             .ai-bot .window { width: 280px; right: -10px; }
+            .stats-bar { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 480px) {
             .hero-title { font-size: 26px; }
@@ -1185,10 +1279,12 @@
             .typing-row .input-group button { font-size: 13px; padding: 10px 16px; }
             .modal-content { padding: 20px 16px; }
             .pro-input-group input { min-width: 100px; }
+            .stats-bar { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-item .number { font-size: 20px; }
         }
 
         /* Floating Emoji */
-        .floating-emoji {
+        .floating-emoji-reaction {
             position: fixed;
             bottom: 10%;
             font-size: 44px;
@@ -1202,7 +1298,6 @@
             100% { transform: translateY(-450px) scale(0.8) rotate(20deg); opacity: 0; }
         }
 
-        /* Credit */
         .credit {
             position: fixed;
             bottom: 14px;
@@ -1221,7 +1316,7 @@
         }
         .credit strong { color: var(--blue-dark); }
 
-        /* ---------- TEACHER DASHBOARD ---------- */
+        /* Teacher Dashboard */
         .teacher-dashboard-box {
             max-width: 500px;
             margin: 0 auto 30px;
@@ -1341,7 +1436,6 @@
             transform: translateY(-2px);
         }
 
-        /* Admin Tracking Table */
         .admin-table-wrap {
             margin-top: 16px;
             background: rgba(255, 255, 255, 0.7);
@@ -1390,7 +1484,6 @@
             background: #c0392b;
         }
 
-        /* Exam Question Block */
         .exam-question-block {
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid var(--blue-soft);
@@ -1437,7 +1530,6 @@
         .exam-question-block .opt-grid input { margin-bottom: 0; }
         .exam-question-block select { width: auto; display: inline-block; }
 
-        /* Gradebook */
         .gradebook-table-wrap {
             overflow-x: auto;
         }
@@ -1491,11 +1583,9 @@
 <body>
 
     <!-- ============================================================
-    ANIMATED BACKGROUND
+    ANIMATED EMOJI BACKGROUND
     ============================================================ -->
-    <div class="animated-bg" id="animatedBg">
-        <!-- Particles will be added by JavaScript -->
-    </div>
+    <div class="emoji-bg" id="emojiBg"></div>
 
     <!-- ============================================================
     LOADER
@@ -1508,10 +1598,13 @@
             <div class="loader-progress-bar" id="load-bar"></div>
         </div>
         <div class="loader-percent" id="load-text">0%</div>
-        <div class="loader-dots">
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
+        <div class="loader-emoji-row">
+            <span>📚</span>
+            <span>✏️</span>
+            <span>🎓</span>
+            <span>📝</span>
+            <span>📖</span>
+            <span>🏫</span>
         </div>
     </div>
 
@@ -1580,7 +1673,7 @@
         <div id="homepage-section">
             <div class="homepage">
 
-                <!-- HERO with BIG Login Buttons -->
+                <!-- HERO -->
                 <div class="hero">
                     <h1 class="hero-title">Welcome to <span>Nexus Learn</span></h1>
                     <p class="hero-subtitle">Virtual Educational Classroom Portal</p>
@@ -1611,27 +1704,66 @@
                     </div>
                 </div>
 
+                <!-- STATS BAR -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="number">10+</div>
+                        <div class="label">Classrooms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">50+</div>
+                        <div class="label">Students</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">100+</div>
+                        <div class="label">Exams Created</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="number">24/7</div>
+                        <div class="label">Availability</div>
+                    </div>
+                </div>
+
+                <!-- QUICK LINKS -->
+                <div class="quick-links">
+                    <span class="quick-link" onclick="showStudentLogin()">🎓 Join Class</span>
+                    <span class="quick-link" onclick="showTeacherLogin()">👨‍🏫 Teacher Dashboard</span>
+                    <span class="quick-link" onclick="showProPaymentModal()">⚡ Pro Upgrade</span>
+                    <span class="quick-link" onclick="toggleAIChat()">🤖 Ask AI</span>
+                    <span class="quick-link">📚 About Nexus</span>
+                </div>
+
                 <!-- Features -->
                 <div class="features-grid">
                     <div class="feature-card">
-                        <div class="icon">📹</div>
+                        <span class="icon">📹</span>
                         <h4>Live Video Conferencing</h4>
                         <p>Real-time video with up to 10 participants</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">💬</div>
+                        <span class="icon">💬</span>
                         <h4>Real-time Chat</h4>
                         <p>Instant messaging with emoji reactions</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">📝</div>
+                        <span class="icon">📝</span>
                         <h4>Dynamic Exam Engine</h4>
                         <p>Create and auto-grade exams instantly</p>
                     </div>
                     <div class="feature-card">
-                        <div class="icon">🛡️</div>
+                        <span class="icon">🛡️</span>
                         <h4>Secure Admin Controls</h4>
                         <p>Full teacher control over the classroom</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon">📊</span>
+                        <h4>Analytics Dashboard</h4>
+                        <p>Track student performance in real-time</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="icon">🎓</span>
+                        <h4>Pro Features</h4>
+                        <p>Unlock premium tools and unlimited access</p>
                     </div>
                 </div>
 
@@ -1645,6 +1777,7 @@
                         <span class="pro-tag">✅ Unlimited exams</span>
                         <span class="pro-tag">✅ Priority support</span>
                         <span class="pro-tag">✅ Pro badge</span>
+                        <span class="pro-tag">✅ Analytics</span>
                     </div>
                     <div class="pro-input-group">
                         <input type="text" id="pro-code-input" maxlength="14" placeholder="Enter Pro Code (NEXUS-XXXXXXXX)" style="text-transform:uppercase;">
@@ -1985,35 +2118,36 @@
     ============================================================ -->
     <script>
         // ============================================================
-        // ANIMATED BACKGROUND - PARTICLES
+        // ANIMATED EMOJI BACKGROUND
         // ============================================================
-        (function createBackground() {
-            const bg = document.getElementById('animatedBg');
-            // Create floating particles
+        (function createEmojiBackground() {
+            const bg = document.getElementById('emojiBg');
+            const emojis = ['📚', '✏️', '🎓', '📝', '📖', '🏫', '📐', '🔬', '🧪', '🌍', '💡', '🧮', '📊', '🎯', '🏆', '📌', '🖊️', '📓', '📒', '📕', '📗', '📘'];
+            
             for (let i = 0; i < 35; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const size = Math.random() * 20 + 6;
-                p.style.width = size + 'px';
-                p.style.height = size + 'px';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDuration = (Math.random() * 20 + 15) + 's';
-                p.style.animationDelay = (Math.random() * 10) + 's';
-                p.style.background = `rgba(180, 210, 240, ${Math.random() * 0.15 + 0.05})`;
-                bg.appendChild(p);
+                const el = document.createElement('div');
+                el.className = 'floating-emoji-item';
+                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                const size = Math.random() * 20 + 18;
+                el.style.fontSize = size + 'px';
+                el.style.left = Math.random() * 100 + '%';
+                el.style.animationDuration = (Math.random() * 25 + 20) + 's';
+                el.style.animationDelay = (Math.random() * 15) + 's';
+                el.style.opacity = Math.random() * 0.12 + 0.04;
+                bg.appendChild(el);
             }
-            // Create floating shapes
-            const shapes = ['◯', '△', '◇', '✧', '☁'];
-            for (let i = 0; i < 6; i++) {
+
+            // Add floating shapes
+            const shapes = ['📚', '✏️', '🎓', '📝', '📖', '🏫'];
+            for (let i = 0; i < 8; i++) {
                 const s = document.createElement('div');
-                s.className = 'shape';
+                s.className = 'shape-bg';
                 s.textContent = shapes[i % shapes.length];
-                s.style.fontSize = (Math.random() * 40 + 30) + 'px';
                 s.style.left = Math.random() * 80 + 10 + '%';
                 s.style.top = Math.random() * 80 + 10 + '%';
-                s.style.animationDelay = (Math.random() * 10) + 's';
-                s.style.animationDuration = (Math.random() * 20 + 20) + 's';
-                s.style.color = Math.random() > 0.5 ? 'var(--blue-soft)' : 'var(--beige-dark)';
+                s.style.animationDelay = (Math.random() * 15) + 's';
+                s.style.animationDuration = (Math.random() * 25 + 25) + 's';
+                s.style.color = Math.random() > 0.5 ? '#d4e2f0' : '#e8ddd0';
                 bg.appendChild(s);
             }
         })();
@@ -2027,6 +2161,15 @@
             reconnectionAttempts: 20,
             reconnectionDelay: 1000,
             timeout: 20000
+        });
+
+        // Socket connection debug
+        socket.on('connect', () => {
+            console.log('✅ Socket connected successfully!');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.log('❌ Socket connection error:', error);
         });
 
         // ============================================================
@@ -2187,7 +2330,7 @@
             const query = input.value.trim();
             if (!query) return;
             const msgs = document.getElementById('ai-messages');
-            msgs.innerHTML += `<div class="user">${query}</div>`;
+            msgs.innerHTML += '<div class="user">' + query + '</div>';
             socket.emit('ai_query', { query: query });
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
@@ -2199,7 +2342,7 @@
 
         socket.on('ai_response', (data) => {
             const msgs = document.getElementById('ai-messages');
-            msgs.innerHTML += `<div class="bot">${data.response}</div>`;
+            msgs.innerHTML += '<div class="bot">' + data.response + '</div>';
             msgs.scrollTop = msgs.scrollHeight;
         });
 
@@ -2213,7 +2356,7 @@
 
         function createFloatingEmoji(emoji) {
             const el = document.createElement('div');
-            el.className = 'floating-emoji';
+            el.className = 'floating-emoji-reaction';
             el.innerText = emoji;
             el.style.left = (Math.random() * 70 + 15) + '%';
             document.body.appendChild(el);
@@ -2221,13 +2364,17 @@
         }
 
         // ============================================================
-        // PRO FUNCTIONS
+        // PRO FUNCTIONS - FIXED
         // ============================================================
         function showProPaymentModal() {
             document.getElementById('pro-modal').classList.add('active');
             document.getElementById('pro-form-section').classList.remove('hidden');
             document.getElementById('pro-payment-details').classList.add('hidden');
             document.getElementById('pro-pending-status').classList.add('hidden');
+            
+            if (myUsername) {
+                document.getElementById('pro-full-name').value = myUsername;
+            }
         }
 
         function closeProPaymentModal() {
@@ -2238,13 +2385,30 @@
             const fullName = document.getElementById('pro-full-name').value.trim();
             const phone = document.getElementById('pro-phone').value.trim();
             const duration = document.getElementById('pro-duration').value;
-            if (!fullName || !phone) { alert('Please fill in all fields.'); return; }
+            
+            if (!fullName || !phone) { 
+                alert('Please fill in all fields.'); 
+                return; 
+            }
+            
+            const btn = document.querySelector('#pro-form-section button');
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Processing...';
+            btn.disabled = true;
+            
+            const username = myUsername || 'guest';
+            
             socket.emit('request_pro_activation', {
-                username: myUsername || 'guest',
+                username: username,
                 full_name: fullName,
                 phone: phone,
                 duration: duration
             });
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 3000);
         }
 
         socket.on('pro_activation_response', (data) => {
@@ -2253,12 +2417,22 @@
                 document.getElementById('pro-form-section').classList.add('hidden');
                 document.getElementById('pro-payment-details').classList.remove('hidden');
             } else {
-                alert(data.message);
+                alert(data.message || 'Something went wrong. Please try again.');
             }
         });
 
         function copyPaymentDetail(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = '✓';
+                setTimeout(() => { btn.innerText = orig; }, 2000);
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
                 const orig = btn.innerText;
                 btn.innerText = '✓';
                 setTimeout(() => { btn.innerText = orig; }, 2000);
@@ -2268,6 +2442,8 @@
         function confirmProPayment() {
             if (currentProRequestId) {
                 socket.emit('confirm_pro_payment', { request_id: currentProRequestId });
+            } else {
+                alert('Please submit your details first.');
             }
         }
 
@@ -2283,9 +2459,16 @@
 
         function activateProCode() {
             const code = document.getElementById('pro-code-input').value.trim().toUpperCase();
-            if (!code) { alert('Please enter your Pro activation code.'); return; }
+            if (!code) { 
+                alert('Please enter your Pro activation code.'); 
+                return; 
+            }
+            if (!myUsername) {
+                alert('Please log in first to activate Pro.');
+                return;
+            }
             socket.emit('activate_pro_code', {
-                username: myUsername || 'user',
+                username: myUsername,
                 activation_code: code
             });
         }
@@ -3133,8 +3316,9 @@
             if (!data.success) alert(data.message);
         });
 
-        console.log('🚀 Nexus Learn loaded successfully!');
-        console.log('🎨 Light Blue & Beige Premium Theme with Big Dashboard');
+        console.log('🚀 Nexus Learn Ultimate Edition loaded!');
+        console.log('📚 Moving emoji background activated!');
+        console.log('🎨 Light Blue & Beige Premium Theme');
     </script>
 </body>
 </html>
