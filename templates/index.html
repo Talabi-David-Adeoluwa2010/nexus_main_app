@@ -6,57 +6,106 @@
     <title>NEXUS LEARN - Virtual Classroom Portal</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        /* ========================================
-           BROWN & CREAM PREMIUM THEME
-           ======================================== */
-        :root {
-            --bg-primary: #f5efe6;
-            --bg-secondary: #e8dccc;
-            --bg-card: #faf7f2;
-            --text-primary: #3d2b1f;
-            --text-secondary: #5c4033;
-            --text-muted: #8b7355;
-            --gold: #c9a96e;
-            --gold-light: #e8d5b5;
-            --gold-dark: #a8894a;
-            --brown-dark: #3d2b1f;
-            --brown-medium: #5c4033;
-            --brown-light: #8b7355;
-            --cream: #f5efe6;
-            --cream-dark: #e8dccc;
-            --border-color: #d4c5a9;
-            --shadow: 0 8px 32px rgba(61, 43, 31, 0.15);
-            --shadow-hover: 0 12px 48px rgba(61, 43, 31, 0.25);
-            --radius: 16px;
-            --radius-sm: 8px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
+        /* ============================================================
+           LIGHT BLUE & BEIGE PREMIUM THEME - WITH BIG DASHBOARD
+           ============================================================ */
+        
+        /* ---------- RESET & BASE ---------- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         html, body {
             width: 100%;
             min-height: 100vh;
-            background: var(--bg-primary);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(201, 169, 110, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 90% 80%, rgba(201, 169, 110, 0.05) 0%, transparent 50%);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', 'Georgia', serif;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             overflow-x: hidden;
             position: relative;
         }
 
-        /* ========================================
-           PREMIUM LOADER
-           ======================================== */
+        /* ---------- ANIMATED BACKGROUND ---------- */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background: linear-gradient(135deg, #e8f0fe 0%, #f5efe6 40%, #d4e2f0 70%, #f0ebe3 100%);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease-in-out infinite;
+            overflow: hidden;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating Particles */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(180, 210, 240, 0.3);
+            pointer-events: none;
+            animation: floatParticle linear infinite;
+        }
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Floating Shapes */
+        .shape {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.08;
+            animation: floatShape 25s ease-in-out infinite alternate;
+        }
+        @keyframes floatShape {
+            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            33% { transform: translate(30px, -40px) rotate(120deg) scale(1.1); }
+            66% { transform: translate(-20px, 30px) rotate(240deg) scale(0.9); }
+            100% { transform: translate(10px, -20px) rotate(360deg) scale(1.05); }
+        }
+
+        /* ---------- COLOR VARIABLES ---------- */
+        :root {
+            --blue-light: #e8f0fe;
+            --blue-soft: #d4e2f0;
+            --blue-mid: #a8c8e8;
+            --blue-accent: #5b9bd5;
+            --blue-dark: #2c6b9e;
+            --beige: #f5efe6;
+            --beige-dark: #e8ddd0;
+            --beige-warm: #f0ebe3;
+            --brown-soft: #c4b5a5;
+            --brown-medium: #8b7a6b;
+            --brown-dark: #5c4a3b;
+            --text-primary: #2c3e50;
+            --text-secondary: #5d6d7e;
+            --text-muted: #85929e;
+            --white: #ffffff;
+            --shadow: 0 8px 40px rgba(44, 62, 80, 0.10);
+            --shadow-hover: 0 16px 60px rgba(44, 62, 80, 0.18);
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ---------- SCROLLBAR ---------- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--beige); }
+        ::-webkit-scrollbar-thumb { background: var(--blue-mid); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--blue-accent); }
+
+        /* ---------- LOADER ---------- */
         #loader-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, #e8f0fe, #f5efe6);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -70,24 +119,21 @@
             visibility: hidden;
             pointer-events: none;
         }
-
         .loader-icon {
-            font-size: 72px;
-            margin-bottom: 20px;
-            animation: pulse-icon 1.5s ease-in-out infinite;
+            font-size: 80px;
+            margin-bottom: 16px;
+            animation: pulseIcon 1.8s ease-in-out infinite;
         }
-        @keyframes pulse-icon {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(-5deg); }
         }
-
         .loader-title {
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 800;
             color: var(--text-primary);
-            letter-spacing: 6px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, var(--brown-dark), var(--gold-dark));
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, var(--blue-dark), var(--blue-accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -95,55 +141,52 @@
         .loader-subtitle {
             font-size: 16px;
             color: var(--text-muted);
-            letter-spacing: 3px;
-            margin-bottom: 30px;
+            letter-spacing: 4px;
+            margin-bottom: 28px;
             font-weight: 300;
         }
-
-        .loader-progress-container {
+        .loader-progress {
             width: 100%;
-            max-width: 320px;
+            max-width: 300px;
             height: 4px;
-            background: var(--cream-dark);
-            border-radius: 2px;
+            background: var(--beige-dark);
+            border-radius: 4px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .loader-progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--gold-light), var(--gold), var(--gold-dark));
-            border-radius: 2px;
+            background: linear-gradient(90deg, var(--blue-mid), var(--blue-accent), var(--blue-dark));
+            border-radius: 4px;
             transition: width 0.3s ease;
         }
-        .loader-percentage {
-            font-family: 'Georgia', serif;
+        .loader-percent {
             font-size: 14px;
             color: var(--text-muted);
             letter-spacing: 2px;
+            font-weight: 300;
         }
         .loader-dots {
             display: flex;
-            gap: 8px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 18px;
         }
         .loader-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: var(--gold);
-            animation: dot-bounce 1.4s ease-in-out infinite;
+            background: var(--blue-accent);
+            animation: dotBounce 1.4s ease-in-out infinite;
         }
-        .loader-dot:nth-child(2) { animation-delay: 0.2s; }
-        .loader-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes dot-bounce {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+        .loader-dot:nth-child(2) { animation-delay: 0.2s; background: var(--blue-mid); }
+        .loader-dot:nth-child(3) { animation-delay: 0.4s; background: var(--blue-soft); }
+        @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(0.5); opacity: 0.3; }
             40% { transform: scale(1); opacity: 1; }
         }
 
-        /* ========================================
-           TOP NAVIGATION DASHBOARD
-           ======================================== */
+        /* ---------- TOP NAV - BIG DASHBOARD ---------- */
         .top-nav {
             position: fixed;
             top: 0;
@@ -153,349 +196,369 @@
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 12px 24px;
+            border-bottom: 2px solid rgba(180, 210, 240, 0.3);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 20px rgba(61, 43, 31, 0.08);
+            box-shadow: 0 4px 30px rgba(44, 62, 80, 0.06);
         }
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             text-decoration: none;
             cursor: pointer;
         }
-        .nav-brand-icon {
-            font-size: 28px;
-        }
+        .nav-brand-icon { font-size: 36px; }
         .nav-brand-text {
-            font-size: 20px;
+            font-size: 28px;
             font-weight: 800;
             color: var(--text-primary);
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
-        .nav-brand-text span {
-            color: var(--gold);
-        }
+        .nav-brand-text span { color: var(--blue-accent); }
 
         .nav-links {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
             flex-wrap: wrap;
         }
         .nav-btn {
-            padding: 8px 18px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
+            padding: 14px 28px;
+            border: 2px solid transparent;
+            border-radius: 50px;
             background: transparent;
             color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 500;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .nav-btn:hover {
-            background: var(--gold);
-            color: #fff;
-            border-color: var(--gold);
+            background: var(--blue-light);
+            border-color: var(--blue-mid);
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(201, 169, 110, 0.3);
-        }
-        .nav-btn.primary {
-            background: var(--gold);
-            color: #fff;
-            border-color: var(--gold);
-        }
-        .nav-btn.primary:hover {
-            background: var(--gold-dark);
-            border-color: var(--gold-dark);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.15);
         }
         .nav-btn.active {
-            background: var(--brown-dark);
+            background: var(--blue-accent);
             color: #fff;
-            border-color: var(--brown-dark);
+            border-color: var(--blue-accent);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
         }
+        .nav-btn.active:hover {
+            background: var(--blue-dark);
+            border-color: var(--blue-dark);
+        }
+        .nav-btn .icon { font-size: 20px; }
         .nav-btn .badge {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
             border-radius: 50%;
-            padding: 1px 7px;
-            font-size: 10px;
-            margin-left: 4px;
+            padding: 1px 10px;
+            font-size: 12px;
+            margin-left: 2px;
         }
         .nav-btn.pro-btn {
-            border-color: var(--gold);
-            color: var(--gold-dark);
+            border-color: var(--blue-mid);
+            color: var(--blue-dark);
         }
         .nav-btn.pro-btn:hover {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
+            border-color: var(--blue-accent);
+        }
+        .nav-btn.pro-btn.active-pro {
+            background: linear-gradient(135deg, var(--blue-accent), var(--blue-dark));
+            color: #fff;
+            border-color: var(--blue-dark);
         }
 
-        /* ========================================
-           MAIN CONTAINER
-           ======================================== */
+        /* ---------- MAIN CONTAINER ---------- */
         .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 80px 20px 30px;
             position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 100px 24px 40px;
         }
 
-        /* ========================================
-           HOMEPAGE
-           ======================================== */
+        /* ---------- HOMEPAGE ---------- */
         .homepage {
             display: flex;
             flex-direction: column;
-            gap: 40px;
-            padding-top: 20px;
+            gap: 36px;
         }
 
-        /* Hero Section */
+        /* HERO SECTION - WITH BIG LOGIN BUTTONS */
         .hero {
             text-align: center;
-            padding: 60px 20px 40px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(232, 220, 204, 0.3));
+            padding: 50px 30px 40px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: var(--radius);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         }
         .hero::before {
             content: '';
             position: absolute;
-            top: -50%;
+            top: -60%;
             right: -20%;
-            width: 60%;
+            width: 70%;
             height: 200%;
-            background: radial-gradient(circle, rgba(201, 169, 110, 0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(180, 210, 240, 0.15) 0%, transparent 70%);
             pointer-events: none;
         }
         .hero-title {
-            font-size: 56px;
+            font-size: 60px;
             font-weight: 800;
-            letter-spacing: 4px;
+            letter-spacing: 6px;
             color: var(--text-primary);
             position: relative;
             z-index: 1;
         }
-        .hero-title span {
-            color: var(--gold);
-        }
+        .hero-title span { color: var(--blue-accent); }
         .hero-subtitle {
-            font-size: 18px;
+            font-size: 20px;
             color: var(--text-secondary);
-            letter-spacing: 3px;
-            margin: 10px 0 20px;
+            letter-spacing: 4px;
+            margin: 10px 0 16px;
             font-weight: 300;
             position: relative;
             z-index: 1;
         }
-        .hero-description {
+        .hero-desc {
             max-width: 600px;
-            margin: 0 auto 30px;
-            font-size: 15px;
-            line-height: 1.8;
+            margin: 0 auto 28px;
+            font-size: 16px;
+            line-height: 1.9;
             color: var(--text-muted);
             position: relative;
             z-index: 1;
         }
-        .hero-badges {
+
+        /* BIG LOGIN BUTTONS ON HERO */
+        .hero-actions {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 24px;
             flex-wrap: wrap;
             position: relative;
             z-index: 1;
         }
+        .hero-btn {
+            padding: 18px 44px;
+            border: none;
+            border-radius: 60px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            letter-spacing: 0.5px;
+        }
+        .hero-btn .icon { font-size: 28px; }
+        .hero-btn.student {
+            background: linear-gradient(135deg, #5b9bd5, #2c6b9e);
+            color: #fff;
+        }
+        .hero-btn.student:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(91, 155, 213, 0.35);
+        }
+        .hero-btn.teacher {
+            background: linear-gradient(135deg, #c4b5a5, #8b7a6b);
+            color: #fff;
+        }
+        .hero-btn.teacher:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(139, 122, 107, 0.35);
+        }
+        .hero-btn.pro-hero {
+            background: linear-gradient(135deg, #f5efe6, #e8ddd0);
+            color: var(--text-primary);
+            border: 2px solid var(--blue-mid);
+        }
+        .hero-btn.pro-hero:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(180, 210, 240, 0.4);
+        }
+
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            position: relative;
+            z-index: 1;
+        }
         .hero-badge {
-            background: rgba(255,255,255,0.7);
-            border: 1px solid var(--border-color);
-            padding: 6px 18px;
-            border-radius: 30px;
-            font-size: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(180, 210, 240, 0.3);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 13px;
             color: var(--text-secondary);
             display: flex;
             align-items: center;
             gap: 6px;
+            font-weight: 500;
         }
         .hero-badge .icon { font-size: 16px; }
 
-        /* Quick Action Cards */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-        }
-        .quick-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 30px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-        }
-        .quick-card:hover {
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--gold);
-        }
-        .quick-card .icon { font-size: 40px; margin-bottom: 12px; }
-        .quick-card h3 {
-            font-size: 16px;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-        }
-        .quick-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-        .quick-card .arrow {
-            display: inline-block;
-            margin-top: 12px;
-            color: var(--gold);
-            font-weight: bold;
-            transition: var(--transition);
-        }
-        .quick-card:hover .arrow {
-            transform: translateX(4px);
-        }
-
-        /* Features Grid */
+        /* FEATURES GRID */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
         }
-        .feature-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+        .feature-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: var(--radius-sm);
-            padding: 20px 16px;
+            padding: 24px 20px;
             text-align: center;
             transition: var(--transition);
+            box-shadow: var(--shadow);
         }
-        .feature-item:hover {
-            border-color: var(--gold);
-            transform: translateY(-3px);
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--blue-mid);
         }
-        .feature-item .icon { font-size: 28px; margin-bottom: 8px; }
-        .feature-item h4 {
-            font-size: 14px;
+        .feature-card .icon { font-size: 36px; margin-bottom: 10px; }
+        .feature-card h4 {
+            font-size: 16px;
             color: var(--text-primary);
             margin-bottom: 4px;
         }
-        .feature-item p {
-            font-size: 12px;
+        .feature-card p {
+            font-size: 13px;
             color: var(--text-muted);
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
-        /* Pro Section */
+        /* PRO SECTION */
         .pro-section {
-            background: linear-gradient(135deg, var(--bg-card), var(--cream-dark));
-            border: 2px solid var(--gold);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid var(--blue-mid);
             border-radius: var(--radius);
-            padding: 30px;
+            padding: 32px 28px;
             text-align: center;
+            box-shadow: var(--shadow);
         }
         .pro-section h2 {
-            font-size: 28px;
-            color: var(--brown-dark);
-            margin-bottom: 10px;
+            font-size: 30px;
+            color: var(--text-primary);
+            margin-bottom: 6px;
         }
-        .pro-section h2 span { color: var(--gold); }
+        .pro-section h2 span { color: var(--blue-accent); }
         .pro-section p {
             color: var(--text-muted);
             max-width: 500px;
-            margin: 0 auto 20px;
+            margin: 0 auto 18px;
             line-height: 1.6;
+            font-size: 15px;
         }
         .pro-features {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 18px;
         }
-        .pro-feature-tag {
-            background: rgba(201, 169, 110, 0.12);
-            border: 1px solid rgba(201, 169, 110, 0.2);
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 12px;
+        .pro-tag {
+            background: rgba(91, 155, 213, 0.08);
+            border: 1px solid rgba(91, 155, 213, 0.15);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 13px;
             color: var(--text-secondary);
+            font-weight: 500;
         }
         .pro-input-group {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             max-width: 500px;
             margin: 0 auto;
         }
         .pro-input-group input {
             flex: 1;
             min-width: 180px;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: rgba(255,255,255,0.7);
-            font-size: 14px;
+            padding: 14px 20px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
             color: var(--text-primary);
             font-family: inherit;
             outline: none;
             transition: var(--transition);
         }
         .pro-input-group input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.2);
+            border-color: var(--blue-accent);
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.12);
         }
         .pro-input-group button {
-            padding: 12px 24px;
-            background: var(--gold);
+            padding: 14px 32px;
+            background: var(--blue-accent);
             color: #fff;
             border: none;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
         }
         .pro-input-group button:hover {
-            background: var(--gold-dark);
+            background: var(--blue-dark);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
         }
 
-        /* ========================================
-           AUTH SECTIONS (Student/Teacher Login)
-           ======================================== */
+        /* ---------- AUTH SECTIONS ---------- */
         .auth-section {
             max-width: 480px;
-            margin: 40px auto;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: var(--radius);
-            padding: 40px 32px;
+            padding: 40px 36px;
             box-shadow: var(--shadow);
         }
         .auth-section h2 {
             text-align: center;
-            font-size: 24px;
+            font-size: 26px;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
-        .auth-section h2 span { color: var(--gold); }
+        .auth-section h2 span { color: var(--blue-accent); }
         .auth-section .sub {
             text-align: center;
             font-size: 14px;
@@ -505,145 +568,147 @@
         .auth-section .input-group {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             margin-bottom: 20px;
         }
         .auth-section input {
-            padding: 14px 16px;
-            border: 1px solid var(--border-color);
+            padding: 16px 18px;
+            border: 2px solid var(--blue-soft);
             border-radius: var(--radius-sm);
-            background: rgba(255,255,255,0.6);
-            font-size: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
             color: var(--text-primary);
             font-family: inherit;
             outline: none;
             transition: var(--transition);
         }
         .auth-section input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
+            border-color: var(--blue-accent);
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
         }
         .auth-section .btn {
-            padding: 14px;
-            background: var(--gold);
+            padding: 16px;
+            background: var(--blue-accent);
             color: #fff;
             border: none;
             border-radius: var(--radius-sm);
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
             width: 100%;
         }
         .auth-section .btn:hover {
-            background: var(--gold-dark);
+            background: var(--blue-dark);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
         }
         .auth-section .link {
             text-align: center;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-muted);
             margin-top: 16px;
             cursor: pointer;
             transition: var(--transition);
         }
-        .auth-section .link:hover { color: var(--gold); }
+        .auth-section .link:hover { color: var(--blue-accent); }
         .hidden { display: none !important; }
 
-        /* ========================================
-           CLASSROOM
-           ======================================== */
-        .classroom-container {
-            padding-top: 90px;
-        }
+        /* ---------- CLASSROOM ---------- */
+        .classroom-container { padding-top: 100px; }
         .classroom-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: var(--radius);
-            padding: 16px 24px;
+            padding: 18px 24px;
             margin-bottom: 20px;
             box-shadow: var(--shadow);
         }
         .classroom-header .info h2 {
-            font-size: 20px;
+            font-size: 22px;
             color: var(--text-primary);
         }
         .classroom-header .info p {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-muted);
         }
         .classroom-header .code-badge {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: var(--cream);
-            border: 1px solid var(--border-color);
-            padding: 6px 14px;
-            border-radius: 30px;
+            gap: 10px;
+            background: var(--blue-light);
+            border: 1px solid var(--blue-soft);
+            padding: 8px 18px;
+            border-radius: 50px;
         }
         .classroom-header .code-badge span {
             font-family: monospace;
             font-weight: bold;
-            color: var(--gold-dark);
-            font-size: 14px;
+            color: var(--blue-dark);
+            font-size: 16px;
+            letter-spacing: 1px;
         }
         .classroom-header .code-badge button {
             background: none;
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 4px;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
             transition: var(--transition);
         }
         .classroom-header .code-badge button:hover {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
         }
         .classroom-header .actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .classroom-header .actions button {
-            padding: 8px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
+            padding: 10px 20px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
             background: transparent;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 600;
             color: var(--text-secondary);
         }
         .classroom-header .actions button:hover {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
-            border-color: var(--gold);
+            border-color: var(--blue-accent);
         }
         .classroom-header .actions button.danger:hover {
-            background: #c0392b;
-            border-color: #c0392b;
+            background: #e74c3c;
+            border-color: #e74c3c;
             color: #fff;
         }
 
+        /* Video Grid */
         .video-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 16px;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .video-card {
-            background: var(--brown-dark);
-            border: 2px solid var(--border-color);
+            background: var(--blue-soft);
+            border: 2px solid var(--blue-mid);
             border-radius: var(--radius-sm);
             width: 220px;
             height: 170px;
@@ -661,13 +726,14 @@
             position: absolute;
             bottom: 8px;
             left: 8px;
-            background: rgba(61, 43, 31, 0.85);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            color: var(--gold-light);
-            border: 1px solid rgba(201, 169, 110, 0.2);
+            background: rgba(44, 62, 80, 0.85);
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            color: var(--blue-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 2;
+            font-weight: 500;
         }
         .video-card .overlay {
             position: absolute;
@@ -675,16 +741,16 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--brown-dark);
+            background: var(--blue-soft);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: var(--text-muted);
-            font-size: 12px;
+            font-size: 13px;
             z-index: 1;
         }
-        .video-card .overlay span { font-size: 32px; margin-bottom: 4px; }
+        .video-card .overlay span { font-size: 36px; margin-bottom: 4px; }
         .video-card .sound-wave {
             position: absolute;
             bottom: 8px;
@@ -692,41 +758,45 @@
             display: flex;
             gap: 3px;
             align-items: flex-end;
-            height: 16px;
-            background: rgba(61, 43, 31, 0.7);
-            padding: 4px 6px;
-            border-radius: 4px;
+            height: 18px;
+            background: rgba(44, 62, 80, 0.6);
+            padding: 4px 8px;
+            border-radius: 6px;
             z-index: 2;
         }
         .video-card .sound-wave .bar {
             width: 3px;
-            background: var(--gold);
+            background: var(--blue-light);
             border-radius: 2px;
-            animation: wave 0.4s ease-in-out infinite alternate;
+            animation: waveAnim 0.4s ease-in-out infinite alternate;
         }
         .video-card .sound-wave .bar:nth-child(2) { animation-delay: 0.1s; }
         .video-card .sound-wave .bar:nth-child(3) { animation-delay: 0.2s; }
         .video-card .sound-wave.inactive .bar { animation: none; height: 4px; opacity: 0.3; }
-        @keyframes wave {
+        @keyframes waveAnim {
             0% { height: 4px; }
             100% { height: 14px; }
         }
 
+        /* Chat */
         .chat-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: var(--radius-sm);
             height: 200px;
             overflow-y: auto;
             padding: 16px;
             margin-bottom: 12px;
+            box-shadow: var(--shadow);
         }
         .chat-box .msg {
             margin-bottom: 8px;
-            font-size: 13px;
+            font-size: 14px;
             line-height: 1.5;
         }
-        .chat-box .msg strong { color: var(--gold-dark); }
+        .chat-box .msg strong { color: var(--blue-dark); }
         .chat-box .msg .img-container {
             display: inline-block;
             position: relative;
@@ -736,42 +806,46 @@
             max-width: 200px;
             max-height: 150px;
             border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--blue-soft);
         }
         .chat-box .msg .img-container .zoom-btn {
             position: absolute;
             top: 4px;
             right: 4px;
-            background: rgba(61, 43, 31, 0.8);
-            color: var(--gold-light);
+            background: rgba(44, 62, 80, 0.8);
+            color: #fff;
             border: none;
-            padding: 2px 8px;
+            padding: 2px 10px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: 11px;
             cursor: pointer;
         }
         .chat-box .msg .img-container .zoom-btn:hover {
-            background: var(--gold);
-            color: #fff;
+            background: var(--blue-accent);
         }
 
+        /* Emoji Bar */
         .emoji-bar {
             display: flex;
-            gap: 12px;
+            gap: 14px;
             justify-content: center;
-            padding: 8px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 60px;
             margin-bottom: 12px;
         }
         .emoji-bar span {
-            font-size: 20px;
+            font-size: 24px;
             cursor: pointer;
             transition: var(--transition);
+            padding: 4px;
         }
-        .emoji-bar span:hover { transform: scale(1.3); }
+        .emoji-bar span:hover { transform: scale(1.4); }
 
+        /* Controls */
         .controls-row {
             display: flex;
             gap: 10px;
@@ -780,31 +854,36 @@
             justify-content: center;
         }
         .controls-row button {
-            padding: 10px 18px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            background: var(--bg-card);
+            padding: 12px 22px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 600;
             color: var(--text-secondary);
         }
         .controls-row button:hover {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
-            border-color: var(--gold);
+            border-color: var(--blue-accent);
+            transform: translateY(-2px);
         }
         .controls-row button.inactive {
-            background: #c0392b;
-            color: #fff;
-            border-color: #c0392b;
-        }
-        .controls-row button.inactive:hover {
             background: #e74c3c;
+            color: #fff;
             border-color: #e74c3c;
         }
+        .controls-row button.inactive:hover {
+            background: #c0392b;
+            border-color: #c0392b;
+        }
 
+        /* Typing Row */
         .typing-row {
             display: flex;
             flex-direction: column;
@@ -816,57 +895,61 @@
             align-items: center;
         }
         .typing-row .input-group .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
             white-space: nowrap;
         }
         .typing-row .input-group .badge.student {
-            background: var(--cream-dark);
-            color: var(--text-secondary);
+            background: var(--blue-light);
+            color: var(--blue-dark);
         }
         .typing-row .input-group .badge.teacher {
-            background: var(--gold-light);
-            color: var(--brown-dark);
+            background: var(--beige-dark);
+            color: var(--brown-medium);
         }
         .typing-row .input-group input {
             flex: 1;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            background: rgba(255,255,255,0.6);
-            font-size: 14px;
+            padding: 12px 18px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
             color: var(--text-primary);
             font-family: inherit;
             outline: none;
             transition: var(--transition);
         }
         .typing-row .input-group input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
+            border-color: var(--blue-accent);
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
         }
         .typing-row .input-group button {
-            padding: 10px 20px;
-            background: var(--gold);
+            padding: 12px 24px;
+            background: var(--blue-accent);
             color: #fff;
             border: none;
-            border-radius: 30px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
-            font-weight: 600;
             transition: var(--transition);
             font-family: inherit;
             white-space: nowrap;
         }
         .typing-row .input-group button:hover {
-            background: var(--gold-dark);
+            background: var(--blue-dark);
             transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
         }
 
-        /* Teacher Admin Panel */
+        /* Teacher Panel */
         .teacher-panel {
-            background: rgba(201, 169, 110, 0.08);
-            border: 1px solid var(--gold);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid var(--blue-mid);
             border-radius: var(--radius-sm);
             padding: 16px 20px;
             margin-bottom: 16px;
@@ -874,46 +957,46 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            box-shadow: var(--shadow);
         }
         .teacher-panel .title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--brown-dark);
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
         }
-        .teacher-panel .title span { color: var(--gold); }
+        .teacher-panel .title span { color: var(--blue-accent); }
         .teacher-panel .actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .teacher-panel .actions button {
-            padding: 6px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            background: var(--bg-card);
+            padding: 8px 18px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.5);
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--text-secondary);
         }
         .teacher-panel .actions button:hover {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
-            border-color: var(--gold);
+            border-color: var(--blue-accent);
         }
 
-        /* ========================================
-           MODALS
-           ======================================== */
+        /* ---------- MODALS ---------- */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(61, 43, 31, 0.8);
+            background: rgba(44, 62, 80, 0.5);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 2000;
@@ -924,14 +1007,16 @@
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: var(--radius);
             max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            padding: 32px;
+            padding: 36px 32px;
             box-shadow: var(--shadow-hover);
             position: relative;
         }
@@ -939,59 +1024,59 @@
             position: absolute;
             top: 16px;
             right: 20px;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
             color: var(--text-muted);
             transition: var(--transition);
             background: none;
             border: none;
         }
-        .modal-content .close:hover { color: var(--brown-dark); }
+        .modal-content .close:hover { color: var(--text-primary); }
         .modal-content h2 {
-            font-size: 22px;
+            font-size: 24px;
             color: var(--text-primary);
             margin-bottom: 4px;
         }
-        .modal-content h2 span { color: var(--gold); }
+        .modal-content h2 span { color: var(--blue-accent); }
         .modal-content .sub {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--text-muted);
             margin-bottom: 20px;
         }
 
-        /* ========================================
-           AI BOT
-           ======================================== */
+        /* ---------- AI BOT ---------- */
         .ai-bot {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            bottom: 28px;
+            right: 28px;
             z-index: 1500;
         }
         .ai-bot .toggle {
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
             border: none;
-            font-size: 28px;
+            font-size: 30px;
             cursor: pointer;
             box-shadow: var(--shadow-hover);
             transition: var(--transition);
         }
         .ai-bot .toggle:hover {
             transform: scale(1.1);
-            box-shadow: 0 8px 32px rgba(201, 169, 110, 0.4);
+            box-shadow: 0 8px 40px rgba(91, 155, 213, 0.4);
         }
         .ai-bot .window {
             position: absolute;
-            bottom: 72px;
+            bottom: 76px;
             right: 0;
-            width: 300px;
-            height: 380px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            width: 320px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: var(--radius);
             box-shadow: var(--shadow-hover);
             display: none;
@@ -1000,142 +1085,429 @@
         }
         .ai-bot .window.active { display: flex; }
         .ai-bot .window .header {
-            background: var(--gold);
+            background: var(--blue-accent);
             color: #fff;
-            padding: 12px 16px;
+            padding: 14px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 700;
         }
         .ai-bot .window .header button {
             background: none;
             border: none;
             color: #fff;
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
         }
         .ai-bot .window .messages {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
-            font-size: 13px;
+            font-size: 14px;
         }
         .ai-bot .window .messages .bot {
-            background: var(--cream);
-            padding: 8px 12px;
-            border-radius: 12px 12px 12px 4px;
+            background: var(--blue-light);
+            padding: 10px 14px;
+            border-radius: 16px 16px 16px 4px;
             margin-bottom: 8px;
             color: var(--text-secondary);
         }
         .ai-bot .window .messages .user {
             text-align: right;
-            padding: 8px 12px;
-            background: var(--gold-light);
-            border-radius: 12px 12px 4px 12px;
+            padding: 10px 14px;
+            background: var(--blue-accent);
+            color: #fff;
+            border-radius: 16px 16px 4px 16px;
             margin-bottom: 8px;
-            color: var(--brown-dark);
         }
         .ai-bot .window .input-row {
             display: flex;
-            border-top: 1px solid var(--border-color);
-            padding: 8px;
-            gap: 8px;
+            border-top: 1px solid var(--blue-soft);
+            padding: 10px 12px;
+            gap: 10px;
         }
         .ai-bot .window .input-row input {
             flex: 1;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 30px;
-            background: rgba(255,255,255,0.6);
+            padding: 10px 16px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.5);
             font-family: inherit;
             outline: none;
-            font-size: 13px;
+            font-size: 14px;
         }
         .ai-bot .window .input-row input:focus {
-            border-color: var(--gold);
+            border-color: var(--blue-accent);
         }
         .ai-bot .window .input-row button {
-            padding: 8px 16px;
-            background: var(--gold);
+            padding: 10px 20px;
+            background: var(--blue-accent);
             color: #fff;
             border: none;
-            border-radius: 30px;
+            border-radius: 50px;
+            font-weight: 700;
             cursor: pointer;
-            font-weight: 600;
+            font-family: inherit;
         }
 
-        /* ========================================
-           RESPONSIVE
-           ======================================== */
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 992px) {
+            .hero-title { font-size: 42px; }
+            .hero-btn { padding: 14px 32px; font-size: 17px; }
+            .nav-btn { padding: 10px 20px; font-size: 14px; }
+            .nav-brand-text { font-size: 22px; }
+        }
         @media (max-width: 768px) {
-            .top-nav { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
-            .nav-brand-text { font-size: 16px; }
-            .nav-links { gap: 4px; }
-            .nav-btn { padding: 6px 12px; font-size: 11px; }
-            .hero-title { font-size: 32px; }
-            .hero-subtitle { font-size: 14px; }
-            .quick-actions { grid-template-columns: 1fr 1fr; }
-            .features-grid { grid-template-columns: 1fr 1fr; }
+            .top-nav { padding: 12px 16px; flex-wrap: wrap; gap: 10px; justify-content: center; }
+            .nav-links { justify-content: center; gap: 6px; }
+            .nav-btn { padding: 8px 14px; font-size: 12px; }
+            .nav-btn .icon { font-size: 14px; }
+            .hero-title { font-size: 32px; letter-spacing: 2px; }
+            .hero-btn { padding: 12px 24px; font-size: 15px; }
+            .hero-btn .icon { font-size: 20px; }
+            .hero-subtitle { font-size: 16px; }
+            .container { padding: 80px 12px 20px; }
             .video-card { width: 160px; height: 130px; }
-            .auth-section { padding: 24px 18px; margin: 20px auto; }
-            .modal-content { padding: 24px; margin: 10px; }
-            .ai-bot .window { width: 260px; right: -20px; }
-            .container { padding: 70px 12px 20px; }
+            .auth-section { padding: 28px 20px; margin: 20px auto; }
+            .modal-content { padding: 24px 18px; }
+            .ai-bot .window { width: 280px; right: -10px; }
         }
         @media (max-width: 480px) {
-            .quick-actions { grid-template-columns: 1fr; }
-            .features-grid { grid-template-columns: 1fr; }
-            .video-card { width: 140px; height: 110px; }
             .hero-title { font-size: 26px; }
-            .nav-btn { font-size: 10px; padding: 4px 10px; }
-            .pro-input-group input { min-width: 120px; }
+            .hero-btn { padding: 10px 18px; font-size: 13px; }
+            .hero-btn .icon { font-size: 16px; }
+            .nav-btn { font-size: 10px; padding: 6px 10px; }
+            .nav-brand-text { font-size: 18px; }
+            .video-card { width: 130px; height: 110px; }
+            .controls-row button { font-size: 12px; padding: 8px 14px; }
+            .typing-row .input-group input { font-size: 13px; padding: 10px 14px; }
+            .typing-row .input-group button { font-size: 13px; padding: 10px 16px; }
+            .modal-content { padding: 20px 16px; }
+            .pro-input-group input { min-width: 100px; }
         }
 
         /* Floating Emoji */
         .floating-emoji {
             position: fixed;
             bottom: 10%;
-            font-size: 40px;
+            font-size: 44px;
             pointer-events: none;
             z-index: 3000;
-            animation: float-up 2.5s ease-out forwards;
+            animation: floatUp 2.5s ease-out forwards;
         }
-        @keyframes float-up {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-50px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-400px) scale(0.8); opacity: 0; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 0; }
+            20% { transform: translateY(-60px) scale(1.2) rotate(-10deg); opacity: 1; }
+            100% { transform: translateY(-450px) scale(0.8) rotate(20deg); opacity: 0; }
         }
 
-        /* Corner Credit */
+        /* Credit */
         .credit {
             position: fixed;
-            bottom: 12px;
-            left: 12px;
-            font-size: 10px;
+            bottom: 14px;
+            left: 14px;
+            font-size: 11px;
             color: var(--text-muted);
-            background: rgba(255,255,255,0.7);
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             z-index: 500;
             letter-spacing: 0.5px;
+            font-weight: 500;
         }
-        .credit strong { color: var(--gold-dark); }
+        .credit strong { color: var(--blue-dark); }
+
+        /* ---------- TEACHER DASHBOARD ---------- */
+        .teacher-dashboard-box {
+            max-width: 500px;
+            margin: 0 auto 30px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            box-shadow: var(--shadow);
+        }
+        .teacher-dashboard-box .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .teacher-dashboard-box .header h3 {
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+        .teacher-dashboard-box .header button {
+            padding: 8px 18px;
+            border: 2px solid #e74c3c;
+            border-radius: 50px;
+            background: transparent;
+            color: #e74c3c;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .teacher-dashboard-box .header button:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .teacher-dashboard-box .welcome {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .teacher-dashboard-box .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .teacher-dashboard-box .row input {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 18px;
+            border: 2px solid var(--blue-soft);
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+        }
+        .teacher-dashboard-box .row input:focus {
+            border-color: var(--blue-accent);
+            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
+        }
+        .teacher-dashboard-box .row button {
+            padding: 14px 28px;
+            background: var(--blue-accent);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .teacher-dashboard-box .row button:hover {
+            background: var(--blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
+        }
+        .teacher-dashboard-box .code-box {
+            text-align: center;
+            padding: 16px;
+            background: var(--blue-light);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--blue-soft);
+            margin-top: 8px;
+        }
+        .teacher-dashboard-box .code-box p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .teacher-dashboard-box .code-box .code {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--blue-dark);
+            letter-spacing: 3px;
+            display: block;
+            margin: 8px 0;
+        }
+        .teacher-dashboard-box .code-box button {
+            padding: 10px 28px;
+            background: var(--blue-accent);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .teacher-dashboard-box .code-box button:hover {
+            background: var(--blue-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Admin Tracking Table */
+        .admin-table-wrap {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            overflow-x: auto;
+        }
+        .admin-table-wrap h4 {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        .admin-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 280px;
+        }
+        .admin-table-wrap table th {
+            text-align: left;
+            padding: 10px 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 2px solid var(--blue-soft);
+        }
+        .admin-table-wrap table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--blue-soft);
+        }
+        .admin-table-wrap table .block-btn {
+            padding: 4px 14px;
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .admin-table-wrap table .block-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Exam Question Block */
+        .exam-question-block {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--blue-soft);
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+        }
+        .exam-question-block .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .exam-question-block .q-header strong {
+            color: var(--blue-dark);
+        }
+        .exam-question-block .q-header button {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .exam-question-block input, .exam-question-block textarea, .exam-question-block select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--blue-soft);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.5);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: var(--transition);
+            margin-bottom: 6px;
+        }
+        .exam-question-block input:focus, .exam-question-block textarea:focus, .exam-question-block select:focus {
+            border-color: var(--blue-accent);
+        }
+        .exam-question-block .opt-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .exam-question-block .opt-grid input { margin-bottom: 0; }
+        .exam-question-block select { width: auto; display: inline-block; }
+
+        /* Gradebook */
+        .gradebook-table-wrap {
+            overflow-x: auto;
+        }
+        .gradebook-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 450px;
+        }
+        .gradebook-table-wrap table th {
+            text-align: left;
+            padding: 10px 8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 2px solid var(--blue-soft);
+        }
+        .gradebook-table-wrap table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--blue-soft);
+        }
+        .gradebook-table-wrap table .publish-btn {
+            padding: 4px 14px;
+            background: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .gradebook-table-wrap table .publish-btn:hover {
+            background: #1e8449;
+        }
+        .gradebook-table-wrap table input {
+            padding: 6px 10px;
+            border: 2px solid var(--blue-soft);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 12px;
+            width: 80px;
+            background: rgba(255, 255, 255, 0.5);
+            outline: none;
+        }
+        .gradebook-table-wrap table input:focus {
+            border-color: var(--blue-accent);
+        }
     </style>
 </head>
 <body>
 
-    <!-- ========================================
-    PREMIUM LOADER
-    ======================================== -->
+    <!-- ============================================================
+    ANIMATED BACKGROUND
+    ============================================================ -->
+    <div class="animated-bg" id="animatedBg">
+        <!-- Particles will be added by JavaScript -->
+    </div>
+
+    <!-- ============================================================
+    LOADER
+    ============================================================ -->
     <div id="loader-screen">
         <div class="loader-icon">📚</div>
         <div class="loader-title">NEXUS LEARN</div>
         <div class="loader-subtitle">Virtual Classroom Portal</div>
-        <div class="loader-progress-container">
+        <div class="loader-progress">
             <div class="loader-progress-bar" id="load-bar"></div>
         </div>
-        <div class="loader-percentage" id="load-text">0%</div>
+        <div class="loader-percent" id="load-text">0%</div>
         <div class="loader-dots">
             <div class="loader-dot"></div>
             <div class="loader-dot"></div>
@@ -1143,26 +1515,16 @@
         </div>
     </div>
 
-    <!-- ========================================
-    TOP NAVIGATION DASHBOARD
-    ======================================== -->
-    <nav class="top-nav" id="main-nav">
-        <div class="nav-brand" onclick="showHomepage()">
-            <span class="nav-brand-icon">📚</span>
-            <span class="nav-brand-text">NEXUS <span>LEARN</span></span>
-        </div>
-        <div class="nav-links" id="nav-links">
-            <button class="nav-btn active" id="nav-home" onclick="showHomepage()">🏠 Home</button>
-            <button class="nav-btn" id="nav-student" onclick="showStudentLogin()">🎓 Student</button>
-            <button class="nav-btn" id="nav-teacher" onclick="showTeacherLogin()">👨‍🏫 Teacher</button>
-            <button class="nav-btn pro-btn" onclick="showProPaymentModal()">⚡ Pro</button>
-            <button class="nav-btn" id="nav-ai" onclick="toggleAIChat()">🤖 AI</button>
-        </div>
-    </nav>
+    <!-- ============================================================
+    CREDIT
+    ============================================================ -->
+    <div class="credit">
+        Produced by <strong>Talabi David Adeoluwa</strong>
+    </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     AI BOT
-    ======================================== -->
+    ============================================================ -->
     <div class="ai-bot">
         <button class="toggle" onclick="toggleAIChat()">🤖</button>
         <div class="window" id="ai-window">
@@ -1180,25 +1542,66 @@
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
+    TOP NAV - BIG DASHBOARD
+    ============================================================ -->
+    <nav class="top-nav" id="main-nav">
+        <div class="nav-brand" onclick="showHomepage()">
+            <span class="nav-brand-icon">📚</span>
+            <span class="nav-brand-text">NEXUS <span>LEARN</span></span>
+        </div>
+        <div class="nav-links" id="nav-links">
+            <button class="nav-btn active" id="nav-home" onclick="showHomepage()">
+                <span class="icon">🏠</span> Home
+            </button>
+            <button class="nav-btn" id="nav-student" onclick="showStudentLogin()">
+                <span class="icon">🎓</span> Student
+            </button>
+            <button class="nav-btn" id="nav-teacher" onclick="showTeacherLogin()">
+                <span class="icon">👨‍🏫</span> Teacher
+            </button>
+            <button class="nav-btn pro-btn" id="nav-pro" onclick="showProPaymentModal()">
+                <span class="icon">⚡</span> Pro
+            </button>
+            <button class="nav-btn" id="nav-ai" onclick="toggleAIChat()">
+                <span class="icon">🤖</span> AI
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
     MAIN CONTAINER
-    ======================================== -->
+    ============================================================ -->
     <div class="container" id="app-container">
 
-        <!-- ========================================
+        <!-- ============================================================
         HOMEPAGE
-        ======================================== -->
+        ============================================================ -->
         <div id="homepage-section">
             <div class="homepage">
 
-                <!-- Hero -->
+                <!-- HERO with BIG Login Buttons -->
                 <div class="hero">
                     <h1 class="hero-title">Welcome to <span>Nexus Learn</span></h1>
                     <p class="hero-subtitle">Virtual Educational Classroom Portal</p>
-                    <p class="hero-description">
+                    <p class="hero-desc">
                         Experience seamless virtual learning with live video conferencing, real-time chat, 
                         dynamic exam engines, and comprehensive student management tools.
                     </p>
+
+                    <!-- BIG LOGIN BUTTONS -->
+                    <div class="hero-actions">
+                        <button class="hero-btn student" onclick="showStudentLogin()">
+                            <span class="icon">🎓</span> Login as Student
+                        </button>
+                        <button class="hero-btn teacher" onclick="showTeacherLogin()">
+                            <span class="icon">👨‍🏫</span> Login as Teacher
+                        </button>
+                        <button class="hero-btn pro-hero" onclick="showProPaymentModal()">
+                            <span class="icon">⚡</span> Upgrade to Pro
+                        </button>
+                    </div>
+
                     <div class="hero-badges">
                         <span class="hero-badge"><span class="icon">🎥</span> Live Video</span>
                         <span class="hero-badge"><span class="icon">🎤</span> Audio</span>
@@ -1208,52 +1611,24 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <div class="quick-card" onclick="showStudentLogin()">
-                        <div class="icon">🎓</div>
-                        <h3>Student Login</h3>
-                        <p>Join your classroom with a class code</p>
-                        <span class="arrow">→ Enter Classroom</span>
-                    </div>
-                    <div class="quick-card" onclick="showTeacherLogin()">
-                        <div class="icon">👨‍🏫</div>
-                        <h3>Teacher Login</h3>
-                        <p>Access your instructor dashboard</p>
-                        <span class="arrow">→ Open Dashboard</span>
-                    </div>
-                    <div class="quick-card" onclick="showProPaymentModal()">
-                        <div class="icon">⚡</div>
-                        <h3>Upgrade to Pro</h3>
-                        <p>Unlock premium features</p>
-                        <span class="arrow">→ Learn More</span>
-                    </div>
-                    <div class="quick-card" onclick="toggleAIChat()">
-                        <div class="icon">🤖</div>
-                        <h3>AI Assistant</h3>
-                        <p>Get help with the platform</p>
-                        <span class="arrow">→ Ask AI</span>
-                    </div>
-                </div>
-
                 <!-- Features -->
                 <div class="features-grid">
-                    <div class="feature-item">
+                    <div class="feature-card">
                         <div class="icon">📹</div>
                         <h4>Live Video Conferencing</h4>
                         <p>Real-time video with up to 10 participants</p>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-card">
                         <div class="icon">💬</div>
                         <h4>Real-time Chat</h4>
                         <p>Instant messaging with emoji reactions</p>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-card">
                         <div class="icon">📝</div>
                         <h4>Dynamic Exam Engine</h4>
                         <p>Create and auto-grade exams instantly</p>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-card">
                         <div class="icon">🛡️</div>
                         <h4>Secure Admin Controls</h4>
                         <p>Full teacher control over the classroom</p>
@@ -1265,28 +1640,23 @@
                     <h2>⚡ <span>Nexus Pro</span></h2>
                     <p>Upgrade for unlimited access and premium features</p>
                     <div class="pro-features">
-                        <span class="pro-feature-tag">✅ 6 hours daily</span>
-                        <span class="pro-feature-tag">✅ Unlimited images</span>
-                        <span class="pro-feature-tag">✅ Unlimited exams</span>
-                        <span class="pro-feature-tag">✅ Priority support</span>
-                        <span class="pro-feature-tag">✅ Pro badge</span>
+                        <span class="pro-tag">✅ 6 hours daily</span>
+                        <span class="pro-tag">✅ Unlimited images</span>
+                        <span class="pro-tag">✅ Unlimited exams</span>
+                        <span class="pro-tag">✅ Priority support</span>
+                        <span class="pro-tag">✅ Pro badge</span>
                     </div>
                     <div class="pro-input-group">
                         <input type="text" id="pro-code-input" maxlength="14" placeholder="Enter Pro Code (NEXUS-XXXXXXXX)" style="text-transform:uppercase;">
                         <button onclick="activateProCode()">Activate Pro</button>
                     </div>
                 </div>
-
-                <!-- Credit -->
-                <div style="text-align:center; padding:20px 0 10px; font-size:12px; color:var(--text-muted); border-top:1px solid var(--border-color);">
-                    Produced by <strong style="color:var(--gold-dark);">Talabi David Adeoluwa</strong>
-                </div>
             </div>
         </div>
 
-        <!-- ========================================
+        <!-- ============================================================
         STUDENT LOGIN
-        ======================================== -->
+        ============================================================ -->
         <div id="student-login-section" class="hidden">
             <div class="auth-section">
                 <h2>🎓 Student <span>Login</span></h2>
@@ -1300,9 +1670,9 @@
             </div>
         </div>
 
-        <!-- ========================================
+        <!-- ============================================================
         TEACHER LOGIN
-        ======================================== -->
+        ============================================================ -->
         <div id="teacher-login-section" class="hidden">
             <div id="teacher-login-container">
                 <div class="auth-section">
@@ -1334,32 +1704,32 @@
             </div>
 
             <!-- Teacher Dashboard -->
-            <div id="teacher-dashboard" class="hidden" style="max-width:500px; margin:0 auto 30px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius); padding:30px 24px; box-shadow:var(--shadow);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                    <h3 style="color:var(--text-primary);">📊 Instructor Hub</h3>
-                    <button onclick="logoutTeacher()" style="padding:6px 14px; border:1px solid #c0392b; border-radius:30px; background:transparent; color:#c0392b; cursor:pointer; font-family:inherit; font-size:12px; transition:var(--transition);">Logout</button>
+            <div id="teacher-dashboard" class="hidden teacher-dashboard-box">
+                <div class="header">
+                    <h3>📊 Instructor Hub</h3>
+                    <button onclick="logoutTeacher()">Logout</button>
                 </div>
-                <p id="saved-teacher-welcome" style="font-size:13px; color:var(--text-muted); margin-bottom:16px;"></p>
-                <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-                    <input type="text" id="create-classname" placeholder="Class Name (e.g. Math 101)" style="flex:1; min-width:150px; padding:12px 16px; border:1px solid var(--border-color); border-radius:30px; background:rgba(255,255,255,0.6); font-family:inherit; outline:none; transition:var(--transition);">
-                    <button id="create-class-btn" style="padding:12px 24px; background:var(--gold); color:#fff; border:none; border-radius:30px; font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">Create Class</button>
+                <p class="welcome" id="saved-teacher-welcome"></p>
+                <div class="row">
+                    <input type="text" id="create-classname" placeholder="Class Name (e.g. Math 101)">
+                    <button id="create-class-btn">Create Class</button>
                 </div>
-                <div id="generated-code-box" class="hidden" style="text-align:center; padding:16px; background:var(--cream); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
-                    <p style="font-size:13px; color:var(--text-muted);">Your Class Code:</p>
-                    <strong id="display-class-code" style="font-size:24px; color:var(--gold-dark); letter-spacing:2px; display:block; margin:8px 0;"></strong>
-                    <button id="enter-classroom-btn" style="padding:10px 24px; background:var(--gold); color:#fff; border:none; border-radius:30px; font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">Enter Classroom</button>
+                <div id="generated-code-box" class="hidden code-box">
+                    <p>Your Class Code:</p>
+                    <span class="code" id="display-class-code"></span>
+                    <button id="enter-classroom-btn">Enter Classroom</button>
                 </div>
             </div>
         </div>
 
-        <!-- ========================================
+        <!-- ============================================================
         CLASSROOM
-        ======================================== -->
+        ============================================================ -->
         <div id="classroom-section" class="hidden">
             <div class="classroom-header">
                 <div class="info">
                     <h2 id="view-class-title">Class Session</h2>
-                    <p id="view-instructor" style="color:var(--text-muted); font-size:13px;"></p>
+                    <p id="view-instructor" style="color:var(--text-muted); font-size:14px;"></p>
                 </div>
                 <div class="code-badge">
                     <span>CODE:</span>
@@ -1436,27 +1806,23 @@
             </div>
 
             <!-- Admin Tracking -->
-            <div id="admin-tracking-section" class="hidden" style="margin-top:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:16px; overflow-x:auto;">
-                <h4 style="color:var(--text-primary); font-size:14px; margin-bottom:10px;">🛡️ Live Users</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:300px;">
+            <div id="admin-tracking-section" class="hidden admin-table-wrap">
+                <h4>🛡️ Live Users</h4>
+                <table>
                     <thead>
-                        <tr style="border-bottom:1px solid var(--border-color);">
-                            <th style="text-align:left; padding:8px; color:var(--text-muted);">Username</th>
-                            <th style="text-align:left; padding:8px; color:var(--text-muted);">Role</th>
-                            <th style="text-align:left; padding:8px; color:var(--text-muted);">Action</th>
-                        </tr>
+                        <tr><th>Username</th><th>Role</th><th>Action</th></tr>
                     </thead>
                     <tbody id="active-tracked-users-list">
-                        <tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-muted);">No users connected</td></tr>
+                        <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No users connected</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     PRO PAYMENT MODAL
-    ======================================== -->
+    ============================================================ -->
     <div class="modal-overlay" id="pro-modal">
         <div class="modal-content">
             <button class="close" onclick="closeProPaymentModal()">✕</button>
@@ -1465,9 +1831,9 @@
 
             <div id="pro-form-section">
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit; outline:none;">
-                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit; outline:none;">
-                    <select id="pro-duration" style="padding:12px 16px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.6);">
+                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                    <select id="pro-duration" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
                         <option value="1week">1 Week</option>
                         <option value="2weeks">2 Weeks</option>
                         <option value="4weeks">4 Weeks</option>
@@ -1476,58 +1842,58 @@
                         <option value="1year">1 Year</option>
                     </select>
                 </div>
-                <button onclick="submitProRequest()" style="width:100%; margin-top:16px; padding:14px; background:var(--gold); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">Continue</button>
+                <button onclick="submitProRequest()" style="width:100%; margin-top:16px; padding:16px; background:var(--blue-accent); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">Continue</button>
             </div>
 
             <div id="pro-payment-details" class="hidden">
-                <h3 style="font-size:16px; margin-bottom:12px; color:var(--text-primary);">💳 Payment Details</h3>
-                <div style="background:var(--cream); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
-                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color); font-size:14px;">
+                <h3 style="font-size:17px; margin-bottom:12px; color:var(--text-primary);">💳 Payment Details</h3>
+                <div style="background:var(--blue-light); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--blue-soft);">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
                         <span>Account Number:</span>
                         <strong>8024300891</strong>
-                        <button onclick="copyPaymentDetail('8024300891', this)" style="background:var(--gold); color:#fff; border:none; padding:2px 10px; border-radius:4px; cursor:pointer; font-size:11px;">Copy</button>
+                        <button onclick="copyPaymentDetail('8024300891', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border-color); font-size:14px;">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
                         <span>Bank Name:</span>
                         <strong>OPay</strong>
-                        <button onclick="copyPaymentDetail('OPay', this)" style="background:var(--gold); color:#fff; border:none; padding:2px 10px; border-radius:4px; cursor:pointer; font-size:11px;">Copy</button>
+                        <button onclick="copyPaymentDetail('OPay', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;">
                         <span>Account Name:</span>
                         <strong>Talabi Sunny Okunola</strong>
-                        <button onclick="copyPaymentDetail('Talabi Sunny Okunola', this)" style="background:var(--gold); color:#fff; border:none; padding:2px 10px; border-radius:4px; cursor:pointer; font-size:11px;">Copy</button>
+                        <button onclick="copyPaymentDetail('Talabi Sunny Okunola', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
                 </div>
-                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:14px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">I've Made Payment</button>
+                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">✅ I've Made Payment</button>
             </div>
 
             <div id="pro-pending-status" class="hidden" style="text-align:center; padding:20px 0;">
-                <div style="font-size:60px; margin-bottom:16px;">⏳</div>
+                <div style="font-size:64px; margin-bottom:16px;">⏳</div>
                 <h3 style="color:var(--text-primary); margin-bottom:8px;">Payment Pending</h3>
-                <p id="pending-message" style="color:var(--text-muted); line-height:1.6;"></p>
-                <button onclick="closeProPaymentModal()" style="margin-top:16px; padding:12px 24px; background:var(--gold); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit; font-weight:600;">Close</button>
+                <p id="pending-message" style="color:var(--text-muted); line-height:1.7;"></p>
+                <button onclick="closeProPaymentModal()" style="margin-top:16px; padding:14px 32px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;">Close</button>
             </div>
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     IMAGE ZOOM MODAL
-    ======================================== -->
+    ============================================================ -->
     <div class="modal-overlay" id="imageZoomModal">
-        <div class="modal-content" style="max-width:90%; max-height:90%; padding:20px; display:flex; flex-direction:column; align-items:center;">
+        <div class="modal-content" style="max-width:90%; max-height:90%; padding:24px; display:flex; flex-direction:column; align-items:center;">
             <button class="close" onclick="closeZoomModal()">✕</button>
             <img id="zoomModalImg" src="" alt="Zoomed" style="max-width:100%; max-height:70vh; border-radius:var(--radius-sm);">
-            <div style="display:flex; gap:12px; margin-top:16px;">
-                <button onclick="zoomIn()" style="padding:8px 16px; background:var(--gold); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit;">Zoom In</button>
-                <button onclick="zoomOut()" style="padding:8px 16px; background:var(--gold); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit;">Zoom Out</button>
-                <button onclick="resetZoom()" style="padding:8px 16px; background:var(--brown-dark); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit;">Reset</button>
+            <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; justify-content:center;">
+                <button onclick="zoomIn()" style="padding:10px 22px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:600;">➕ Zoom In</button>
+                <button onclick="zoomOut()" style="padding:10px 22px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:600;">➖ Zoom Out</button>
+                <button onclick="resetZoom()" style="padding:10px 22px; background:var(--text-muted); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:600;">↺ Reset</button>
             </div>
         </div>
     </div>
 
-    <!-- ========================================
-    EXAM SETUP MODAL (Teacher)
-    ======================================== -->
+    <!-- ============================================================
+    EXAM SETUP MODAL
+    ============================================================ -->
     <div class="modal-overlay" id="teacher-exam-setup-modal">
         <div class="modal-content">
             <button class="close" onclick="closeExamSetup()">✕</button>
@@ -1536,74 +1902,74 @@
 
             <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
                 <div style="flex:1; min-width:120px;">
-                    <label style="font-size:13px; color:var(--text-muted);">Timer (minutes):</label>
-                    <input type="number" id="exam-minutes" value="10" style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); font-family:inherit;">
+                    <label style="font-size:14px; color:var(--text-muted); font-weight:600;">Timer (minutes):</label>
+                    <input type="number" id="exam-minutes" value="10" style="width:100%; padding:12px 16px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; background:rgba(255,255,255,0.5);">
                 </div>
-                <div style="display:flex; gap:16px; align-items:center;">
-                    <label style="font-size:13px; color:var(--text-muted);"><input type="checkbox" id="exam-has-obj" checked onchange="toggleOBJ()"> OBJ</label>
-                    <label style="font-size:13px; color:var(--text-muted);"><input type="checkbox" id="exam-has-theory" checked onchange="toggleTheory()"> Theory</label>
+                <div style="display:flex; gap:20px; align-items:center;">
+                    <label style="font-size:14px; color:var(--text-secondary); font-weight:600;"><input type="checkbox" id="exam-has-obj" checked onchange="toggleOBJ()"> OBJ</label>
+                    <label style="font-size:14px; color:var(--text-secondary); font-weight:600;"><input type="checkbox" id="exam-has-theory" checked onchange="toggleTheory()"> Theory</label>
                 </div>
             </div>
 
             <div id="obj-wrapper">
-                <h4 style="font-size:15px; color:var(--text-primary); margin-bottom:8px;">Objective Questions</h4>
-                <button onclick="addOBJQuestion()" style="padding:6px 16px; background:var(--gold); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit; font-size:12px; margin-bottom:12px;">+ Add Question</button>
+                <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Objective Questions</h4>
+                <button onclick="addOBJQuestion()" style="padding:8px 20px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; margin-bottom:12px;">+ Add Question</button>
                 <div id="obj-questions-list"></div>
             </div>
 
             <div id="theory-wrapper">
-                <h4 style="font-size:15px; color:var(--text-primary); margin-bottom:8px;">Theory Questions</h4>
-                <button onclick="addTheoryQuestion()" style="padding:6px 16px; background:var(--gold); color:#fff; border:none; border-radius:30px; cursor:pointer; font-family:inherit; font-size:12px; margin-bottom:12px;">+ Add Question</button>
+                <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Theory Questions</h4>
+                <button onclick="addTheoryQuestion()" style="padding:8px 20px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; margin-bottom:12px;">+ Add Question</button>
                 <div id="theory-questions-list"></div>
             </div>
 
-            <button onclick="deployClassExam()" style="width:100%; margin-top:16px; padding:14px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">🚀 Deploy Exam</button>
+            <button onclick="deployClassExam()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">🚀 Deploy Exam</button>
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     STUDENT EXAM MODAL
-    ======================================== -->
+    ============================================================ -->
     <div class="modal-overlay" id="student-exam-workspace-modal">
         <div class="modal-content">
             <button class="close" onclick="document.getElementById('student-exam-workspace-modal').classList.remove('active')">✕</button>
             <h2>📝 <span>Live Exam</span></h2>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <p class="sub" style="margin:0;">Answer all questions before time runs out</p>
-                <strong id="exam-timer-display" style="font-size:24px; color:#c0392b; font-family:monospace;">00:00</strong>
+                <strong id="exam-timer-display" style="font-size:28px; color:#e74c3c; font-family:monospace;">00:00</strong>
             </div>
 
             <div id="student-obj-display-section" class="hidden">
-                <h4 style="font-size:15px; color:var(--text-primary); margin-bottom:8px;">Section A: Objectives</h4>
+                <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Section A: Objectives</h4>
                 <div id="student-obj-questions-container"></div>
             </div>
 
             <div id="student-theory-display-section" class="hidden">
-                <h4 style="font-size:15px; color:var(--text-primary); margin-bottom:8px;">Section B: Theory</h4>
+                <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Section B: Theory</h4>
                 <div id="student-theory-questions-container"></div>
             </div>
 
-            <button onclick="submitStudentExamAnswers()" style="width:100%; margin-top:16px; padding:14px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:600; cursor:pointer; transition:var(--transition); font-family:inherit;">📝 Submit Exam</button>
+            <button onclick="submitStudentExamAnswers()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">📝 Submit Exam</button>
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     TEACHER GRADEBOOK MODAL
-    ======================================== -->
+    ============================================================ -->
     <div class="modal-overlay" id="teacher-gradebook-modal">
         <div class="modal-content" style="max-width:800px;">
             <button class="close" onclick="closeGradebookModal()">✕</button>
             <h2>📊 <span>Gradebook</span></h2>
             <p class="sub">Review and grade student submissions</p>
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:500px;">
+            <div class="gradebook-table-wrap">
+                <table>
                     <thead>
-                        <tr style="border-bottom:2px solid var(--gold);">
-                            <th style="text-align:left; padding:8px;">Student</th>
-                            <th style="text-align:left; padding:8px;">OBJ Score</th>
-                            <th style="text-align:left; padding:8px;">Theory</th>
-                            <th style="text-align:left; padding:8px;">Grade</th>
-                            <th style="text-align:left; padding:8px;">Action</th>
+                        <tr>
+                            <th>Student</th>
+                            <th>OBJ Score</th>
+                            <th>Theory</th>
+                            <th>Grade</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="gradebook-table-rows">
@@ -1614,13 +1980,47 @@
         </div>
     </div>
 
-    <!-- ========================================
+    <!-- ============================================================
     JAVASCRIPT
-    ======================================== -->
+    ============================================================ -->
     <script>
-        // ========================================
-        // SOCKET.IO SETUP
-        // ========================================
+        // ============================================================
+        // ANIMATED BACKGROUND - PARTICLES
+        // ============================================================
+        (function createBackground() {
+            const bg = document.getElementById('animatedBg');
+            // Create floating particles
+            for (let i = 0; i < 35; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 20 + 6;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                p.style.animationDelay = (Math.random() * 10) + 's';
+                p.style.background = `rgba(180, 210, 240, ${Math.random() * 0.15 + 0.05})`;
+                bg.appendChild(p);
+            }
+            // Create floating shapes
+            const shapes = ['◯', '△', '◇', '✧', '☁'];
+            for (let i = 0; i < 6; i++) {
+                const s = document.createElement('div');
+                s.className = 'shape';
+                s.textContent = shapes[i % shapes.length];
+                s.style.fontSize = (Math.random() * 40 + 30) + 'px';
+                s.style.left = Math.random() * 80 + 10 + '%';
+                s.style.top = Math.random() * 80 + 10 + '%';
+                s.style.animationDelay = (Math.random() * 10) + 's';
+                s.style.animationDuration = (Math.random() * 20 + 20) + 's';
+                s.style.color = Math.random() > 0.5 ? 'var(--blue-soft)' : 'var(--beige-dark)';
+                bg.appendChild(s);
+            }
+        })();
+
+        // ============================================================
+        // SOCKET.IO
+        // ============================================================
         const socket = io({
             transports: ['websocket', 'polling'],
             reconnection: true,
@@ -1629,9 +2029,9 @@
             timeout: 20000
         });
 
-        // ========================================
+        // ============================================================
         // GLOBAL STATE
-        // ========================================
+        // ============================================================
         let myUsername = "";
         let classCodeRoom = "";
         let currentTeacherUser = "";
@@ -1652,9 +2052,9 @@
         const pendingCandidates = {};
         let currentZoomScale = 1;
 
-        // ========================================
+        // ============================================================
         // RTC CONFIG
-        // ========================================
+        // ============================================================
         const rtcConfig = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
@@ -1674,9 +2074,9 @@
             ]
         };
 
-        // ========================================
+        // ============================================================
         // LOADER
-        // ========================================
+        // ============================================================
         window.addEventListener('DOMContentLoaded', () => {
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
@@ -1703,7 +2103,7 @@
                 showTeacherLogin();
                 document.getElementById('teacher-login-container').classList.add('hidden');
                 document.getElementById('teacher-dashboard').classList.remove('hidden');
-                document.getElementById('saved-teacher-welcome').innerText = `Logged in as: ${savedTeacher}`;
+                document.getElementById('saved-teacher-welcome').innerText = 'Logged in as: ' + savedTeacher;
                 document.getElementById('nav-teacher').classList.add('active');
                 document.getElementById('nav-home').classList.remove('active');
             }
@@ -1717,9 +2117,9 @@
             });
         });
 
-        // ========================================
+        // ============================================================
         // NAVIGATION
-        // ========================================
+        // ============================================================
         function showHomepage() {
             document.getElementById('homepage-section').classList.remove('hidden');
             document.getElementById('student-login-section').classList.add('hidden');
@@ -1767,9 +2167,6 @@
             location.reload();
         }
 
-        // ========================================
-        // COPY FUNCTION
-        // ========================================
         function copyToClipboard(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
                 const orig = btn.innerText;
@@ -1778,9 +2175,9 @@
             });
         }
 
-        // ========================================
+        // ============================================================
         // AI BOT
-        // ========================================
+        // ============================================================
         function toggleAIChat() {
             document.getElementById('ai-window').classList.toggle('active');
         }
@@ -1806,9 +2203,9 @@
             msgs.scrollTop = msgs.scrollHeight;
         });
 
-        // ========================================
+        // ============================================================
         // EMOJI REACTIONS
-        // ========================================
+        // ============================================================
         function sendEmojiReaction(emoji) {
             createFloatingEmoji(emoji);
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: emoji, type: "emoji_reaction" });
@@ -1823,9 +2220,9 @@
             setTimeout(() => el.remove(), 2500);
         }
 
-        // ========================================
+        // ============================================================
         // PRO FUNCTIONS
-        // ========================================
+        // ============================================================
         function showProPaymentModal() {
             document.getElementById('pro-modal').classList.add('active');
             document.getElementById('pro-form-section').classList.remove('hidden');
@@ -1899,13 +2296,14 @@
                 isProUser = true;
                 proExpiryDate = data.expiry_date;
                 document.getElementById('pro-code-input').value = '';
-                document.querySelector('.pro-btn').innerHTML = '⚡ Pro ✓';
+                document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
+                document.getElementById('nav-pro').classList.add('active-pro');
             }
         });
 
-        // ========================================
+        // ============================================================
         // TEACHER AUTH
-        // ========================================
+        // ============================================================
         document.getElementById('register-btn').addEventListener('click', () => {
             const username = document.getElementById('reg-username').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -1935,17 +2333,20 @@
                     localStorage.setItem('nexus_teacher_username', data.username);
                     document.getElementById('teacher-login-container').classList.add('hidden');
                     document.getElementById('teacher-dashboard').classList.remove('hidden');
-                    document.getElementById('saved-teacher-welcome').innerText = `Logged in as: ${data.username}${isProUser ? ' ⚡ PRO' : ''}`;
-                    if (isProUser) document.querySelector('.pro-btn').innerHTML = '⚡ Pro ✓';
+                    document.getElementById('saved-teacher-welcome').innerText = 'Logged in as: ' + data.username + (isProUser ? ' ⚡ PRO' : '');
+                    if (isProUser) {
+                        document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
+                        document.getElementById('nav-pro').classList.add('active-pro');
+                    }
                 } else if (data.action === "register") {
                     showTeacherLogin();
                 }
             }
         });
 
-        // ========================================
+        // ============================================================
         // CLASS CREATION
-        // ========================================
+        // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', () => {
             const name = document.getElementById('create-classname').value.trim();
             socket.emit('create_class', { username: currentTeacherUser, classname: name });
@@ -1964,9 +2365,9 @@
             }
         });
 
-        // ========================================
+        // ============================================================
         // JOIN CLASSROOM
-        // ========================================
+        // ============================================================
         document.getElementById('join-btn').addEventListener('click', () => {
             myUsername = document.getElementById('join-name').value.trim();
             classCodeRoom = document.getElementById('join-code').value.trim();
@@ -1984,13 +2385,16 @@
                 document.getElementById('app-container').classList.add('classroom-container');
 
                 document.getElementById('view-class-title').innerText = data.classname;
-                document.getElementById('view-instructor').innerText = `Instructor: ${data.teacher}`;
-                document.getElementById('local-label').innerText = `${myUsername} (You)${data.is_pro ? ' ⚡ PRO' : ''}`;
+                document.getElementById('view-instructor').innerText = 'Instructor: ' + data.teacher;
+                document.getElementById('local-label').innerText = myUsername + ' (You)' + (data.is_pro ? ' ⚡ PRO' : '');
                 document.getElementById('classroom-code-label').innerText = classCodeRoom;
 
                 isProUser = data.is_pro || false;
                 proExpiryDate = data.pro_expiry || null;
-                if (isProUser) document.querySelector('.pro-btn').innerHTML = '⚡ Pro ✓';
+                if (isProUser) {
+                    document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
+                    document.getElementById('nav-pro').classList.add('active-pro');
+                }
 
                 if (isTeacherUser && data.teacher === myUsername) {
                     document.getElementById('teacher-lock-panel').classList.remove('hidden');
@@ -2012,9 +2416,9 @@
             copyToClipboard(classCodeRoom, this);
         });
 
-        // ========================================
+        // ============================================================
         // CAMERA & MIC
-        // ========================================
+        // ============================================================
         async function startLocalCameraAndMic() {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             try {
@@ -2095,9 +2499,9 @@
             document.getElementById('my-camera').classList.toggle('mirrored');
         });
 
-        // ========================================
+        // ============================================================
         // WEBRTC PEER CONNECTIONS
-        // ========================================
+        // ============================================================
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
@@ -2116,14 +2520,14 @@
             };
 
             pc.ontrack = e => {
-                let card = document.getElementById(`peer-card-${targetId}`);
+                let card = document.getElementById('peer-card-' + targetId);
                 let video;
                 const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
 
                 if (!card) {
                     card = document.createElement('div');
                     card.className = 'video-card';
-                    card.id = `peer-card-${targetId}`;
+                    card.id = 'peer-card-' + targetId;
                     video = document.createElement('video');
                     video.autoplay = true;
                     video.playsInline = true;
@@ -2132,8 +2536,8 @@
                     card.appendChild(video);
                     const overlay = document.createElement('div');
                     overlay.className = 'overlay hidden';
-                    overlay.id = `peer-blocked-overlay-${targetId}`;
-                    overlay.innerHTML = `<span>📷</span>Camera Off`;
+                    overlay.id = 'peer-blocked-overlay-' + targetId;
+                    overlay.innerHTML = '<span>📷</span>Camera Off';
                     card.appendChild(overlay);
                     const label = document.createElement('div');
                     label.className = 'label';
@@ -2141,8 +2545,8 @@
                     card.appendChild(label);
                     const wave = document.createElement('div');
                     wave.className = 'sound-wave';
-                    wave.id = `peer-wave-${targetId}`;
-                    wave.innerHTML = `<div class="bar"></div><div class="bar"></div><div class="bar"></div>`;
+                    wave.id = 'peer-wave-' + targetId;
+                    wave.innerHTML = '<div class="bar"></div><div class="bar"></div><div class="bar"></div>';
                     card.appendChild(wave);
                     document.getElementById('video-layout-grid').appendChild(card);
                 } else {
@@ -2199,7 +2603,7 @@
         });
 
         socket.on('user_left', data => {
-            const card = document.getElementById(`peer-card-${data.socket_id}`);
+            const card = document.getElementById('peer-card-' + data.socket_id);
             if (card) card.remove();
             if (peerConnections[data.socket_id]) {
                 peerConnections[data.socket_id].close();
@@ -2208,13 +2612,13 @@
             if (pendingCandidates[data.socket_id]) delete pendingCandidates[data.socket_id];
         });
 
-        // ========================================
+        // ============================================================
         // CHAT
-        // ========================================
+        // ============================================================
         function sendMsg(role) {
-            const el = document.getElementById(`${role}-input-field`);
+            const el = document.getElementById(role + '-input-field');
             if (el && el.value.trim()) {
-                const displayName = `${myUsername} (${role.toUpperCase()})${isProUser ? ' ⚡' : ''}`;
+                const displayName = myUsername + ' (' + role.toUpperCase() + ')' + (isProUser ? ' ⚡' : '');
                 socket.emit('text_message', { room: classCodeRoom, name: displayName, content: el.value.trim(), type: "text" });
                 appendMsg(displayName, el.value.trim(), "text");
                 el.value = "";
@@ -2240,18 +2644,18 @@
                 zoom.onclick = () => openZoomModal(content);
                 wrap.appendChild(img);
                 wrap.appendChild(zoom);
-                d.innerHTML = `<strong>${sender}:</strong><br>`;
+                d.innerHTML = '<strong>' + sender + ':</strong><br>';
                 d.appendChild(wrap);
             } else {
-                d.innerHTML = `<strong>${sender}:</strong> ${content}`;
+                d.innerHTML = '<strong>' + sender + ':</strong> ' + content;
             }
             log.appendChild(d);
             log.scrollTop = log.scrollHeight;
         }
 
-        // ========================================
+        // ============================================================
         // IMAGE HANDLING
-        // ========================================
+        // ============================================================
         function compressAndSendImage(file) {
             const reader = new FileReader();
             reader.onload = function(event) {
@@ -2289,7 +2693,7 @@
 
         document.getElementById('snap-cam-btn').addEventListener('click', () => {
             const video = document.getElementById('my-camera');
-            const canvas = document.getElementById('screenshot-canvas');
+            const canvas = document.createElement('canvas');
             if (localStream && video.srcObject) {
                 const ctx = canvas.getContext('2d');
                 canvas.width = video.videoWidth || 640;
@@ -2307,13 +2711,13 @@
             }
         });
 
-        // ========================================
+        // ============================================================
         // IMAGE ZOOM
-        // ========================================
+        // ============================================================
         function openZoomModal(src) {
             document.getElementById('zoomModalImg').src = src;
             currentZoomScale = 1;
-            document.getElementById('zoomModalImg').style.transform = `scale(${currentZoomScale})`;
+            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
             document.getElementById('imageZoomModal').classList.add('active');
         }
 
@@ -2323,24 +2727,24 @@
 
         function zoomIn() {
             currentZoomScale += 0.25;
-            document.getElementById('zoomModalImg').style.transform = `scale(${currentZoomScale})`;
+            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
         }
 
         function zoomOut() {
             if (currentZoomScale > 0.5) {
                 currentZoomScale -= 0.25;
-                document.getElementById('zoomModalImg').style.transform = `scale(${currentZoomScale})`;
+                document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
             }
         }
 
         function resetZoom() {
             currentZoomScale = 1;
-            document.getElementById('zoomModalImg').style.transform = `scale(${currentZoomScale})`;
+            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
         }
 
-        // ========================================
+        // ============================================================
         // TEACHER CONTROLS
-        // ========================================
+        // ============================================================
         let globalMuteLocked = false;
         document.getElementById('teacher-global-mute-btn').addEventListener('click', function() {
             globalMuteLocked = !globalMuteLocked;
@@ -2355,9 +2759,9 @@
             }
         });
 
-        // ========================================
+        // ============================================================
         // EXAM SYSTEM
-        // ========================================
+        // ============================================================
         document.getElementById('teacher-exam-portal-btn').addEventListener('click', () => {
             document.getElementById('teacher-exam-setup-modal').classList.add('active');
             document.getElementById('obj-questions-list').innerHTML = '';
@@ -2383,21 +2787,20 @@
             const id = container.children.length + 1;
             const block = document.createElement('div');
             block.className = 'exam-question-block';
-            block.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid var(--border-color);padding:12px;border-radius:8px;margin-bottom:10px;';
-            block.id = `obj-block-${id}`;
+            block.id = 'obj-block-' + id;
             block.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="color:var(--gold-dark);">Q${id}</strong>
-                    <button onclick="document.getElementById('obj-block-${id}').remove()" style="background:none;border:none;color:#c0392b;cursor:pointer;">✕</button>
+                <div class="q-header">
+                    <strong>Q${id}</strong>
+                    <button onclick="document.getElementById('obj-block-${id}').remove()">✕</button>
                 </div>
-                <input type="text" class="obj-prompt" placeholder="Question..." style="width:100%;padding:8px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;margin-bottom:8px;background:rgba(255,255,255,0.5);">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <input type="text" class="opt-a" placeholder="A" style="padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);">
-                    <input type="text" class="opt-b" placeholder="B" style="padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);">
-                    <input type="text" class="opt-c" placeholder="C" style="padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);">
-                    <input type="text" class="opt-d" placeholder="D" style="padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);">
+                <input type="text" class="obj-prompt" placeholder="Question prompt...">
+                <div class="opt-grid">
+                    <input type="text" class="opt-a" placeholder="A">
+                    <input type="text" class="opt-b" placeholder="B">
+                    <input type="text" class="opt-c" placeholder="C">
+                    <input type="text" class="opt-d" placeholder="D">
                 </div>
-                <select class="obj-correct-key" style="margin-top:8px;padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);">
+                <select class="obj-correct-key" style="margin-top:6px; padding:8px 14px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; background:rgba(255,255,255,0.5);">
                     <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
                 </select>
             `;
@@ -2409,14 +2812,13 @@
             const id = container.children.length + 1;
             const block = document.createElement('div');
             block.className = 'exam-question-block';
-            block.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid var(--border-color);padding:12px;border-radius:8px;margin-bottom:10px;';
-            block.id = `theory-block-${id}`;
+            block.id = 'theory-block-' + id;
             block.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <strong style="color:var(--gold-dark);">Theory ${id}</strong>
-                    <button onclick="document.getElementById('theory-block-${id}').remove()" style="background:none;border:none;color:#c0392b;cursor:pointer;">✕</button>
+                <div class="q-header">
+                    <strong>Theory ${id}</strong>
+                    <button onclick="document.getElementById('theory-block-${id}').remove()">✕</button>
                 </div>
-                <textarea class="theory-prompt" placeholder="Essay question..." style="width:100%;height:60px;padding:8px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);resize:none;"></textarea>
+                <textarea class="theory-prompt" placeholder="Essay question..." style="height:70px; resize:vertical;"></textarea>
             `;
             container.appendChild(block);
         }
@@ -2466,7 +2868,6 @@
                 config.objQuestions.forEach((q, idx) => {
                     const block = document.createElement('div');
                     block.className = 'exam-question-block';
-                    block.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid var(--border-color);padding:12px;border-radius:8px;margin-bottom:10px;';
                     block.innerHTML = `
                         <p style="margin:0 0 8px 0;"><strong>Q${idx+1}:</strong> ${q.prompt}</p>
                         <div style="display:flex;flex-direction:column;gap:4px;">
@@ -2489,10 +2890,9 @@
                 config.theoryQuestions.forEach((q, idx) => {
                     const block = document.createElement('div');
                     block.className = 'exam-question-block';
-                    block.style.cssText = 'background:rgba(255,255,255,0.03);border:1px solid var(--border-color);padding:12px;border-radius:8px;margin-bottom:10px;';
                     block.innerHTML = `
                         <p style="margin:0 0 8px 0;"><strong>Q${idx+1}:</strong> ${q.prompt}</p>
-                        <textarea class="student-theory-response" data-idx="${idx}" placeholder="Write your answer..." style="width:100%;height:80px;padding:8px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;background:rgba(255,255,255,0.5);resize:none;"></textarea>
+                        <textarea class="student-theory-response" data-idx="${idx}" placeholder="Write your answer..." style="width:100%;height:80px;padding:10px;border:2px solid var(--blue-soft);border-radius:var(--radius-sm);font-family:inherit;background:rgba(255,255,255,0.5);resize:vertical;"></textarea>
                     `;
                     theoryContainer.appendChild(block);
                 });
@@ -2517,7 +2917,7 @@
         function updateTimerDisplay() {
             const mins = String(Math.floor(currentExamTimeSecondsLeft / 60)).padStart(2, '0');
             const secs = String(currentExamTimeSecondsLeft % 60).padStart(2, '0');
-            document.getElementById('exam-timer-display').innerText = `${mins}:${secs}`;
+            document.getElementById('exam-timer-display').innerText = mins + ':' + secs;
         }
 
         function submitStudentExamAnswers() {
@@ -2527,7 +2927,7 @@
             if (activeExamConfig && activeExamConfig.objQuestions && activeExamConfig.objQuestions.length > 0) {
                 possibleObj = activeExamConfig.objQuestions.length;
                 activeExamConfig.objQuestions.forEach((q, idx) => {
-                    const checked = document.querySelector(`input[name="student-q-${idx}"]:checked`);
+                    const checked = document.querySelector('input[name="student-q-' + idx + '"]:checked');
                     if (checked && checked.value === q.key) totalCorrectObj++;
                 });
             }
@@ -2545,12 +2945,12 @@
                 room: classCodeRoom,
                 score: totalCorrectObj,
                 total_questions: possibleObj,
-                answers: { obj_score: `${totalCorrectObj}/${possibleObj}`, theory: theorySubmissions }
+                answers: { obj_score: totalCorrectObj + '/' + possibleObj, theory: theorySubmissions }
             });
 
             const examPackage = {
                 studentName: myUsername,
-                objScore: possibleObj > 0 ? `${totalCorrectObj}/${possibleObj}` : "N/A",
+                objScore: possibleObj > 0 ? totalCorrectObj + '/' + possibleObj : "N/A",
                 theoryResponses: theorySubmissions
             };
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(examPackage), type: 'exam_submission' });
@@ -2563,9 +2963,9 @@
             if (!resp.success) alert(resp.message);
         });
 
-        // ========================================
+        // ============================================================
         // GRADEBOOK
-        // ========================================
+        // ============================================================
         document.getElementById('teacher-gradebook-btn').addEventListener('click', () => {
             renderGradebookUI();
             document.getElementById('teacher-gradebook-modal').classList.add('active');
@@ -2580,7 +2980,7 @@
             tbody.innerHTML = '';
             const keys = Object.keys(examGradebook);
             if (keys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">No submissions yet</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">No submissions yet</td></tr>';
                 return;
             }
             keys.forEach(student => {
@@ -2588,24 +2988,23 @@
                 let theoryHtml = "N/A";
                 if (entry.theoryResponses && entry.theoryResponses.length > 0) {
                     theoryHtml = entry.theoryResponses.map((t, i) =>
-                        `<p style="margin:2px 0;font-size:11px;"><strong>Q${i+1}:</strong> ${t.answer || '(Empty)'}</p>`
+                        '<p style="margin:2px 0;font-size:12px;"><strong>Q' + (i + 1) + ':</strong> ' + (t.answer || '(Empty)') + '</p>'
                     ).join('');
                 }
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid var(--border-color)';
                 tr.innerHTML = `
                     <td style="padding:8px;font-weight:bold;">${student}</td>
-                    <td style="padding:8px;color:var(--gold-dark);">${entry.objScore}</td>
-                    <td style="padding:8px;max-width:150px;overflow:hidden;font-size:12px;">${theoryHtml}</td>
-                    <td style="padding:8px;"><input type="text" class="theory-grade-val-${student}" placeholder="Grade" style="padding:6px;border:1px solid var(--border-color);border-radius:4px;font-family:inherit;width:80px;background:rgba(255,255,255,0.5);"></td>
-                    <td style="padding:8px;"><button onclick="publishStudentScores('${student}')" style="padding:4px 12px;background:#27ae60;color:#fff;border:none;border-radius:30px;cursor:pointer;font-family:inherit;font-size:11px;">Publish</button></td>
+                    <td style="padding:8px;color:var(--blue-dark);font-weight:600;">${entry.objScore}</td>
+                    <td style="padding:8px;max-width:150px;overflow:hidden;font-size:13px;">${theoryHtml}</td>
+                    <td style="padding:8px;"><input type="text" class="theory-grade-val-${student}" placeholder="Grade" style="width:70px;"></td>
+                    <td style="padding:8px;"><button class="publish-btn" onclick="publishStudentScores('${student}')">Publish</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
         function publishStudentScores(student) {
-            const theoryVal = document.querySelector(`.theory-grade-val-${student}`).value.trim();
+            const theoryVal = document.querySelector('.theory-grade-val-' + student).value.trim();
             examGradebook[student].theoryGrade = theoryVal || "N/A";
             const publishData = {
                 targetStudent: student,
@@ -2614,12 +3013,12 @@
                 remarks: "Well done!"
             };
             socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(publishData), type: 'publish_report_card' });
-            alert(`Grades published for ${student}`);
+            alert('Grades published for ' + student);
         }
 
-        // ========================================
+        // ============================================================
         // ACTIVE USERS
-        // ========================================
+        // ============================================================
         socket.on('update_active_users', (data) => {
             const list = document.getElementById('active-tracked-users-list');
             list.innerHTML = '';
@@ -2629,35 +3028,34 @@
             }
             data.users.forEach(u => {
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid var(--border-color)';
                 const isInstructor = u.role === 'instructor';
                 const proBadge = u.is_pro ? ' ⚡' : '';
                 const action = isInstructor ?
-                    '<span style="color:var(--text-muted);font-size:11px;">Protected</span>' :
-                    `<button onclick="forceBlockUser('${u.username}')" style="padding:2px 10px;background:#c0392b;color:#fff;border:none;border-radius:30px;cursor:pointer;font-family:inherit;font-size:10px;">Block</button>`;
+                    '<span style="color:var(--text-muted);font-size:12px;">Protected</span>' :
+                    '<button class="block-btn" onclick="forceBlockUser(\'' + u.username + '\')">Block</button>';
                 tr.innerHTML = `
-                    <td style="padding:8px;"><strong>${u.username}${proBadge}</strong></td>
-                    <td style="padding:8px;font-size:12px;color:${isInstructor ? 'var(--gold-dark)' : 'var(--text-muted)'};">${u.role.toUpperCase()}</td>
-                    <td style="padding:8px;">${action}</td>
+                    <td><strong>${u.username}${proBadge}</strong></td>
+                    <td style="font-size:13px;color:${isInstructor ? 'var(--blue-dark)' : 'var(--text-muted)'};">${u.role.toUpperCase()}</td>
+                    <td>${action}</td>
                 `;
                 list.appendChild(tr);
             });
         });
 
         function forceBlockUser(username) {
-            if (confirm(`Block ${username}?`)) {
+            if (confirm('Block ' + username + '?')) {
                 socket.emit('block_user_by_username', { username });
             }
         }
 
-        // ========================================
+        // ============================================================
         // MESSAGE HANDLER
-        // ========================================
+        // ============================================================
         socket.on('bounce_message', d => {
             if (d.type === "emoji_reaction") {
                 createFloatingEmoji(d.content);
             } else if (d.type === "camera_status_update") {
-                const overlay = document.getElementById(`peer-blocked-overlay-${d.sender_id}`);
+                const overlay = document.getElementById('peer-blocked-overlay-' + d.sender_id);
                 if (overlay) {
                     if (d.content === 'disable') overlay.classList.remove('hidden');
                     else overlay.classList.add('hidden');
@@ -2701,18 +3099,15 @@
                         theoryGrade: "",
                         remarks: ""
                     };
-                    appendMsg("SYSTEM", `📝 Exam received from: ${sub.studentName}`, "text");
+                    appendMsg("SYSTEM", "📝 Exam received from: " + sub.studentName, "text");
                 }
             } else if (d.type === "publish_report_card") {
                 const report = JSON.parse(d.content);
                 if (!isTeacherUser && report.targetStudent === myUsername) {
-                    alert(`
-📊 NEXUS LEARN RESULTS
-─────────────────────────
-Multiple Choice: ${report.objScore}
-Theory Grade: ${report.theoryGrade}
-Remarks: ${report.remarks}
-                    `);
+                    alert(
+                        '📊 NEXUS LEARN RESULTS\n─────────────────────────\nMultiple Choice: ' + report.objScore +
+                        '\nTheory Grade: ' + report.theoryGrade + '\nRemarks: ' + report.remarks
+                    );
                 }
             } else {
                 appendMsg(d.name, d.content, d.type);
@@ -2725,11 +3120,11 @@ Remarks: ${report.remarks}
         function handleForcedLockout(msg) {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             document.body.innerHTML = `
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg-primary);color:var(--text-primary);text-align:center;padding:20px;">
+                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--blue-light);color:var(--text-primary);text-align:center;padding:20px;">
                     <span style="font-size:72px;">🚫</span>
                     <h1 style="margin:16px 0 8px;">Account Locked</h1>
                     <p style="color:var(--text-muted);max-width:400px;">${msg || 'You have been removed from this session.'}</p>
-                    <button onclick="location.reload()" style="margin-top:20px;padding:12px 32px;background:var(--gold);color:#fff;border:none;border-radius:30px;cursor:pointer;font-family:inherit;font-weight:600;">Reconnect</button>
+                    <button onclick="location.reload()" style="margin-top:20px;padding:14px 40px;background:var(--blue-accent);color:#fff;border:none;border-radius:50px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;">Reconnect</button>
                 </div>
             `;
         }
@@ -2739,7 +3134,7 @@ Remarks: ${report.remarks}
         });
 
         console.log('🚀 Nexus Learn loaded successfully!');
-        console.log('📚 Brown & Cream Premium Theme');
+        console.log('🎨 Light Blue & Beige Premium Theme with Big Dashboard');
     </script>
 </body>
 </html>
