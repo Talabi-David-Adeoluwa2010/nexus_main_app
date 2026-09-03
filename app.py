@@ -7,6 +7,8 @@ import json
 import uuid
 import logging
 import requests
+import re
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 
@@ -22,12 +24,20 @@ socketio = SocketIO(
     async_mode='gevent', 
     cors_allowed_origins="*",
     max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
-    ping_timeout=60,
-    ping_interval=25
+    ping_timeout=60,                       # 60s timeout before dropping client
+    ping_interval=25                       # 25s ping interval
 )
 
 # MASTER ADMIN CONFIGURATION
 ADMIN_APP_URL = os.environ.get("ADMIN_APP_URL", "https://nexus-admin-app-6.onrender.com").rstrip('/')
+
+# PAYMENT DETAILS
+PAYMENT_DETAILS = {
+    "account_number": "8024300891",
+    "bank_name": "OPay",
+    "account_name": "Talabi Sunny Okunola",
+    "contact_number": "+2348024300891"
+}
 
 classrooms = {}       
 active_sockets = {}   
@@ -35,52 +45,138 @@ teacher_accounts = {
     "admin": "admin123"
 }
 
-# PRO SUBSCRIPTION STORAGE
-pro_subscribers = {}  # Format: {username: {"expiry": timestamp, "plan": "1year"}}
+# PRO USER DATABASE (In production, use a proper database)
+pro_users = {}
+activation_codes = {}
+
+# AI BOT RESPONSES
+AI_BOT_RESPONSES = {
+    "how to navigate": "To navigate NEXUS LEARN: 1) After the loading page, you'll see the homepage with buttons for Student and Teacher login. 2) Click the appropriate button based on your role. 3) For students, enter your name and class code. 4) For teachers, login with your credentials and create a class session. 5) Use the controls at the bottom to manage your camera, microphone, and chat.",
+    "how to login as a teacher": "To login as a teacher: 1) On the homepage, click the 'Login as Teacher' button. 2) Enter your username and password. 3) If you don't have an account, click 'Register as instructor' and fill in the required fields including your activation ticket. 4) After successful login, you'll see the Instructor Hub where you can create class sessions.",
+    "how to login as a student": "To login as a student: 1) On the homepage, click the 'Login as Student' button. 2) Enter your full name and the class code provided by your teacher. 3) Click 'Join Classroom'. 4) You'll be connected to your virtual classroom with video, chat, and exam features.",
+    "about the app": "NEXUS LEARN is a comprehensive virtual educational classroom portal founded by Talabi David Adeoluwa. It provides real-time video conferencing, interactive chat, dynamic exam creation, gradebook tracking, and secure teacher-student communication. The app is designed to make online learning engaging and accessible.",
+    "the idea of the app": "The idea behind NEXUS LEARN is to create a secure, feature-rich virtual classroom environment that bridges the gap between physical and online education. It enables teachers to conduct live classes, administer exams, track student progress, and maintain classroom discipline remotely - all in one unified platform.",
+    "why the app is the best for you": "NEXUS LEARN stands out because: 1) It's completely FREE for basic use. 2) Features real-time video with optimized bandwidth for smooth connections. 3) Includes dynamic exam engines with OBJ and theory support. 4) Provides teacher controls for classroom management. 5) Has built-in gradebook tracking. 6) Offers Nexus Pro for advanced features like extended hours and more.",
+    "how to pay for the nexus pro": "To pay for Nexus Pro: 1) Click 'Activate Nexus Pro' button on the homepage. 2) Fill in your name and phone number. 3) Select your preferred duration (1 week to 1 year). 4) You'll see the payment details - transfer to OPay account 8024300891 (Talabi Sunny Okunola). 5) After payment, contact +2348024300891 with your receipt to receive your activation code. 6) Enter the activation code on the homepage to unlock Pro features.",
+    "features of the nexus pro": "NEXUS PRO features include: 1) Extended 6-hour daily usage limit. 2) Send up to 5 pictures in global chat. 3) Exam setting available every 24 hours. 4) Premium background theme. 5) Priority video streaming quality. 6) Advanced classroom analytics. 7) Priority support access. 8) Exclusive Pro badges and features.",
+}
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/api/check_pro/<username>')
-def check_pro_status(username):
-    """Check if a user has active Pro subscription"""
-    if username in pro_subscribers:
-        import time
-        if time.time() < pro_subscribers[username].get('expiry', 0):
-            return jsonify({"active": True, "expiry": pro_subscribers[username]['expiry'], "plan": pro_subscribers[username].get('plan', 'Unknown')})
-        else:
-            del pro_subscribers[username]
-    return jsonify({"active": False})
+# --- PAYMENT & ACTIVATION SYSTEM ---
+@socketio.on('submit_payment_request')
+def handle_payment_request(data):
+    try:
+        name = data.get('name', '').strip()
+        phone = data.get('phone', '').strip()
+        duration = data.get('duration', '').strip()
+        
+        if not name or not phone or not duration:
+            emit('payment_response', {'success': False, 'message': 'All fields are required.'})
+            return
+        
+        # Send payment request to admin app for processing
+        try:
+            response = requests.post(
+                f"{ADMIN_APP_URL}/api/payment_request",
+                json={
+                    "name": name,
+                    "phone": phone,
+                    "duration": duration,
+                    "account_details": PAYMENT_DETAILS
+                },
+                timeout=5
+            )
+        except Exception as e:
+            print(f"Payment request forwarding failed: {e}")
+        
+        emit('payment_response', {
+            'success': True,
+            'payment_details': PAYMENT_DETAILS,
+            'message': 'Payment details retrieved successfully'
+        })
+    except Exception as e:
+        emit('payment_response', {'success': False, 'message': 'Error processing payment request.'})
 
-@app.route('/api/activate_pro', methods=['POST'])
-def activate_pro():
-    """Activate Pro subscription with valid code"""
-    data = request.json
-    code = data.get('code', '').upper().strip()
+@socketio.on('verify_pro_activation')
+def handle_pro_activation(data):
+    code = data.get('activation_code', '').strip().upper()
     username = data.get('username', '').strip()
     
-    # Verify activation code with Admin App
+    if not code or not username:
+        emit('pro_activation_response', {'success': False, 'message': 'Activation code and username are required.'})
+        return
+    
+    # Check if code is valid format
+    if not code.startswith("NEXUS-PRO-"):
+        emit('pro_activation_response', {'success': False, 'message': 'Invalid activation code format.'})
+        return
+    
+    # Check if already used
+    if code in activation_codes and activation_codes[code].get('used'):
+        emit('pro_activation_response', {'success': False, 'message': 'This activation code has already been used.'})
+        return
+    
+    # Verify with admin app
+    is_valid = False
     try:
         response = requests.post(
-            f"{ADMIN_APP_URL}/api/verify_code", 
-            json={"code": code, "username": username}, 
+            f"{ADMIN_APP_URL}/api/verify_pro_code", 
+            json={"code": code, "username": username},
             headers={"Content-Type": "application/json"},
             timeout=5
         )
         if response.status_code == 200 and response.json().get("valid"):
-            import time
-            # Determine duration from code format (implement your logic here)
-            duration_days = 365  # Default 1 year
-            expiry = time.time() + (duration_days * 24 * 60 * 60)
-            pro_subscribers[username] = {"expiry": expiry, "plan": "1 Year"}
-            return jsonify({"success": True, "message": "Pro activated successfully!", "expiry": expiry})
+            is_valid = True
     except Exception as e:
-        print(f"Activation error: {e}")
+        print(f"Admin verification failed: {e}")
     
-    return jsonify({"success": False, "message": "Invalid activation code"})
+    if not is_valid:
+        emit('pro_activation_response', {'success': False, 'message': 'Invalid or expired activation code.'})
+        return
+    
+    # Activate pro for user
+    activation_codes[code] = {
+        'used': True,
+        'username': username,
+        'activated_at': datetime.now().isoformat()
+    }
+    
+    pro_users[username] = {
+        'activated': True,
+        'activation_date': datetime.now().isoformat(),
+        'code': code
+    }
+    
+    emit('pro_activation_response', {
+        'success': True,
+        'message': 'Nexus Pro activated successfully! Enjoy your premium features.'
+    })
 
-# --- TEACHER AUTH SYSTEM ---
+@socketio.on('check_pro_status')
+def handle_pro_status(data):
+    username = data.get('username', '').strip()
+    is_pro = username in pro_users and pro_users[username].get('activated', False)
+    emit('pro_status_response', {'is_pro': is_pro})
+
+# --- AI BOT QUERY HANDLER ---
+@socketio.on('ai_bot_query')
+def handle_ai_bot_query(data):
+    query = data.get('query', '').strip().lower()
+    
+    # Find best matching response
+    best_response = "I'm sorry, I don't understand that question. Please ask about navigation, login, app features, Nexus Pro, or payment."
+    
+    for key, response in AI_BOT_RESPONSES.items():
+        if key in query:
+            best_response = response
+            break
+    
+    emit('ai_bot_response', {'response': best_response})
+
+# --- TEACHER AUTH SYSTEM (LOGIN & REGISTRATION) ---
 @socketio.on('login_teacher')
 def handle_login_teacher(data):
     username = data.get('username', '').strip()
@@ -91,14 +187,10 @@ def handle_login_teacher(data):
         return
 
     if username in teacher_accounts and teacher_accounts[username] == password:
-        # Check Pro status
-        import time
-        is_pro = username in pro_subscribers and time.time() < pro_subscribers[username].get('expiry', 0)
         emit('auth_response', {
             'success': True, 
             'action': 'login', 
             'username': username, 
-            'is_pro': is_pro,
             'message': 'Login successful!'
         })
     else:
@@ -161,12 +253,32 @@ def handle_create_class(data):
     username = data.get('username')
     classname = data.get('classname', '').strip() or "Untitled Session"
     
+    # Check if pro user for exam limits
+    is_pro = username in pro_users and pro_users[username].get('activated', False)
+    
+    # Check exam eligibility for non-pro users
+    if not is_pro:
+        if username in teacher_accounts:
+            last_exam = teacher_accounts[username].get('last_exam_time')
+            if last_exam:
+                time_diff = datetime.now() - datetime.fromisoformat(last_exam)
+                if time_diff < timedelta(hours=24):
+                    hours_left = 24 - (time_diff.seconds // 3600)
+                    emit('exam_eligibility', {
+                        'eligible': False,
+                        'message': f'You must wait {hours_left} hours before setting another exam. Upgrade to Pro for unlimited exam setting!',
+                        'is_pro': False
+                    })
+                    return
+    
     class_code = str(uuid.uuid4())[:13].upper()
 
     classrooms[class_code] = {
         "classname": classname,
         "teacher": username,
-        "members": []
+        "members": [],
+        "is_pro": is_pro,
+        "created_at": datetime.now().isoformat()
     }
     emit('class_created', {'class_code': class_code})
 
@@ -179,10 +291,6 @@ def handle_join_class(data):
     if not name or not class_code:
         emit('join_response', {'success': False, 'message': 'Name and Class Code are required.'})
         return
-
-    # Check Pro status for class joining
-    import time
-    is_pro = name in pro_subscribers and time.time() < pro_subscribers[name].get('expiry', 0)
 
     try:
         ban_check = requests.get(f"{ADMIN_APP_URL}/api/check_ban/{name}", timeout=2).json()
@@ -198,13 +306,22 @@ def handle_join_class(data):
 
     classroom = classrooms[class_code]
     role = 'instructor' if classroom['teacher'] == name else 'student'
+    
+    # Check pro status and daily usage
+    is_pro = name in pro_users and pro_users[name].get('activated', False)
+    daily_usage_key = f"daily_usage_{name}_{datetime.now().strftime('%Y-%m-%d')}"
+    
+    if not is_pro and daily_usage_key in active_sockets:
+        emit('join_response', {'success': False, 'message': 'Free users are limited to 6 hours daily. Upgrade to Pro for extended access!'})
+        return
 
     active_sockets[request.sid] = {
         "username": name,
         "room": class_code,
         "role": role,
         "is_pro": is_pro,
-        "join_time": time.time()
+        "joined_at": datetime.now().isoformat(),
+        "daily_usage_key": daily_usage_key
     }
 
     join_room(class_code)
@@ -212,7 +329,7 @@ def handle_join_class(data):
     existing_members = []
     for sid, info in active_sockets.items():
         if info['room'] == class_code and sid != request.sid:
-            existing_members.append({"socket_id": sid, "name": info["username"], "is_pro": info.get('is_pro', False)})
+            existing_members.append({"socket_id": sid, "name": info["username"]})
 
     classroom['members'].append({"socket_id": request.sid, "name": name})
 
@@ -221,7 +338,8 @@ def handle_join_class(data):
         'classname': classroom['classname'],
         'teacher': classroom['teacher'],
         'existing_members': existing_members,
-        'is_pro': is_pro
+        'is_pro': is_pro,
+        'is_pro_classroom': classroom.get('is_pro', False)
     })
 
     try:
@@ -242,15 +360,13 @@ def handle_register_user(data):
     role = data.get('role', 'student')
     room = data.get('room')
     
-    # Check Pro status
-    import time
-    is_pro = username in pro_subscribers and time.time() < pro_subscribers[username].get('expiry', 0)
-    
     active_sockets[request.sid] = {
         "username": username,
         "room": room,
         "role": role,
-        "is_pro": is_pro
+        "is_pro": username in pro_users and pro_users[username].get('activated', False),
+        "joined_at": datetime.now().isoformat(),
+        "daily_usage_key": f"daily_usage_{username}_{datetime.now().strftime('%Y-%m-%d')}"
     }
     broadcast_active_users(room)
 
@@ -340,12 +456,27 @@ def handle_image_broadcast(data):
     room = data.get('room')
     name = data.get('name')
     image_data = data.get('image_data')
-
-    # Check image limit for non-pro users
-    is_pro = active_sockets.get(request.sid, {}).get('is_pro', False)
+    
+    # Check pro status for image limit
+    user_info = active_sockets.get(request.sid, {})
+    is_pro = user_info.get('is_pro', False)
+    
     if not is_pro:
-        # Implement image limit logic here if needed
-        pass
+        # Free users limited to 3 images per session
+        image_count = user_info.get('image_count', 0)
+        if image_count >= 3:
+            emit('image_limit_reached', {'message': 'Free users can only send 3 images. Upgrade to Pro for 5 images!'})
+            return
+        user_info['image_count'] = image_count + 1
+        active_sockets[request.sid] = user_info
+    else:
+        # Pro users limited to 5 images
+        image_count = user_info.get('image_count', 0)
+        if image_count >= 5:
+            emit('image_limit_reached', {'message': 'You have reached the maximum of 5 images for this session.'})
+            return
+        user_info['image_count'] = image_count + 1
+        active_sockets[request.sid] = user_info
 
     emit('bounce_message', {
         'sender_id': request.sid,
@@ -389,7 +520,7 @@ def broadcast_active_users(room_code):
             active_list.append({
                 "username": info["username"], 
                 "role": info["role"],
-                "is_pro": info.get('is_pro', False)
+                "is_pro": info.get("is_pro", False)
             })
     emit('update_active_users', {'users': active_list}, room=room_code)
 
