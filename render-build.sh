@@ -2,9 +2,5 @@
 # Exit on error
 set -o errexit
 
-# Install system dependencies
-apt-get update
-apt-get install -y gcc python3-dev libevent-dev
-
-# Install Python dependencies
+# Install Python dependencies (gevent will build with pre-installed system deps on Render)
 pip install -r requirements.txt
