@@ -1824,12 +1824,12 @@
             <div id="teacher-reg-container" class="hidden">
                 <div class="auth-section">
                     <h2>📝 Register <span>Instructor</span></h2>
-                    <p class="sub">Create your teacher account</p>
+                    <p class="sub">Create your teacher account (free)</p>
                     <div class="input-group">
                         <input type="text" id="reg-username" placeholder="Username">
                         <input type="email" id="reg-email" placeholder="Email Address">
                         <input type="password" id="reg-password" placeholder="Password">
-                        <input type="text" id="reg-activation" maxlength="14" placeholder="Activation Code (NEXUS-XXXXXXXX)" style="text-transform:uppercase;">
+                        <!-- Activation code input removed – free registration -->
                     </div>
                     <button class="btn" id="register-btn">Complete Registration</button>
                     <div class="link" onclick="showTeacherLogin()">Back to Login</div>
@@ -2255,9 +2255,7 @@
             document.getElementById('pro-code-input').addEventListener('input', function(e) {
                 e.target.value = e.target.value.toUpperCase();
             });
-            document.getElementById('reg-activation').addEventListener('input', function(e) {
-                e.target.value = e.target.value.toUpperCase();
-            });
+            // No activation code input, so no need for that listener
         });
 
         // ============================================================
@@ -2485,16 +2483,15 @@
         });
 
         // ============================================================
-        // TEACHER AUTH
+        // TEACHER AUTH - ACTIVATION CODE REMOVED
         // ============================================================
         document.getElementById('register-btn').addEventListener('click', () => {
             const username = document.getElementById('reg-username').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
-            const code = document.getElementById('reg-activation').value.trim().toUpperCase();
-            if (!username || !password || !code) { alert('All fields required.'); return; }
-            if (code.length !== 14 || !code.startsWith("NEXUS-")) { alert('Invalid activation code.'); return; }
-            socket.emit('register_teacher', { username, email, password, activationCode: code });
+            // No activation code – free registration
+            if (!username || !password) { alert('Username and password are required.'); return; }
+            socket.emit('register_teacher', { username, email, password });
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
@@ -3319,6 +3316,7 @@
         console.log('🚀 Nexus Learn Ultimate Edition loaded!');
         console.log('📚 Moving emoji background activated!');
         console.log('🎨 Light Blue & Beige Premium Theme');
+        console.log('✅ Activation code removed for free teacher registration!');
     </script>
 </body>
 </html>
