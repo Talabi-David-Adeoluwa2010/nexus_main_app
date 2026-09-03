@@ -10,15 +10,15 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
-# Disable noisy debug logs to save system resources during image streaming
+# Disable noisy debug logs
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
-# OPTIMIZED SOCKET.IO CONFIGURATION - CHANGED TO threading
+# OPTIMIZED SOCKET.IO CONFIGURATION
 socketio = SocketIO(
     app, 
-    async_mode='threading', 
+    async_mode='threading',
     cors_allowed_origins="*",
-    max_http_buffer_size=10 * 1024 * 1024,  # 10 MB Buffer
+    max_http_buffer_size=10 * 1024 * 1024,
     ping_timeout=60,
     ping_interval=25
 )
@@ -34,7 +34,7 @@ PAYMENT_DETAILS = {
     "phone": "+2348024300891"
 }
 
-# PRO PLAN DURATIONS (in days)
+# PRO PLAN DURATIONS
 PRO_DURATIONS = {
     "1week": 7,
     "2weeks": 14,
@@ -50,8 +50,8 @@ active_sockets = {}
 teacher_accounts = {
     "admin": "admin123"
 }
-pro_users = {}  # Store pro user info: {username: {expiry_date, phone, name, activated_date}}
-pending_payments = {}  # Store pending payment requests
+pro_users = {}
+pending_payments = {}
 
 @app.route('/')
 def home():
@@ -145,20 +145,17 @@ def handle_register_teacher(data):
 
 # --- PRO ACTIVATION SYSTEM ---
 def check_pro_status(username):
-    """Check if user has active pro subscription"""
     if username in pro_users:
         user_pro = pro_users[username]
         expiry = datetime.fromisoformat(user_pro.get('expiry_date', ''))
         if datetime.now() < expiry:
             return {'is_pro': True, 'expiry_date': user_pro['expiry_date'], 'days_left': (expiry - datetime.now()).days}
         else:
-            # Expired
             del pro_users[username]
     return {'is_pro': False, 'expiry_date': None, 'days_left': 0}
 
 @socketio.on('request_pro_activation')
 def handle_pro_activation_request(data):
-    """Handle initial pro activation request - collect user details"""
     username = data.get('username', '')
     name = data.get('full_name', '')
     phone = data.get('phone', '')
@@ -172,7 +169,6 @@ def handle_pro_activation_request(data):
         emit('pro_activation_response', {'success': False, 'message': 'Invalid duration selected.'})
         return
     
-    # Store pending payment
     request_id = str(uuid.uuid4())[:8].upper()
     pending_payments[request_id] = {
         'username': username,
@@ -193,14 +189,11 @@ def handle_pro_activation_request(data):
 
 @socketio.on('confirm_pro_payment')
 def handle_pro_payment_confirmation(data):
-    """Handle payment confirmation - shows pending status"""
     request_id = data.get('request_id', '')
     
     if request_id not in pending_payments:
         emit('payment_status_response', {'success': False, 'message': 'Invalid request.'})
         return
-    
-    pending_info = pending_payments[request_id]
     
     emit('payment_status_response', {
         'success': True,
@@ -211,7 +204,6 @@ def handle_pro_payment_confirmation(data):
 
 @socketio.on('activate_pro_code')
 def handle_pro_code_activation(data):
-    """Activate pro subscription with code"""
     username = data.get('username', '')
     activation_code = data.get('activation_code', '').strip().upper()
     
@@ -219,7 +211,6 @@ def handle_pro_code_activation(data):
         emit('pro_activation_status', {'success': False, 'message': 'Username and activation code are required.'})
         return
     
-    # Verify with admin app - same verification style
     is_valid = False
     try:
         response = requests.post(
@@ -230,20 +221,17 @@ def handle_pro_code_activation(data):
         )
         if response.status_code == 200 and response.json().get("valid"):
             is_valid = True
-            # Get duration from admin response
-            duration_days = response.json().get("duration_days", 30)  # Default 30 days
+            duration_days = response.json().get("duration_days", 30)
     except Exception as e:
         print(f"Pro code verification failed: {e}")
-        # Local fallback validation for testing
         if len(activation_code) == 14 and activation_code.startswith("NEXUS-"):
             is_valid = True
-            duration_days = 30  # Default
+            duration_days = 30
     
     if not is_valid:
         emit('pro_activation_status', {'success': False, 'message': 'Invalid or expired Pro activation code!'})
         return
     
-    # Activate pro subscription
     expiry_date = (datetime.now() + timedelta(days=duration_days)).isoformat()
     pro_users[username] = {
         'expiry_date': expiry_date,
@@ -272,7 +260,6 @@ def handle_create_class(data):
         "members": []
     }
     
-    # Check if teacher is pro for enhanced features
     pro_status = check_pro_status(username)
     
     emit('class_created', {
@@ -305,7 +292,6 @@ def handle_join_class(data):
     classroom = classrooms[class_code]
     role = 'instructor' if classroom['teacher'] == name else 'student'
 
-    # Check pro status for restrictions
     pro_status = check_pro_status(name)
     
     active_sockets[request.sid] = {
@@ -371,35 +357,30 @@ def handle_register_user(data):
 
 # --- PRO RESTRICTION CHECKS ---
 def check_pro_restrictions(sid, action_type):
-    """Check if non-pro users hit their limits"""
     if sid not in active_sockets:
         return {'allowed': False, 'message': 'User not found.'}
     
     user_info = active_sockets[sid]
     
-    # Pro users have no restrictions
     if user_info.get('is_pro'):
         return {'allowed': True}
     
-    # Check daily usage limit (6 hours for non-pro)
     if action_type == 'daily_usage':
         usage_start = datetime.fromisoformat(user_info.get('daily_usage_start', datetime.now().isoformat()))
         hours_used = (datetime.now() - usage_start).total_seconds() / 3600
         if hours_used > 6:
             return {'allowed': False, 'message': 'Daily usage limit reached. Wait 24 hours or upgrade to Pro.'}
     
-    # Check image limit (5 images per day for non-pro)
     if action_type == 'image_upload':
         images_sent = user_info.get('images_sent_today', 0)
         if images_sent >= 5:
             return {'allowed': False, 'message': 'Image limit reached. Upgrade to Pro for unlimited images.'}
     
-    # Check exam limit (once per 24 hours for non-pro)
     if action_type == 'exam_submission':
         last_exam = user_info.get('last_exam_submission')
         if last_exam:
             last_exam_time = datetime.fromisoformat(last_exam)
-            if (datetime.now() - last_exam_time).total_seconds() < 86400:  # 24 hours
+            if (datetime.now() - last_exam_time).total_seconds() < 86400:
                 return {'allowed': False, 'message': 'Exam submission locked. Wait 24 hours or upgrade to Pro.'}
     
     return {'allowed': True}
@@ -413,7 +394,6 @@ def handle_submit_exam(data):
     total_questions = data.get('total_questions', 0)
     answers = data.get('answers', {})
 
-    # Check exam restrictions
     restriction_check = check_pro_restrictions(request.sid, 'exam_submission')
     if not restriction_check['allowed']:
         emit('exam_submitted_response', {
@@ -443,7 +423,6 @@ def handle_submit_exam(data):
     except Exception as e:
         print(f"Failed to submit results to Admin URL: {e}")
 
-    # Update last exam submission time
     if request.sid in active_sockets:
         active_sockets[request.sid]['last_exam_submission'] = datetime.now().isoformat()
 
@@ -466,7 +445,6 @@ def handle_image_broadcast(data):
     name = data.get('name')
     image_data = data.get('image_data')
 
-    # Check image restrictions
     restriction_check = check_pro_restrictions(request.sid, 'image_upload')
     if not restriction_check['allowed']:
         emit('image_upload_response', {
@@ -475,7 +453,6 @@ def handle_image_broadcast(data):
         })
         return
 
-    # Update image count
     if request.sid in active_sockets:
         active_sockets[request.sid]['images_sent_today'] = active_sockets[request.sid].get('images_sent_today', 0) + 1
 
@@ -553,10 +530,8 @@ def handle_block_user_by_username(data):
 
 @socketio.on('ai_query')
 def handle_ai_query(data):
-    """Handle AI bot questions"""
     query = data.get('query', '').lower().strip()
     
-    # Find best matching response
     response = "I'm sorry, I don't understand that question. Please ask about navigation, login, the app, Pro features, or payments."
     
     if 'navigate' in query or 'how to use' in query:
