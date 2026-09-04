@@ -2396,10 +2396,11 @@
 
         // ============================================================
         // SOCKET.IO with better error handling
+        // CRITICAL FIX: Transport order must be ['polling', 'websocket']
         // ============================================================
         let socketAttempts = 0;
         const socket = io({
-            transports: ['websocket', 'polling'],
+            transports: ['polling', 'websocket'],
             reconnection: true,
             reconnectionAttempts: 30,
             reconnectionDelay: 1000,
@@ -2415,7 +2416,7 @@
             console.log('❌ Socket connection error:', error);
             socketAttempts++;
             if (socketAttempts > 5) {
-                alert('Unable to connect to the server. Please check your network and refresh.');
+                console.warn('Still trying to reconnect... Attempt ' + socketAttempts);
             }
         });
 
