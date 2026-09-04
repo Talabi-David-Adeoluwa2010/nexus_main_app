@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
 
+# CRITICAL FIX: Import threading driver for Render Proxy
+from engineio.async_drivers import threading
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 
