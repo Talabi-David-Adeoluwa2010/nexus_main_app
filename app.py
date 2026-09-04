@@ -3,12 +3,10 @@ import json
 import uuid
 import logging
 import requests
+import simple_websocket  # CRITICAL FIX: Allows WS upgrade on Render
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
-
-# CRITICAL FIX: Import threading driver for Render Proxy
-from engineio.async_drivers import threading
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
@@ -16,10 +14,9 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 # Disable noisy debug logs
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
-# OPTIMIZED SOCKET.IO CONFIGURATION
+# OPTIMIZED SOCKET.IO CONFIGURATION FOR RENDER
 socketio = SocketIO(
     app, 
-    async_mode='threading',
     cors_allowed_origins="*",
     max_http_buffer_size=10 * 1024 * 1024,
     ping_timeout=60,
