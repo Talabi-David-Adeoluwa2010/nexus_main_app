@@ -1,6 +1,5 @@
 import os
 import logging
-from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -8,9 +7,7 @@ app.config['SECRET_KEY'] = 'nexus_firebase_secret'
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-# Master Data
 teacher_accounts = {"admin": "admin123"}
-pro_users = {}
 
 @app.route('/')
 def home():
