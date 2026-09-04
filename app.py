@@ -3,7 +3,7 @@ import logging
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw'
+app.config['SECRET_KEY'] = 'nexus_firebase_secret'
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
