@@ -2395,18 +2395,30 @@
         })();
 
         // ============================================================
-        // SOCKET.IO with better error handling
-        // CRITICAL FIX: Transport order must be ['polling', 'websocket']
+        // SOCKET.IO CONFIGURATION (Patience for Free Tier Cold Start)
         // ============================================================
         let socketAttempts = 0;
+
+        // SAFE EMIT FUNCTION: Waits for socket to connect, never alerts user
+        function safeEmit(event, data, maxRetries = 20) {
+            if (socket.connected) {
+                socket.emit(event, data);
+            } else if (maxRetries > 0) {
+                setTimeout(() => safeEmit(event, data, maxRetries - 1), 1000);
+            } else {
+                // Only show a gentle message if it truly fails after 20 seconds
+                console.log('Connection timeout for event: ' + event);
+            }
+        }
+
         const socket = io({
-    transports: ['polling', 'websocket'],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 3000,
-    reconnectionDelayMax: 10000,
-    timeout: 60000 // 60-second timeout for cold start
-});
+            transports: ['polling', 'websocket'],
+            reconnection: true,
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 3000,
+            reconnectionDelayMax: 10000,
+            timeout: 60000 // 60-second timeout for cold start
+        });
 
         socket.on('connect', () => {
             console.log('✅ Socket connected successfully!');
@@ -2416,9 +2428,7 @@
         socket.on('connect_error', (error) => {
             console.log('❌ Socket connection error:', error);
             socketAttempts++;
-            if (socketAttempts > 5) {
-                console.warn('Still trying to reconnect... Attempt ' + socketAttempts);
-            }
+            // We do NOT alert the user here. We just wait and try again.
         });
 
         // ============================================================
@@ -2577,12 +2587,9 @@
             if (!query) return;
             const msgs = document.getElementById('ai-messages');
             msgs.innerHTML += '<div class="user">' + query + '</div>';
-            // Ensure socket is connected before emitting
-            if (socket.connected) {
-                socket.emit('ai_query', { query: query });
-            } else {
-                alert('Socket not connected. Please refresh and try again.');
-            }
+            
+            safeEmit('ai_query', { query: query });
+            
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
         }
@@ -2602,7 +2609,7 @@
         // ============================================================
         function sendEmojiReaction(emoji) {
             createFloatingEmoji(emoji);
-            socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: emoji, type: "emoji_reaction" });
+            safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: emoji, type: "emoji_reaction" });
         }
 
         function createFloatingEmoji(emoji) {
@@ -2649,16 +2656,12 @@
 
             const username = myUsername || 'guest';
 
-            if (socket.connected) {
-                socket.emit('request_pro_activation', {
-                    username: username,
-                    full_name: fullName,
-                    phone: phone,
-                    duration: duration
-                });
-            } else {
-                alert('Socket not connected. Please refresh.');
-            }
+            safeEmit('request_pro_activation', {
+                username: username,
+                full_name: fullName,
+                phone: phone,
+                duration: duration
+            });
 
             setTimeout(() => {
                 btn.textContent = originalText;
@@ -2696,7 +2699,7 @@
 
         function confirmProPayment() {
             if (currentProRequestId) {
-                socket.emit('confirm_pro_payment', { request_id: currentProRequestId });
+                safeEmit('confirm_pro_payment', { request_id: currentProRequestId });
             } else {
                 alert('Please submit your details first.');
             }
@@ -2722,14 +2725,10 @@
                 alert('Please log in first to activate Pro.');
                 return;
             }
-            if (socket.connected) {
-                socket.emit('activate_pro_code', {
-                    username: myUsername,
-                    activation_code: code
-                });
-            } else {
-                alert('Socket not connected. Please refresh.');
-            }
+            safeEmit('activate_pro_code', {
+                username: myUsername,
+                activation_code: code
+            });
         }
 
         socket.on('pro_activation_status', (data) => {
@@ -2751,22 +2750,14 @@
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             if (!username || !password) { alert('Username and password are required.'); return; }
-            if (socket.connected) {
-                socket.emit('register_teacher', { username, email, password });
-            } else {
-                alert('Socket not connected. Please refresh.');
-            }
+            safeEmit('register_teacher', { username, email, password });
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
             const username = document.getElementById('login-identity').value.trim();
             const password = document.getElementById('login-password').value;
             if (!username || !password) { alert('Please enter username and password.'); return; }
-            if (socket.connected) {
-                socket.emit('login_teacher', { username, password });
-            } else {
-                alert('Socket not connected. Please refresh.');
-            }
+            safeEmit('login_teacher', { username, password });
         });
 
         socket.on('auth_response', (data) => {
@@ -2797,11 +2788,7 @@
         // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', () => {
             const name = document.getElementById('create-classname').value.trim();
-            if (socket.connected) {
-                socket.emit('create_class', { username: currentTeacherUser, classname: name });
-            } else {
-                alert('Socket not connected. Please refresh.');
-            }
+            safeEmit('create_class', { username: currentTeacherUser, classname: name });
         });
 
         socket.on('class_created', (data) => {
@@ -2813,7 +2800,7 @@
 
         document.getElementById('enter-classroom-btn').addEventListener('click', () => {
             if (myUsername && classCodeRoom) {
-                socket.emit('join_class_session', { name: myUsername, classCode: classCodeRoom });
+                safeEmit('join_class_session', { name: myUsername, classCode: classCodeRoom });
             }
         });
 
@@ -2825,7 +2812,7 @@
             classCodeRoom = document.getElementById('join-code').value.trim();
             isTeacherUser = false;
             if (!myUsername || !classCodeRoom) { alert('Please enter your name and class code.'); return; }
-            socket.emit('join_class_session', { name: myUsername, classCode: classCodeRoom });
+            safeEmit('join_class_session', { name: myUsername, classCode: classCodeRoom });
         });
 
         socket.on('join_response', async (data) => {
@@ -2853,7 +2840,7 @@
                     document.getElementById('admin-tracking-section').classList.remove('hidden');
                 }
 
-                socket.emit('register_user', { username: myUsername, role: isTeacherUser ? 'instructor' : 'student', room: classCodeRoom });
+                safeEmit('register_user', { username: myUsername, role: isTeacherUser ? 'instructor' : 'student', room: classCodeRoom });
 
                 await startLocalCameraAndMic();
                 if (data.existing_members) {
@@ -3071,7 +3058,7 @@
             const el = document.getElementById(role + '-input-field');
             if (el && el.value.trim()) {
                 const displayName = myUsername + ' (' + role.toUpperCase() + ')' + (isProUser ? ' ⚡' : '');
-                socket.emit('text_message', { room: classCodeRoom, name: displayName, content: el.value.trim(), type: "text" });
+                safeEmit('text_message', { room: classCodeRoom, name: displayName, content: el.value.trim(), type: "text" });
                 appendMsg(displayName, el.value.trim(), "text");
                 el.value = "";
             }
@@ -3129,7 +3116,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
                     const compressed = canvas.toDataURL('image/jpeg', 0.7);
-                    socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: compressed });
+                    safeEmit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: compressed });
                     appendMsg(myUsername, compressed, "image");
                 };
                 img.src = event.target.result;
@@ -3156,7 +3143,7 @@
                 }
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const snap = canvas.toDataURL('image/jpeg', 0.7);
-                socket.emit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: snap });
+                safeEmit('image_broadcast', { room: classCodeRoom, name: myUsername, image_data: snap });
                 appendMsg(myUsername, snap, "image");
             } else {
                 alert("Camera not available.");
@@ -3203,11 +3190,11 @@
             if (globalMuteLocked) {
                 this.innerText = "🔊 Unlock Mics";
                 this.style.background = "#27ae60";
-                socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: 'force_mute_on', type: 'global_mic_control' });
+                safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: 'force_mute_on', type: 'global_mic_control' });
             } else {
                 this.innerText = "🔇 Force Mute";
                 this.style.background = "";
-                socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: 'force_mute_off', type: 'global_mic_control' });
+                safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: 'force_mute_off', type: 'global_mic_control' });
             }
         });
 
@@ -3304,7 +3291,7 @@
             if (!hasOBJ && !hasTheory) { alert('Add at least one question.'); return; }
 
             const config = { duration: minutes, objQuestions: objList, theoryQuestions: theoryList };
-            socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(config), type: 'deploy_examination' });
+            safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(config), type: 'deploy_examination' });
             closeExamSetup();
             alert('Exam deployed successfully!');
         }
@@ -3392,7 +3379,7 @@
                 theorySubmissions.push({ prompt: promptText, answer: t.value.trim() });
             });
 
-            socket.emit('submit_exam', {
+            safeEmit('submit_exam', {
                 student_name: myUsername,
                 room: classCodeRoom,
                 score: totalCorrectObj,
@@ -3405,7 +3392,7 @@
                 objScore: possibleObj > 0 ? totalCorrectObj + '/' + possibleObj : "N/A",
                 theoryResponses: theorySubmissions
             };
-            socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(examPackage), type: 'exam_submission' });
+            safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(examPackage), type: 'exam_submission' });
 
             document.getElementById('student-exam-workspace-modal').classList.remove('active');
             alert('Exam submitted successfully!');
@@ -3464,7 +3451,7 @@
                 theoryGrade: theoryVal || "N/A",
                 remarks: "Well done!"
             };
-            socket.emit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(publishData), type: 'publish_report_card' });
+            safeEmit('text_message', { room: classCodeRoom, name: myUsername, content: JSON.stringify(publishData), type: 'publish_report_card' });
             alert('Grades published for ' + student);
         }
 
@@ -3496,7 +3483,7 @@
 
         function forceBlockUser(username) {
             if (confirm('Block ' + username + '?')) {
-                socket.emit('block_user_by_username', { username });
+                safeEmit('block_user_by_username', { username });
             }
         }
 
