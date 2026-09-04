@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NEXUS LEARN - Virtual Classroom Portal</title>
+    <title>NEXUS LEARN - Virtual Classroom</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -18,8 +18,7 @@
             margin: 0;
             padding: 0;
         }
-        html,
-        body {
+        html, body {
             width: 100%;
             min-height: 100vh;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -86,9 +85,6 @@
             --blue-dark: #2c6b9e;
             --beige: #f5efe6;
             --beige-dark: #e8ddd0;
-            --beige-warm: #f0ebe3;
-            --brown-soft: #c4b5a5;
-            --brown-medium: #8b7a6b;
             --text-primary: #2c3e50;
             --text-secondary: #5d6d7e;
             --text-muted: #85929e;
@@ -266,10 +262,6 @@
             color: #fff;
             border-color: var(--blue-accent);
             box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
-        }
-        .nav-btn.active:hover {
-            background: var(--blue-dark);
-            border-color: var(--blue-dark);
         }
         .nav-btn .icon { font-size: 20px; }
         .nav-btn.pro-btn {
@@ -2205,11 +2197,9 @@
         }
 
         function leaveClassroom() {
-            // Clean up listeners and leave room
             if (classCodeRoom) {
                 const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
                 presenceRef.remove();
-                // Remove all listeners? We'll reload.
             }
             location.reload();
         }
@@ -2258,35 +2248,51 @@
         });
 
         // ============================================================
-        // CLASS CREATION (Firebase)
+        // CLASS CREATION (Firebase) - FIXED with loading state
         // ============================================================
-        document.getElementById('create-class-btn').addEventListener('click', () => {
+        document.getElementById('create-class-btn').addEventListener('click', async function() {
             const name = document.getElementById('create-classname').value.trim();
             if (!name) { alert('Enter a class name.'); return; }
-            // Generate a 12‑character alphanumeric code with hyphens
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    code += chars[Math.floor(Math.random() * chars.length)];
+            if (!currentTeacherUser) { alert('You must be logged in as a teacher first.'); return; }
+
+            // Show loading state
+            const originalText = this.innerText;
+            this.innerText = '⏳ Creating...';
+            this.disabled = true;
+
+            try {
+                // Generate a 12‑character alphanumeric code with hyphens
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let code = '';
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        code += chars[Math.floor(Math.random() * chars.length)];
+                    }
+                    if (i < 3) code += '-';
                 }
-                if (i < 3) code += '-';
-            }
-            classCodeRoom = code;
-            // Write class info to Firebase
-            const classRef = db.ref('classrooms/' + classCodeRoom);
-            classRef.update({
-                info: {
-                    name: name,
-                    teacher: currentTeacherUser,
-                    created_at: Date.now()
-                }
-            }).then(() => {
+                classCodeRoom = code;
+
+                // Write class info to Firebase
+                const classRef = db.ref('classrooms/' + classCodeRoom);
+                await classRef.update({
+                    info: {
+                        name: name,
+                        teacher: currentTeacherUser,
+                        created_at: Date.now()
+                    }
+                });
+
                 document.getElementById('display-class-code').innerText = code;
                 document.getElementById('generated-code-box').classList.remove('hidden');
                 myUsername = currentTeacherUser;
-                // Optionally auto‑enter classroom
-            }).catch(err => alert('Error creating class: ' + err.message));
+                alert('Class "' + name + '" created successfully! Code: ' + code);
+            } catch (err) {
+                alert('Error creating class: ' + err.message);
+                console.error(err);
+            } finally {
+                this.innerText = originalText;
+                this.disabled = false;
+            }
         });
 
         document.getElementById('enter-classroom-btn').addEventListener('click', () => {
@@ -2351,7 +2357,7 @@
 
             // Listen for messages
             const messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
-            messagesRef.off(); // remove previous listeners
+            messagesRef.off();
             messagesRef.on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 if (msg) handleIncomingMessage(msg);
@@ -2364,7 +2370,7 @@
                 const signal = snapshot.val();
                 if (signal) {
                     handleSignaling(signal);
-                    snapshot.ref.remove(); // clean up
+                    snapshot.ref.remove();
                 }
             });
 
@@ -2411,7 +2417,6 @@
         // ============================================================
         function forceBlockUser(username) {
             if (confirm('Block ' + username + '?')) {
-                // Write a ban message to the room so the user gets kicked
                 const blockMsg = {
                     name: 'SYSTEM',
                     content: JSON.stringify({ type: 'block', target: username }),
@@ -2498,7 +2503,6 @@
                 appendMsg(msg.name, msg.content, 'text');
                 return;
             }
-            // Default: text or image
             appendMsg(msg.name, msg.content, msg.type);
         }
 
@@ -2730,8 +2734,6 @@
             const originalText = btn.textContent;
             btn.textContent = '⏳ Processing...';
             btn.disabled = true;
-            // In a real app, send to backend or Firebase
-            // For demo, just show payment details
             setTimeout(() => {
                 document.getElementById('pro-form-section').classList.add('hidden');
                 document.getElementById('pro-payment-details').classList.remove('hidden');
@@ -2749,11 +2751,9 @@
         }
 
         async function confirmProPayment() {
-            // Simulate confirmation
             document.getElementById('pro-payment-details').classList.add('hidden');
             document.getElementById('pro-pending-status').classList.remove('hidden');
             document.getElementById('pending-message').innerText = 'Your Pro activation is being processed. We will notify you shortly.';
-            // Optionally call backend
         }
 
         // ============================================================
