@@ -1867,7 +1867,7 @@
                 <button onclick="toggleAIChat()">✕</button>
             </div>
             <div class="messages" id="ai-messages">
-                <div class="bot">Hello! I'm the Nexus AI Assistant. Ask me about navigation, login, the app, Pro features, or payments!</div>
+                <div class="bot">Hello! I'm the Nexus AI Assistant. To ask questions related to this app text either navigation, login, the app, Pro features, or payments!</div>
             </div>
             <div class="input-row">
                 <input type="text" id="ai-input" placeholder="Ask me anything..." onkeypress="handleAIKey(event)">
@@ -2400,12 +2400,13 @@
         // ============================================================
         let socketAttempts = 0;
         const socket = io({
-            transports: ['polling', 'websocket'],
-            reconnection: true,
-            reconnectionAttempts: 30,
-            reconnectionDelay: 1000,
-            timeout: 20000
-        });
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 3000,
+    reconnectionDelayMax: 10000,
+    timeout: 60000 // 60-second timeout for cold start
+});
 
         socket.on('connect', () => {
             console.log('✅ Socket connected successfully!');
