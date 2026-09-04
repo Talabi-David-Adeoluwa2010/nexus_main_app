@@ -7,6 +7,7 @@ app.config['SECRET_KEY'] = 'nexus_firebase_secret'
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+# In‑memory teacher store (demo only; for production use Firebase)
 teacher_accounts = {"admin": "admin123"}
 
 @app.route('/')
@@ -44,7 +45,24 @@ def api_ai():
         response = "Click 'Login as Teacher', enter your username and password, or register to create an account."
     elif 'pro' in query or 'pay' in query:
         response = "To pay for Pro: Transfer to Account: 8024300891 - OPay - Talabi Sunny Okunola, then send the receipt to +2348024300891."
+    elif 'exam' in query or 'test' in query:
+        response = "Teachers can deploy exams using the 'Setup Exam' button. Students will see a live exam modal with a timer."
+    elif 'video' in query or 'camera' in query:
+        response = "Your video is shared with all participants. Use the controls to mute mic, stop cam, flip or mirror."
+    else:
+        response = "Try asking about 'login', 'pro', 'exam', or 'video'."
     return jsonify({'response': response}), 200
+
+@app.route('/api/activate_pro', methods=['POST'])
+def api_activate_pro():
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    code = data.get('activation_code', '').strip().upper()
+    # Demo: accept any code starting with NEXUS- and at least 6 characters
+    if code.startswith('NEXUS-') and len(code) > 6:
+        return jsonify({'success': True, 'message': 'Pro activated successfully!', 'expiry': '2026-12-31'})
+    else:
+        return jsonify({'success': False, 'message': 'Invalid activation code.'}), 400
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
