@@ -66,10 +66,10 @@
                 opacity: 0.05;
             }
             10% {
-                opacity: 0.15;
+                opacity: 0.2;
             }
             90% {
-                opacity: 0.15;
+                opacity: 0.2;
             }
             100% {
                 transform: translateY(-10vh) rotate(720deg) scale(1.2);
@@ -145,9 +145,9 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(232, 240, 254, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(232, 240, 254, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -2359,59 +2359,64 @@
     ============================================================ -->
     <script>
         // ============================================================
-        // ANIMATED EMOJI BACKGROUND - 100+ FLOATING EMOJIS
+        // ANIMATED EMOJI BACKGROUND - 150+ FLOATING EMOJIS
         // ============================================================
         (function createEmojiBackground() {
             const bg = document.getElementById('emojiBg');
             const emojis = ['📚', '✏️', '🎓', '📝', '📖', '🏫', '📐', '🔬', '🧪', '🌍', '💡', '🧮', '📊', '🎯', '🏆', '📌', '🖊️', '📓', '📒', '📕', '📗', '📘'];
 
-            // Generate 100+ floating emojis
-            for (let i = 0; i < 120; i++) {
+            // Generate 150+ floating emojis for rich background
+            for (let i = 0; i < 150; i++) {
                 const el = document.createElement('div');
                 el.className = 'floating-emoji-item';
                 el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                const size = Math.random() * 28 + 16;
+                const size = Math.random() * 30 + 14;
                 el.style.fontSize = size + 'px';
                 el.style.left = Math.random() * 100 + '%';
-                el.style.animationDuration = (Math.random() * 30 + 20) + 's';
-                el.style.animationDelay = (Math.random() * 20) + 's';
-                el.style.opacity = Math.random() * 0.15 + 0.05;
+                el.style.animationDuration = (Math.random() * 35 + 20) + 's';
+                el.style.animationDelay = (Math.random() * 25) + 's';
+                el.style.opacity = Math.random() * 0.2 + 0.06; // more visible
                 bg.appendChild(el);
             }
 
-            // Add some larger shape emojis
+            // Add larger shape emojis
             const shapes = ['📚', '✏️', '🎓', '📝', '📖', '🏫'];
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < 15; i++) {
                 const s = document.createElement('div');
                 s.className = 'shape-bg';
                 s.textContent = shapes[i % shapes.length];
                 s.style.left = Math.random() * 80 + 10 + '%';
                 s.style.top = Math.random() * 80 + 10 + '%';
-                s.style.animationDelay = (Math.random() * 15) + 's';
-                s.style.animationDuration = (Math.random() * 25 + 25) + 's';
+                s.style.animationDelay = (Math.random() * 18) + 's';
+                s.style.animationDuration = (Math.random() * 30 + 30) + 's';
                 s.style.color = Math.random() > 0.5 ? '#d4e2f0' : '#e8ddd0';
                 bg.appendChild(s);
             }
         })();
 
         // ============================================================
-        // SOCKET.IO
+        // SOCKET.IO with better error handling
         // ============================================================
+        let socketAttempts = 0;
         const socket = io({
             transports: ['websocket', 'polling'],
             reconnection: true,
-            reconnectionAttempts: 20,
+            reconnectionAttempts: 30,
             reconnectionDelay: 1000,
             timeout: 20000
         });
 
-        // Socket connection debug
         socket.on('connect', () => {
             console.log('✅ Socket connected successfully!');
+            socketAttempts = 0;
         });
 
         socket.on('connect_error', (error) => {
             console.log('❌ Socket connection error:', error);
+            socketAttempts++;
+            if (socketAttempts > 5) {
+                alert('Unable to connect to the server. Please check your network and refresh.');
+            }
         });
 
         // ============================================================
@@ -2570,7 +2575,12 @@
             if (!query) return;
             const msgs = document.getElementById('ai-messages');
             msgs.innerHTML += '<div class="user">' + query + '</div>';
-            socket.emit('ai_query', { query: query });
+            // Ensure socket is connected before emitting
+            if (socket.connected) {
+                socket.emit('ai_query', { query: query });
+            } else {
+                alert('Socket not connected. Please refresh and try again.');
+            }
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
         }
@@ -2637,12 +2647,16 @@
 
             const username = myUsername || 'guest';
 
-            socket.emit('request_pro_activation', {
-                username: username,
-                full_name: fullName,
-                phone: phone,
-                duration: duration
-            });
+            if (socket.connected) {
+                socket.emit('request_pro_activation', {
+                    username: username,
+                    full_name: fullName,
+                    phone: phone,
+                    duration: duration
+                });
+            } else {
+                alert('Socket not connected. Please refresh.');
+            }
 
             setTimeout(() => {
                 btn.textContent = originalText;
@@ -2706,10 +2720,14 @@
                 alert('Please log in first to activate Pro.');
                 return;
             }
-            socket.emit('activate_pro_code', {
-                username: myUsername,
-                activation_code: code
-            });
+            if (socket.connected) {
+                socket.emit('activate_pro_code', {
+                    username: myUsername,
+                    activation_code: code
+                });
+            } else {
+                alert('Socket not connected. Please refresh.');
+            }
         }
 
         socket.on('pro_activation_status', (data) => {
@@ -2731,14 +2749,22 @@
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             if (!username || !password) { alert('Username and password are required.'); return; }
-            socket.emit('register_teacher', { username, email, password });
+            if (socket.connected) {
+                socket.emit('register_teacher', { username, email, password });
+            } else {
+                alert('Socket not connected. Please refresh.');
+            }
         });
 
         document.getElementById('login-btn').addEventListener('click', () => {
             const username = document.getElementById('login-identity').value.trim();
             const password = document.getElementById('login-password').value;
             if (!username || !password) { alert('Please enter username and password.'); return; }
-            socket.emit('login_teacher', { username, password });
+            if (socket.connected) {
+                socket.emit('login_teacher', { username, password });
+            } else {
+                alert('Socket not connected. Please refresh.');
+            }
         });
 
         socket.on('auth_response', (data) => {
@@ -2769,7 +2795,11 @@
         // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', () => {
             const name = document.getElementById('create-classname').value.trim();
-            socket.emit('create_class', { username: currentTeacherUser, classname: name });
+            if (socket.connected) {
+                socket.emit('create_class', { username: currentTeacherUser, classname: name });
+            } else {
+                alert('Socket not connected. Please refresh.');
+            }
         });
 
         socket.on('class_created', (data) => {
@@ -3554,7 +3584,7 @@
         });
 
         console.log('🚀 Nexus Learn Ultimate Edition loaded!');
-        console.log('📚 100+ moving emojis in background!');
+        console.log('📚 150+ moving emojis in background!');
         console.log('🎨 Light Blue & Beige Premium Theme');
         console.log('✅ Free registration – no activation code required!');
     </script>
