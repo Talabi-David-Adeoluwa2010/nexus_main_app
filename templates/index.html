@@ -950,8 +950,8 @@
             z-index: 3000;
         }
         #video-expand-modal .modal-content {
-            max-width: 90vw;
-            max-height: 90vh;
+            max-width: 95vw;
+            max-height: 95vh;
             padding: 16px;
             background: #000;
             border-radius: var(--radius);
@@ -963,7 +963,8 @@
         #video-expand-modal .modal-content video {
             width: 100%;
             height: auto;
-            max-height: 80vh;
+            max-height: 85vh;
+            object-fit: contain;
             border-radius: var(--radius-sm);
             background: #222;
         }
@@ -1990,7 +1991,7 @@
     <div class="modal-overlay" id="video-expand-modal">
         <div class="modal-content">
             <button class="close" onclick="closeVideoExpand()">✕</button>
-            <video id="expand-video" autoplay playsinline style="width:100%; height:auto; max-height:80vh;"></video>
+            <video id="expand-video" autoplay playsinline style="width:100%; height:auto; max-height:85vh; object-fit:contain;"></video>
             <div class="expand-label" id="expand-label">Participant</div>
         </div>
     </div>
@@ -2175,20 +2176,38 @@
         const peerConnections = {};
         const pendingCandidates = {};
         let currentZoomScale = 1;
-        let expandedVideoStream = null; // for video expand modal
+        let expandedVideoStream = null;
 
         // ============================================================
-        // RTC CONFIG
+        // RTC CONFIG (improved with more TURN servers)
         // ============================================================
         const rtcConfig = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
                 { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
                 { urls: 'stun:openrelay.metered.ca:80' },
-                { urls: 'turn:openrelay.metered.ca:80', username: 'openrelay', credential: 'openrelay' },
-                { urls: 'turn:openrelay.metered.ca:443', username: 'openrelay', credential: 'openrelay' }
-            ]
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelay',
+                    credential: 'openrelay'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelay',
+                    credential: 'openrelay'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelay',
+                    credential: 'openrelay'
+                }
+            ],
+            iceCandidatePoolSize: 10,
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require'
         };
 
         // ============================================================
@@ -2286,6 +2305,11 @@
             if (classCodeRoom) {
                 const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
                 presenceRef.remove();
+                // Close all peer connections
+                for (let id in peerConnections) {
+                    peerConnections[id].close();
+                    delete peerConnections[id];
+                }
             }
             location.reload();
         }
@@ -2770,18 +2794,12 @@
             const expandVideo = document.getElementById('expand-video');
             const label = document.getElementById('expand-label');
 
-            // If there's already a stream playing, stop it (optional)
-            if (expandVideo.srcObject) {
-                // we can just replace it
-            }
-            // Attach the source stream from the clicked video
             if (videoElement.srcObject) {
                 expandVideo.srcObject = videoElement.srcObject;
-                expandVideo.muted = false; // ensure audio is on
+                expandVideo.muted = false;
                 expandVideo.volume = 1.0;
                 expandVideo.play().catch(e => console.log('play error:', e));
             } else {
-                // fallback: use src attribute if it's a regular video (not stream)
                 expandVideo.src = videoElement.src;
             }
             label.innerText = labelText || 'Participant';
@@ -2791,9 +2809,7 @@
         function closeVideoExpand() {
             const modal = document.getElementById('video-expand-modal');
             const expandVideo = document.getElementById('expand-video');
-            // stop playback to release resources
             if (expandVideo.srcObject) {
-                // we don't stop the stream, just detach
                 expandVideo.pause();
                 expandVideo.srcObject = null;
             } else {
@@ -2960,7 +2976,7 @@
         }
 
         // ============================================================
-        // WEBRTC SIGNALING VIA FIREBASE
+        // WEBRTC SIGNALING VIA FIREBASE (improved)
         // ============================================================
         function initiatePeerConnection(targetId, name, isInitiator) {
             const pc = new RTCPeerConnection(rtcConfig);
@@ -2981,6 +2997,14 @@
                         from: myUsername
                     };
                     db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
+                }
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                console.log('ICE state for', targetId, ':', pc.iceConnectionState);
+                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                    // Try to restart ICE
+                    pc.restartIce();
                 }
             };
 
@@ -3015,7 +3039,6 @@
                     card.appendChild(wave);
                     document.getElementById('video-layout-grid').appendChild(card);
 
-                    // Click to expand
                     card.addEventListener('click', function() {
                         const vid = this.querySelector('video');
                         const lbl = this.querySelector('.label');
@@ -3100,7 +3123,7 @@
 
                 const myVideo = document.getElementById('my-camera');
                 myVideo.srcObject = localStream;
-                myVideo.muted = true;
+                myVideo.muted = true; // local muted to avoid echo
 
                 if (!isTeacherUser) {
                     cameraBlocked = true;
@@ -3117,7 +3140,6 @@
                     localStream.getAudioTracks()[0].enabled = (!micMuted && !forceMutedByTeacher);
                 }
 
-                // Local video card click to expand (optional)
                 document.getElementById('local-video-card').addEventListener('click', function() {
                     const vid = document.getElementById('my-camera');
                     const lbl = document.getElementById('local-label');
@@ -3496,6 +3518,7 @@
         console.log('💬 Real-time powered by Firebase Realtime Database.');
         console.log('✅ Class creation is instant; student join now more tolerant.');
         console.log('🎥 Click any video to expand to full-screen.');
+        console.log('🔊 Audio is now enabled for all participants.');
     </script>
 </body>
 </html>
