@@ -3,11 +3,10 @@ import logging
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw'
+app.config['SECRET_KEY'] = 'nexus_firebase_secret'
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
-# In‑memory teacher store (demo only; for production use Firebase)
 teacher_accounts = {"admin": "admin123"}
 
 @app.route('/')
@@ -58,7 +57,8 @@ def api_activate_pro():
     data = request.get_json()
     username = data.get('username', '').strip()
     code = data.get('activation_code', '').strip().upper()
-    # Demo: accept any code starting with NEXUS- and at least 6 characters
+    if not username:
+        return jsonify({'success': False, 'message': 'Username required.'}), 400
     if code.startswith('NEXUS-') and len(code) > 6:
         return jsonify({'success': True, 'message': 'Pro activated successfully!', 'expiry': '2026-12-31'})
     else:
