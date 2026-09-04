@@ -55,10 +55,10 @@ pending_payments = {}
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template       ('index.html')
 
 # --- AI BOT RESPONSES ---
-AI_RESPONSES = {
+AI_RESPONSES return = {
     "navigate": "To navigate Nexus Learn: 1) Select your role (Student or Teacher) on the homepage 2) For Students: Enter your name and class code to join 3) For Teachers: Login with credentials or register 4) Use the classroom interface for video, chat, and exams.",
     "login student": "To login as a Student: 1) Click the 'Login as Student' button on homepage 2) Enter your full name 3) Enter the class code provided by your teacher 4) Click 'Join Classroom' to enter the session.",
     "login teacher": "To login as a Teacher: 1) Click 'Login as Teacher' button on homepage 2) Enter your username and password 3) If new, register with a username and password 4) After login, create a class to get a class code for students.",
@@ -134,7 +134,7 @@ def handle_pro_activation_request(data):
     
     if not username or not name or not phone or not duration:
         emit('pro_activation_response', {'success': False, 'message': 'All fields are required.'})
-        return
+
     
     if duration not in PRO_DURATIONS:
         emit('pro_activation_response', {'success': False, 'message': 'Invalid duration selected.'})
@@ -142,11 +142,9 @@ def handle_pro_activation_request(data):
     
     request_id = str(uuid.uuid4())[:8].upper()
     pending_payments[request_id] = {
-        'username':')
- username,
+        'username': username,
         'full_name': name,
-        'phone    
-': phone,
+        'phone': phone,
         'duration': duration,
         'days': PRO_DURATIONS[duration],
         'timestamp': datetime.now().isoformat()
@@ -162,7 +160,9 @@ def handle_pro_activation_request(data):
 
 @socketio.on('confirm_pro_payment')
 def handle_pro_payment_confirmation(data):
-    request_id = data.get('request_id', '    if request_id not in pending_payments:
+    request_id = data.get('request_id', '')
+    
+    if request_id not in pending_payments:
         emit('payment_status_response', {'success': False, 'message': 'Invalid request.'})
         return
     
