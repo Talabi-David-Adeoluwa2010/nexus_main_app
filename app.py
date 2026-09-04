@@ -512,7 +512,7 @@ def handle_block_user_by_username(data):
 def handle_ai_query(data):
     query = data.get('query', '').lower().strip()
     
-    response = "I'm sorry, I don't understand that question. Please ask about navigation, login, the app, Pro features, or payments."
+    response = "I'm sorry, I don't understand that question. Please text either navigation, login, the app, Pro features, or payments."
     
     if 'navigate' in query or 'how to use' in query:
         response = AI_RESPONSES['navigate']
