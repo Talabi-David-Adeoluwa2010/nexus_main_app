@@ -1003,7 +1003,7 @@
         }
         .typing-row .input-group .badge.teacher {
             background: var(--beige-dark);
-            color: var(--brown-medium);
+            color: #8b7a6b;
         }
         .typing-row .input-group input {
             flex: 1;
@@ -2248,51 +2248,47 @@
         });
 
         // ============================================================
-        // CLASS CREATION (Firebase) - FIXED with loading state
+        // CLASS CREATION - INSTANT, NON-BLOCKING (FIXED)
         // ============================================================
-        document.getElementById('create-class-btn').addEventListener('click', async function() {
+        document.getElementById('create-class-btn').addEventListener('click', function() {
             const name = document.getElementById('create-classname').value.trim();
             if (!name) { alert('Enter a class name.'); return; }
             if (!currentTeacherUser) { alert('You must be logged in as a teacher first.'); return; }
 
-            // Show loading state
-            const originalText = this.innerText;
-            this.innerText = '⏳ Creating...';
-            this.disabled = true;
-
-            try {
-                // Generate a 12‑character alphanumeric code with hyphens
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let code = '';
-                for (let i = 0; i < 4; i++) {
-                    for (let j = 0; j < 4; j++) {
-                        code += chars[Math.floor(Math.random() * chars.length)];
-                    }
-                    if (i < 3) code += '-';
+            // Generate class code immediately
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                for (let j = 0; j < 4; j++) {
+                    code += chars[Math.floor(Math.random() * chars.length)];
                 }
-                classCodeRoom = code;
-
-                // Write class info to Firebase
-                const classRef = db.ref('classrooms/' + classCodeRoom);
-                await classRef.update({
-                    info: {
-                        name: name,
-                        teacher: currentTeacherUser,
-                        created_at: Date.now()
-                    }
-                });
-
-                document.getElementById('display-class-code').innerText = code;
-                document.getElementById('generated-code-box').classList.remove('hidden');
-                myUsername = currentTeacherUser;
-                alert('Class "' + name + '" created successfully! Code: ' + code);
-            } catch (err) {
-                alert('Error creating class: ' + err.message);
-                console.error(err);
-            } finally {
-                this.innerText = originalText;
-                this.disabled = false;
+                if (i < 3) code += '-';
             }
+            classCodeRoom = code;
+
+            // Show code box instantly
+            document.getElementById('display-class-code').innerText = code;
+            document.getElementById('generated-code-box').classList.remove('hidden');
+            myUsername = currentTeacherUser;
+
+            // Show quick confirmation
+            alert('Class "' + name + '" created! Code: ' + code);
+
+            // Write to Firebase in the background (non-blocking)
+            const classRef = db.ref('classrooms/' + classCodeRoom);
+            classRef.update({
+                info: {
+                    name: name,
+                    teacher: currentTeacherUser,
+                    created_at: Date.now()
+                }
+            }).then(() => {
+                console.log('Class saved to Firebase successfully.');
+            }).catch(err => {
+                console.warn('Class save error:', err);
+                // User already has the code, but persistence failed.
+                alert('Class created but could not be saved to Firebase. It may not persist after refresh.');
+            });
         });
 
         document.getElementById('enter-classroom-btn').addEventListener('click', () => {
@@ -3324,6 +3320,7 @@
         console.log('🚀 Nexus Learn Ultimate Edition with Firebase loaded!');
         console.log('📚 All features integrated: live video, chat, exams, gradebook, Pro, AI.');
         console.log('💬 Real-time powered by Firebase Realtime Database.');
+        console.log('✅ Class creation is now INSTANT (non-blocking).');
     </script>
 </body>
 </html>
