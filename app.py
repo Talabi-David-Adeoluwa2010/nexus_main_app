@@ -3,7 +3,6 @@ import json
 import uuid
 import logging
 import requests
-import simple_websocket  # CRITICAL FIX: Allows WS upgrade on Render
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit, join_room, leave_room, disconnect
@@ -14,10 +13,13 @@ app.config['SECRET_KEY'] = 'nexus_classroom_super_secret_key'
 # Disable noisy debug logs
 logging.getLogger('engineio').setLevel(logging.ERROR)
 
-# OPTIMIZED SOCKET.IO CONFIGURATION FOR RENDER
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*", max_http_buffer_size=10*1024*1024, ping_timeout=60, ping_interval=25)
-    max_http_buffer_size=10 * 1024 * 1024,
-    ping_timeout=60,
+# OPTIMIZED SOCKET.IO CONFIGURATION FOR RENDER (Eventlet is lightweight)
+socketio = SocketIO(
+    app, 
+    async_mode='eventlet',
+    cors_allowed_origins="*", 
+    max_http_buffer_size=10 * 1024 * 1024, 
+    ping_timeout=60, 
     ping_interval=25
 )
 
@@ -510,7 +512,7 @@ def handle_block_user_by_username(data):
 def handle_ai_query(data):
     query = data.get('query', '').lower().strip()
     
-    response = "I'm sorry, I don't understand that question. Please text either navigation, login, the app, Pro features, or payments, and other things related to the app."
+    response = "I'm sorry, I don't understand that question. Please ask about navigation, login, the app, Pro features, or payments."
     
     if 'navigate' in query or 'how to use' in query:
         response = AI_RESPONSES['navigate']
