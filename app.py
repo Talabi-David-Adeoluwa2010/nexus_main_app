@@ -142,9 +142,11 @@ def handle_pro_activation_request(data):
     
     request_id = str(uuid.uuid4())[:8].upper()
     pending_payments[request_id] = {
-        'username': username,
+        'username':')
+ username,
         'full_name': name,
-        'phone': phone,
+        'phone    
+': phone,
         'duration': duration,
         'days': PRO_DURATIONS[duration],
         'timestamp': datetime.now().isoformat()
@@ -160,9 +162,7 @@ def handle_pro_activation_request(data):
 
 @socketio.on('confirm_pro_payment')
 def handle_pro_payment_confirmation(data):
-    request_id = data.get('request_id', '')
-    
-    if request_id not in pending_payments:
+    request_id = data.get('request_id', '    if request_id not in pending_payments:
         emit('payment_status_response', {'success': False, 'message': 'Invalid request.'})
         return
     
