@@ -2177,6 +2177,7 @@
         const pendingCandidates = {};
         let currentZoomScale = 1;
         let expandedVideoStream = null;
+        let connectedPeers = new Set(); // track which remote peers we have connected
 
         // ============================================================
         // RTC CONFIG (improved with more TURN servers)
@@ -2211,6 +2212,21 @@
         };
 
         // ============================================================
+        // PERMISSION PRE-CHECK
+        // ============================================================
+        async function requestMediaPermissions() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                stream.getTracks().forEach(track => track.stop());
+                return true;
+            } catch (err) {
+                console.warn('Permission denied:', err);
+                alert('Camera and microphone access are required to join the classroom. Please allow permissions and try again.');
+                return false;
+            }
+        }
+
+        // ============================================================
         // LOADER
         // ============================================================
         window.addEventListener('DOMContentLoaded', () => {
@@ -2230,7 +2246,6 @@
                 text.innerText = progress + '%';
             }, 50);
 
-            // Restore teacher session
             const savedTeacher = localStorage.getItem('nexus_teacher_username');
             if (savedTeacher) {
                 currentTeacherUser = savedTeacher;
@@ -2244,7 +2259,6 @@
                 document.getElementById('nav-home').classList.remove('active');
             }
 
-            // Pro input uppercase
             document.getElementById('pro-code-input').addEventListener('input', function(e) {
                 e.target.value = e.target.value.toUpperCase();
             });
@@ -2305,11 +2319,11 @@
             if (classCodeRoom) {
                 const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
                 presenceRef.remove();
-                // Close all peer connections
                 for (let id in peerConnections) {
                     peerConnections[id].close();
                     delete peerConnections[id];
                 }
+                connectedPeers.clear();
             }
             location.reload();
         }
@@ -2323,7 +2337,7 @@
         }
 
         // ============================================================
-        // TEACHER AUTH (HTTP)
+        // TEACHER AUTH
         // ============================================================
         document.getElementById('register-btn').addEventListener('click', async () => {
             const username = document.getElementById('reg-username').value.trim();
@@ -2358,7 +2372,7 @@
         });
 
         // ============================================================
-        // CLASS CREATION - INSTANT (non-blocking)
+        // CLASS CREATION - INSTANT
         // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', function() {
             const name = document.getElementById('create-classname').value.trim();
@@ -2381,7 +2395,6 @@
 
             alert('Class "' + name + '" created! Code: ' + code);
 
-            // background write
             const classRef = db.ref('classrooms/' + classCodeRoom);
             classRef.update({
                 info: {
@@ -2397,26 +2410,32 @@
             });
         });
 
-        document.getElementById('enter-classroom-btn').addEventListener('click', () => {
-            if (myUsername && classCodeRoom) enterClassroom();
+        document.getElementById('enter-classroom-btn').addEventListener('click', async () => {
+            if (!myUsername || !classCodeRoom) {
+                alert('Please create a class first.');
+                return;
+            }
+            const ok = await requestMediaPermissions();
+            if (!ok) return;
+            enterClassroom();
         });
 
         // ============================================================
-        // STUDENT JOIN - FIXED (now more tolerant)
+        // STUDENT JOIN
         // ============================================================
-        document.getElementById('join-btn').addEventListener('click', () => {
+        document.getElementById('join-btn').addEventListener('click', async () => {
             myUsername = document.getElementById('join-name').value.trim();
             classCodeRoom = document.getElementById('join-code').value.trim();
             isTeacherUser = false;
             if (!myUsername || !classCodeRoom) { alert('Please enter your name and class code.'); return; }
-            // Attempt to read info, but if it fails, we still try to join
+
+            const ok = await requestMediaPermissions();
+            if (!ok) return;
+
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
                 if (snap.exists()) {
                     enterClassroom();
                 } else {
-                    // Info doesn't exist – maybe background write pending or failed.
-                    // We'll still allow joining, because the room path may exist for other data.
-                    // We'll create a minimal info to avoid confusion.
                     const classRef = db.ref('classrooms/' + classCodeRoom);
                     classRef.update({
                         info: {
@@ -2432,8 +2451,6 @@
                     });
                 }
             }).catch(err => {
-                // If the read fails entirely, we assume the class might still be valid.
-                // We'll create a minimal info and proceed.
                 const classRef = db.ref('classrooms/' + classCodeRoom);
                 classRef.update({
                     info: {
@@ -2451,7 +2468,7 @@
         });
 
         // ============================================================
-        // ENTER CLASSROOM (Firebase real‑time setup)
+        // ENTER CLASSROOM
         // ============================================================
         function enterClassroom() {
             document.getElementById('homepage-section').classList.add('hidden');
@@ -2460,7 +2477,7 @@
             document.getElementById('classroom-section').classList.remove('hidden');
             document.getElementById('app-container').classList.add('classroom-container');
 
-            // Fetch class info (if exists)
+            // Fetch class info
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
                 const info = snap.val();
                 if (info) {
@@ -2499,7 +2516,7 @@
                 if (msg) handleIncomingMessage(msg);
             });
 
-            // Listen for signals (WebRTC)
+            // Listen for signals
             const signalsRef = db.ref('classrooms/' + classCodeRoom + '/signals/' + myUsername);
             signalsRef.off();
             signalsRef.on('child_added', (snapshot) => {
@@ -2510,12 +2527,24 @@
                 }
             });
 
-            // Listen for presence updates (for admin tracking)
+            // --- NEW: Listen for presence changes to connect to new peers ---
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
             presenceListRef.off();
             presenceListRef.on('value', (snap) => {
                 const users = snap.val();
                 updateActiveUsers(users);
+                // Connect to any new users (except ourselves)
+                if (users) {
+                    Object.keys(users).forEach(username => {
+                        if (username !== myUsername && !connectedPeers.has(username)) {
+                            // Initiate peer connection to this user
+                            // We need the socket ID? In Firebase we use username as identifier.
+                            // We'll use the username as the peer ID.
+                            initiatePeerConnection(username, username, true);
+                            connectedPeers.add(username);
+                        }
+                    });
+                }
             });
 
             // Start local video
@@ -2523,7 +2552,7 @@
         }
 
         // ============================================================
-        // UPDATE ACTIVE USERS (Teacher Admin)
+        // UPDATE ACTIVE USERS (Admin)
         // ============================================================
         function updateActiveUsers(users) {
             const list = document.getElementById('active-tracked-users-list');
@@ -2563,7 +2592,7 @@
         }
 
         // ============================================================
-        // HANDLE INCOMING MESSAGES (from Firebase)
+        // HANDLE INCOMING MESSAGES
         // ============================================================
         function handleIncomingMessage(msg) {
             if (msg.type === 'emoji_reaction') {
@@ -2643,7 +2672,7 @@
         }
 
         // ============================================================
-        // SEND MESSAGE TO FIREBASE
+        // SEND MESSAGE
         // ============================================================
         function sendMsg(role) {
             const el = document.getElementById(role + '-input-field');
@@ -2688,7 +2717,7 @@
         }
 
         // ============================================================
-        // IMAGE HANDLING (compress & send via Firebase)
+        // IMAGE HANDLING
         // ============================================================
         function compressAndSendImage(file) {
             const reader = new FileReader();
@@ -2850,7 +2879,7 @@
         }
 
         // ============================================================
-        // TEACHER CONTROLS (global mute)
+        // TEACHER CONTROLS
         // ============================================================
         let globalMuteLocked = false;
         document.getElementById('teacher-global-mute-btn').addEventListener('click', function() {
@@ -2879,7 +2908,7 @@
         });
 
         // ============================================================
-        // PRO PAYMENT MODAL (HTTP)
+        // PRO PAYMENT
         // ============================================================
         function showProPaymentModal() {
             document.getElementById('pro-modal').classList.add('active');
@@ -2927,7 +2956,7 @@
         }
 
         // ============================================================
-        // ACTIVATE PRO CODE (HTTP)
+        // ACTIVATE PRO CODE
         // ============================================================
         async function activateProCode() {
             const code = document.getElementById('pro-code-input').value.trim().toUpperCase();
@@ -2949,7 +2978,7 @@
         }
 
         // ============================================================
-        // AI CHAT (HTTP)
+        // AI CHAT
         // ============================================================
         function toggleAIChat() {
             document.getElementById('ai-window').classList.toggle('active');
@@ -2976,9 +3005,14 @@
         }
 
         // ============================================================
-        // WEBRTC SIGNALING VIA FIREBASE (improved)
+        // WEBRTC SIGNALING
         // ============================================================
         function initiatePeerConnection(targetId, name, isInitiator) {
+            // Avoid duplicate connections
+            if (peerConnections[targetId]) {
+                return peerConnections[targetId];
+            }
+
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
             pendingCandidates[targetId] = [];
@@ -3003,8 +3037,14 @@
             pc.oniceconnectionstatechange = () => {
                 console.log('ICE state for', targetId, ':', pc.iceConnectionState);
                 if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
-                    // Try to restart ICE
                     pc.restartIce();
+                }
+                if (pc.iceConnectionState === 'closed' || pc.iceConnectionState === 'disconnected') {
+                    // Clean up if closed
+                    delete peerConnections[targetId];
+                    connectedPeers.delete(targetId);
+                    const card = document.getElementById('peer-card-' + targetId);
+                    if (card) card.remove();
                 }
             };
 
@@ -3079,7 +3119,9 @@
         async function handleSignaling(signal) {
             let pc = peerConnections[signal.from];
             if (!pc) {
+                // If we don't have a connection yet, create one (but we might be receiving an offer)
                 pc = initiatePeerConnection(signal.from, signal.from, false);
+                connectedPeers.add(signal.from);
             }
 
             if (signal.sdp) {
@@ -3123,7 +3165,7 @@
 
                 const myVideo = document.getElementById('my-camera');
                 myVideo.srcObject = localStream;
-                myVideo.muted = true; // local muted to avoid echo
+                myVideo.muted = true;
 
                 if (!isTeacherUser) {
                     cameraBlocked = true;
@@ -3201,7 +3243,7 @@
         });
 
         // ============================================================
-        // EXAM SYSTEM (Teacher deploys, students take)
+        // EXAM SYSTEM
         // ============================================================
         document.getElementById('teacher-exam-portal-btn').addEventListener('click', () => {
             document.getElementById('teacher-exam-setup-modal').classList.add('active');
@@ -3482,7 +3524,7 @@
         }
 
         // ============================================================
-        // ANIMATED EMOJI BACKGROUND (150+ floating emojis)
+        // ANIMATED EMOJI BACKGROUND
         // ============================================================
         (function createEmojiBackground() {
             const bg = document.getElementById('emojiBg');
@@ -3514,11 +3556,7 @@
         })();
 
         console.log('🚀 Nexus Learn Ultimate Edition with Firebase loaded!');
-        console.log('📚 All features integrated: live video, chat, exams, gradebook, Pro, AI.');
-        console.log('💬 Real-time powered by Firebase Realtime Database.');
-        console.log('✅ Class creation is instant; student join now more tolerant.');
-        console.log('🎥 Click any video to expand to full-screen.');
-        console.log('🔊 Audio is now enabled for all participants.');
+        console.log('✅ Audio and video connections are now automatically established with all participants.');
     </script>
 </body>
 </html>
