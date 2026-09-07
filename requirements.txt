@@ -2,3 +2,4 @@ flask
 requests
 gunicorn
 simple-websocket
+flask-cors
