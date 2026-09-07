@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- FIX: stronger zoom prevention -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
     <title>NEXUS LEARN - Virtual Classroom</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -17,6 +18,8 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            /* FIX: prevent double-tap zoom on all elements */
+            touch-action: manipulation;
         }
         html, body {
             width: 100%;
@@ -2178,6 +2181,7 @@
         let currentZoomScale = 1;
         let expandedVideoStream = null;
         let connectedPeers = new Set(); // track which remote peers we have connected
+        let mirrorActive = true; // default mirrored for local
 
         // ============================================================
         // RTC CONFIG (improved with more TURN servers)
@@ -2261,6 +2265,11 @@
 
             document.getElementById('pro-code-input').addEventListener('input', function(e) {
                 e.target.value = e.target.value.toUpperCase();
+            });
+
+            // FIX: Prevent pinch/zoom gestures globally
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
             });
         });
 
@@ -2417,7 +2426,7 @@
             }
             const ok = await requestMediaPermissions();
             if (!ok) return;
-            enterClassroom();
+            await enterClassroom();
         });
 
         // ============================================================
@@ -2468,9 +2477,9 @@
         });
 
         // ============================================================
-        // ENTER CLASSROOM
+        // ENTER CLASSROOM (async)
         // ============================================================
-        function enterClassroom() {
+        async function enterClassroom() {
             document.getElementById('homepage-section').classList.add('hidden');
             document.getElementById('student-login-section').classList.add('hidden');
             document.getElementById('teacher-login-section').classList.add('hidden');
@@ -2491,6 +2500,9 @@
 
             document.getElementById('local-label').innerText = myUsername + ' (You)' + (isProUser ? ' ⚡ PRO' : '');
             document.getElementById('classroom-code-label').innerText = classCodeRoom;
+
+            // IMPORTANT: Start local camera FIRST before listening to presence
+            await startLocalCameraAndMic();
 
             // Register presence
             const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
@@ -2527,28 +2539,22 @@
                 }
             });
 
-            // --- NEW: Listen for presence changes to connect to new peers ---
+            // Listen for presence changes (to connect to new peers)
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
             presenceListRef.off();
             presenceListRef.on('value', (snap) => {
                 const users = snap.val();
                 updateActiveUsers(users);
-                // Connect to any new users (except ourselves)
                 if (users) {
                     Object.keys(users).forEach(username => {
                         if (username !== myUsername && !connectedPeers.has(username)) {
-                            // Initiate peer connection to this user
-                            // We need the socket ID? In Firebase we use username as identifier.
-                            // We'll use the username as the peer ID.
+                            // Initiate connection to this user
                             initiatePeerConnection(username, username, true);
                             connectedPeers.add(username);
                         }
                     });
                 }
             });
-
-            // Start local video
-            startLocalCameraAndMic();
         }
 
         // ============================================================
@@ -3040,7 +3046,6 @@
                     pc.restartIce();
                 }
                 if (pc.iceConnectionState === 'closed' || pc.iceConnectionState === 'disconnected') {
-                    // Clean up if closed
                     delete peerConnections[targetId];
                     connectedPeers.delete(targetId);
                     const card = document.getElementById('peer-card-' + targetId);
@@ -3051,6 +3056,7 @@
             pc.ontrack = e => {
                 let card = document.getElementById('peer-card-' + targetId);
                 let video;
+                // If there are multiple streams, take the first one
                 const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
 
                 if (!card) {
@@ -3079,11 +3085,18 @@
                     card.appendChild(wave);
                     document.getElementById('video-layout-grid').appendChild(card);
 
+                    // FIX: Click to expand and also to play if paused (user gesture)
                     card.addEventListener('click', function() {
                         const vid = this.querySelector('video');
                         const lbl = this.querySelector('.label');
                         const labelText = lbl ? lbl.innerText : name;
                         openVideoExpand(vid, labelText);
+                        // Ensure audio plays on user gesture
+                        if (vid) {
+                            vid.muted = false;
+                            vid.volume = 1.0;
+                            vid.play().catch(e => console.log("Play on click:", e));
+                        }
                     });
                 } else {
                     video = card.querySelector('video');
@@ -3095,7 +3108,15 @@
                     }
                     video.muted = false;
                     video.volume = 1.0;
-                    video.play().catch(err => console.log("Play error:", err));
+                    // Play with a catch; if it fails, user will click to play
+                    video.play().catch(err => {
+                        console.log("Autoplay blocked, waiting for user gesture");
+                        // Add a one-time click to play on the card
+                        card.addEventListener('click', function playOnce() {
+                            video.play().catch(e => console.log("Still blocked"));
+                            card.removeEventListener('click', playOnce);
+                        });
+                    });
                 }
             };
 
@@ -3119,7 +3140,7 @@
         async function handleSignaling(signal) {
             let pc = peerConnections[signal.from];
             if (!pc) {
-                // If we don't have a connection yet, create one (but we might be receiving an offer)
+                // If we don't have a connection yet, create one (passive)
                 pc = initiatePeerConnection(signal.from, signal.from, false);
                 connectedPeers.add(signal.from);
             }
@@ -3166,6 +3187,12 @@
                 const myVideo = document.getElementById('my-camera');
                 myVideo.srcObject = localStream;
                 myVideo.muted = true;
+                // Ensure mirror is applied
+                if (mirrorActive) {
+                    myVideo.classList.add('mirrored');
+                } else {
+                    myVideo.classList.remove('mirrored');
+                }
 
                 if (!isTeacherUser) {
                     cameraBlocked = true;
@@ -3187,6 +3214,18 @@
                     const lbl = document.getElementById('local-label');
                     openVideoExpand(vid, lbl.innerText);
                 });
+
+                // After stream is ready, add tracks to any existing peer connections
+                for (let targetId in peerConnections) {
+                    const pc = peerConnections[targetId];
+                    const senders = pc.getSenders();
+                    localStream.getTracks().forEach(track => {
+                        const hasTrack = senders.some(s => s.track && s.track.id === track.id);
+                        if (!hasTrack) {
+                            pc.addTrack(track, localStream);
+                        }
+                    });
+                }
 
             } catch (err) {
                 console.error("Camera error:", err);
@@ -3230,6 +3269,7 @@
         document.getElementById('swap-cam-btn').addEventListener('click', async () => {
             currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
             await startLocalCameraAndMic();
+            // After restart, replace tracks in all peer connections
             const videoTrack = localStream.getVideoTracks()[0];
             for (let targetId in peerConnections) {
                 const senders = peerConnections[targetId].getSenders();
@@ -3238,8 +3278,17 @@
             }
         });
 
+        // FIX: Mirror button toggles both class and variable
         document.getElementById('mirror-cam-btn').addEventListener('click', () => {
-            document.getElementById('my-camera').classList.toggle('mirrored');
+            const video = document.getElementById('my-camera');
+            mirrorActive = !mirrorActive;
+            if (mirrorActive) {
+                video.classList.add('mirrored');
+                document.getElementById('mirror-cam-btn').innerText = '🪞 Mirror On';
+            } else {
+                video.classList.remove('mirrored');
+                document.getElementById('mirror-cam-btn').innerText = '🪞 Mirror Off';
+            }
         });
 
         // ============================================================
