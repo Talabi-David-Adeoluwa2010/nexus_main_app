@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <!-- FIX: stronger zoom prevention -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
     <title>NEXUS LEARN - Virtual Classroom</title>
     <!-- Firebase SDKs -->
@@ -18,7 +17,6 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            /* FIX: prevent double-tap zoom on all elements */
             touch-action: manipulation;
         }
         html, body {
@@ -1651,6 +1649,35 @@
             outline: none;
         }
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
+
+        /* ---- Debug status panel ---- */
+        #debug-status {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(0,0,0,0.75);
+            color: #0f0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.9;
+            border: 1px solid #0f0;
+            display: none;
+        }
+        #debug-status.visible {
+            display: block;
+        }
+        #debug-status .entry {
+            margin: 2px 0;
+            border-bottom: 1px solid #333;
+            padding: 2px 0;
+        }
     </style>
 </head>
 <body>
@@ -2139,6 +2166,13 @@
     </div>
 
     <!-- ============================================================
+    DEBUG STATUS PANEL
+    ============================================================ -->
+    <div id="debug-status" class="visible">
+        <div id="debug-log"></div>
+    </div>
+
+    <!-- ============================================================
     JAVASCRIPT - FIREBASE + ALL FEATURES
     ============================================================ -->
     <script>
@@ -2169,8 +2203,8 @@
         let currentProRequestId = null;
         let localStream = null;
         let currentFacingMode = "user";
-        let micMuted = true;
-        let cameraBlocked = false;
+        let micMuted = true; // default muted
+        let cameraBlocked = false; // false means camera is on
         let forceMutedByTeacher = false;
         let activeExamConfig = null;
         let examIntervalTimer = null;
@@ -2180,8 +2214,8 @@
         const pendingCandidates = {};
         let currentZoomScale = 1;
         let expandedVideoStream = null;
-        let connectedPeers = new Set(); // track which remote peers we have connected
-        let mirrorActive = true; // default mirrored for local
+        let connectedPeers = new Set();
+        let mirrorActive = true;
 
         // ============================================================
         // RTC CONFIG (improved with more TURN servers)
@@ -2216,15 +2250,34 @@
         };
 
         // ============================================================
+        // DEBUG LOGGING
+        // ============================================================
+        const debugLog = document.getElementById('debug-log');
+        function logDebug(msg) {
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            const now = new Date().toLocaleTimeString();
+            entry.textContent = `[${now}] ${msg}`;
+            debugLog.appendChild(entry);
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(`[DEBUG] ${msg}`);
+        }
+
+        function showDebugPanel() {
+            document.getElementById('debug-status').classList.add('visible');
+        }
+
+        // ============================================================
         // PERMISSION PRE-CHECK
         // ============================================================
         async function requestMediaPermissions() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
                 stream.getTracks().forEach(track => track.stop());
+                logDebug('Media permissions granted');
                 return true;
             } catch (err) {
-                console.warn('Permission denied:', err);
+                logDebug('Permission denied: ' + err.message);
                 alert('Camera and microphone access are required to join the classroom. Please allow permissions and try again.');
                 return false;
             }
@@ -2234,6 +2287,7 @@
         // LOADER
         // ============================================================
         window.addEventListener('DOMContentLoaded', () => {
+            showDebugPanel();
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
             let progress = 0;
@@ -2261,13 +2315,13 @@
                 document.getElementById('saved-teacher-welcome').innerText = 'Logged in as: ' + savedTeacher;
                 document.getElementById('nav-teacher').classList.add('active');
                 document.getElementById('nav-home').classList.remove('active');
+                logDebug('Teacher auto-login: ' + savedTeacher);
             }
 
             document.getElementById('pro-code-input').addEventListener('input', function(e) {
                 e.target.value = e.target.value.toUpperCase();
             });
 
-            // FIX: Prevent pinch/zoom gestures globally
             document.addEventListener('gesturestart', function(e) {
                 e.preventDefault();
             });
@@ -2291,6 +2345,7 @@
             document.getElementById('classroom-section').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-home').classList.add('active');
+            logDebug('Navigated to Homepage');
         }
 
         function showStudentLogin() {
@@ -2300,6 +2355,7 @@
             document.getElementById('classroom-section').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-student').classList.add('active');
+            logDebug('Navigated to Student Login');
         }
 
         function showTeacherLogin() {
@@ -2312,6 +2368,7 @@
             document.getElementById('teacher-reg-container').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-teacher').classList.add('active');
+            logDebug('Navigated to Teacher Login');
         }
 
         function showTeacherRegister() {
@@ -2333,6 +2390,7 @@
                     delete peerConnections[id];
                 }
                 connectedPeers.clear();
+                logDebug('Left classroom');
             }
             location.reload();
         }
@@ -2355,6 +2413,7 @@
             if (!username || !password) { alert('Username and password are required.'); return; }
             const data = await httpPost('/api/register', { username, email, password });
             alert(data.message);
+            logDebug('Registration response: ' + data.message);
             if (data.success) showTeacherLogin();
         });
 
@@ -2363,6 +2422,7 @@
             const password = document.getElementById('login-password').value;
             if (!username || !password) { alert('Please enter username and password.'); return; }
             const data = await httpPost('/api/login', { username, password });
+            logDebug('Login response: ' + data.message);
             if (data.success) {
                 currentTeacherUser = data.username;
                 myUsername = data.username;
@@ -2375,6 +2435,7 @@
                     document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
                     document.getElementById('nav-pro').classList.add('active-pro');
                 }
+                logDebug('Teacher logged in: ' + data.username);
             } else {
                 alert(data.message);
             }
@@ -2403,6 +2464,7 @@
             myUsername = currentTeacherUser;
 
             alert('Class "' + name + '" created! Code: ' + code);
+            logDebug('Class created: ' + name + ' code: ' + code);
 
             const classRef = db.ref('classrooms/' + classCodeRoom);
             classRef.update({
@@ -2412,9 +2474,9 @@
                     created_at: Date.now()
                 }
             }).then(() => {
-                console.log('Class saved to Firebase.');
+                logDebug('Class saved to Firebase.');
             }).catch(err => {
-                console.warn('Class save error:', err);
+                logDebug('Class save error: ' + err.message);
                 alert('Class created but could not be saved to Firebase. It may not persist after refresh.');
             });
         });
@@ -2456,10 +2518,11 @@
                         enterClassroom();
                     }).catch(err => {
                         alert('Could not verify class. Please check the code and try again.');
-                        console.error(err);
+                        logDebug('Class verify error: ' + err.message);
                     });
                 }
             }).catch(err => {
+                logDebug('Error checking class: ' + err.message);
                 const classRef = db.ref('classrooms/' + classCodeRoom);
                 classRef.update({
                     info: {
@@ -2471,7 +2534,7 @@
                     enterClassroom();
                 }).catch(err2 => {
                     alert('Could not verify class. Please check the code and try again.');
-                    console.error(err2);
+                    logDebug('Error creating class: ' + err2.message);
                 });
             });
         });
@@ -2480,6 +2543,7 @@
         // ENTER CLASSROOM (async)
         // ============================================================
         async function enterClassroom() {
+            logDebug('Entering classroom: ' + classCodeRoom + ' as ' + myUsername + (isTeacherUser ? ' (Teacher)' : ' (Student)'));
             document.getElementById('homepage-section').classList.add('hidden');
             document.getElementById('student-login-section').classList.add('hidden');
             document.getElementById('teacher-login-section').classList.add('hidden');
@@ -2501,7 +2565,7 @@
             document.getElementById('local-label').innerText = myUsername + ' (You)' + (isProUser ? ' ⚡ PRO' : '');
             document.getElementById('classroom-code-label').innerText = classCodeRoom;
 
-            // IMPORTANT: Start local camera FIRST before listening to presence
+            // Start local camera and mic
             await startLocalCameraAndMic();
 
             // Register presence
@@ -2534,6 +2598,7 @@
             signalsRef.on('child_added', (snapshot) => {
                 const signal = snapshot.val();
                 if (signal) {
+                    logDebug('Received signal from ' + signal.from + ' type: ' + (signal.type || 'candidate'));
                     handleSignaling(signal);
                     snapshot.ref.remove();
                 }
@@ -2548,13 +2613,22 @@
                 if (users) {
                     Object.keys(users).forEach(username => {
                         if (username !== myUsername && !connectedPeers.has(username)) {
-                            // Initiate connection to this user
-                            initiatePeerConnection(username, username, true);
+                            logDebug('New peer detected: ' + username);
+                            // Determine who initiates: lower username initiates
+                            const shouldInitiate = myUsername.localeCompare(username) < 0;
+                            if (shouldInitiate) {
+                                logDebug('I will initiate connection to ' + username);
+                                initiatePeerConnection(username, username, true);
+                            } else {
+                                logDebug('Waiting for ' + username + ' to initiate');
+                                // We'll create a passive PC when we receive an offer
+                            }
                             connectedPeers.add(username);
                         }
                     });
                 }
             });
+            logDebug('Classroom entry complete');
         }
 
         // ============================================================
@@ -2594,6 +2668,7 @@
                     type: 'system'
                 };
                 db.ref('classrooms/' + classCodeRoom + '/messages').push(blockMsg);
+                logDebug('Blocked user: ' + username);
             }
         }
 
@@ -2618,6 +2693,7 @@
                         micBtn.classList.add('inactive');
                         document.getElementById('local-soundwave').classList.add('inactive');
                         appendMsg("SYSTEM", "Teacher muted all mics.", "text");
+                        logDebug('Teacher forced mute ON');
                     } else if (msg.content === 'force_mute_off') {
                         forceMutedByTeacher = false;
                         micBtn.innerText = "🎙️ Mute Mic";
@@ -2627,6 +2703,7 @@
                         }
                         if (!micMuted) document.getElementById('local-soundwave').classList.remove('inactive');
                         appendMsg("SYSTEM", "Teacher unmuted all mics.", "text");
+                        logDebug('Teacher forced mute OFF');
                     }
                 }
                 return;
@@ -2650,6 +2727,7 @@
                         remarks: ""
                     };
                     appendMsg("SYSTEM", "📝 Exam received from: " + sub.studentName, "text");
+                    logDebug('Exam submission from ' + sub.studentName);
                 }
                 return;
             }
@@ -2900,6 +2978,7 @@
                     timestamp: Date.now()
                 };
                 db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+                logDebug('Teacher toggled global mute ON');
             } else {
                 this.innerText = "🔇 Force Mute";
                 this.style.background = "";
@@ -2910,6 +2989,7 @@
                     timestamp: Date.now()
                 };
                 db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+                logDebug('Teacher toggled global mute OFF');
             }
         });
 
@@ -2971,6 +3051,7 @@
             try {
                 const data = await httpPost('/api/activate_pro', { username: myUsername, activation_code: code });
                 alert(data.message);
+                logDebug('Pro activation response: ' + data.message);
                 if (data.success) {
                     isProUser = true;
                     proExpiryDate = data.expiry || '2026-12-31';
@@ -2980,6 +3061,7 @@
                 }
             } catch (err) {
                 alert('Error activating Pro: ' + err.message);
+                logDebug('Pro activation error: ' + err.message);
             }
         }
 
@@ -3003,8 +3085,10 @@
             try {
                 const data = await httpPost('/api/ai', { query });
                 msgs.innerHTML += '<div class="bot">' + data.response + '</div>';
+                logDebug('AI query sent');
             } catch (err) {
                 msgs.innerHTML += '<div class="bot">Sorry, I encountered an error. Please try again.</div>';
+                logDebug('AI error: ' + err.message);
             }
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
@@ -3016,9 +3100,11 @@
         function initiatePeerConnection(targetId, name, isInitiator) {
             // Avoid duplicate connections
             if (peerConnections[targetId]) {
+                logDebug('PC already exists for ' + targetId + ', reusing');
                 return peerConnections[targetId];
             }
 
+            logDebug('Creating new PC for ' + targetId + ' (initiator: ' + isInitiator + ')');
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
             pendingCandidates[targetId] = [];
@@ -3026,7 +3112,10 @@
             if (localStream) {
                 localStream.getTracks().forEach(track => {
                     pc.addTrack(track, localStream);
+                    logDebug('Added track to PC for ' + targetId + ': ' + track.kind);
                 });
+            } else {
+                logDebug('Warning: localStream is null when creating PC for ' + targetId);
             }
 
             pc.onicecandidate = e => {
@@ -3037,15 +3126,18 @@
                         from: myUsername
                     };
                     db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
+                    logDebug('Sent ICE candidate to ' + targetId);
                 }
             };
 
             pc.oniceconnectionstatechange = () => {
-                console.log('ICE state for', targetId, ':', pc.iceConnectionState);
-                if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+                const state = pc.iceConnectionState;
+                logDebug('ICE state for ' + targetId + ': ' + state);
+                if (state === 'failed' || state === 'disconnected') {
+                    logDebug('ICE failed/disconnected, trying to restart ICE for ' + targetId);
                     pc.restartIce();
                 }
-                if (pc.iceConnectionState === 'closed' || pc.iceConnectionState === 'disconnected') {
+                if (state === 'closed' || state === 'disconnected') {
                     delete peerConnections[targetId];
                     connectedPeers.delete(targetId);
                     const card = document.getElementById('peer-card-' + targetId);
@@ -3054,9 +3146,9 @@
             };
 
             pc.ontrack = e => {
+                logDebug('Track received from ' + targetId + ', kind: ' + e.track.kind);
                 let card = document.getElementById('peer-card-' + targetId);
                 let video;
-                // If there are multiple streams, take the first one
                 const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
 
                 if (!card) {
@@ -3084,18 +3176,18 @@
                     wave.innerHTML = '<div class="bar"></div><div class="bar"></div><div class="bar"></div>';
                     card.appendChild(wave);
                     document.getElementById('video-layout-grid').appendChild(card);
+                    logDebug('Created video card for ' + targetId);
 
-                    // FIX: Click to expand and also to play if paused (user gesture)
+                    // Click to expand and play
                     card.addEventListener('click', function() {
                         const vid = this.querySelector('video');
                         const lbl = this.querySelector('.label');
                         const labelText = lbl ? lbl.innerText : name;
                         openVideoExpand(vid, labelText);
-                        // Ensure audio plays on user gesture
                         if (vid) {
                             vid.muted = false;
                             vid.volume = 1.0;
-                            vid.play().catch(e => console.log("Play on click:", e));
+                            vid.play().catch(e => logDebug('Play on click error: ' + e.message));
                         }
                     });
                 } else {
@@ -3108,18 +3200,31 @@
                     }
                     video.muted = false;
                     video.volume = 1.0;
-                    // Play with a catch; if it fails, user will click to play
+                    // Try to play; if blocked, user will click
                     video.play().catch(err => {
-                        console.log("Autoplay blocked, waiting for user gesture");
-                        // Add a one-time click to play on the card
-                        card.addEventListener('click', function playOnce() {
-                            video.play().catch(e => console.log("Still blocked"));
-                            card.removeEventListener('click', playOnce);
+                        logDebug('Autoplay blocked for ' + targetId + ', waiting for user gesture');
+                        // Show a hint
+                        const hint = document.createElement('div');
+                        hint.style.position = 'absolute';
+                        hint.style.top = '50%';
+                        hint.style.left = '50%';
+                        hint.style.transform = 'translate(-50%, -50%)';
+                        hint.style.color = '#fff';
+                        hint.style.background = 'rgba(0,0,0,0.6)';
+                        hint.style.padding = '8px 16px';
+                        hint.style.borderRadius = '8px';
+                        hint.style.zIndex = '3';
+                        hint.innerText = 'Click to play';
+                        card.appendChild(hint);
+                        card.addEventListener('click', function removeHint() {
+                            hint.remove();
+                            card.removeEventListener('click', removeHint);
                         });
                     });
                 }
             };
 
+            // If we are the initiator, create an offer
             if (isInitiator) {
                 pc.createOffer()
                     .then(o => pc.setLocalDescription(o))
@@ -3130,8 +3235,9 @@
                             from: myUsername
                         };
                         db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
+                        logDebug('Sent offer to ' + targetId);
                     })
-                    .catch(err => console.error("Offer error:", err));
+                    .catch(err => logDebug('Offer creation error: ' + err.message));
             }
 
             return pc;
@@ -3140,35 +3246,44 @@
         async function handleSignaling(signal) {
             let pc = peerConnections[signal.from];
             if (!pc) {
-                // If we don't have a connection yet, create one (passive)
+                // Create a passive PC if we don't have one yet
+                logDebug('Creating passive PC for ' + signal.from + ' due to incoming signal');
                 pc = initiatePeerConnection(signal.from, signal.from, false);
                 connectedPeers.add(signal.from);
             }
 
             if (signal.sdp) {
-                await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-                if (pendingCandidates[signal.from]) {
-                    while (pendingCandidates[signal.from].length) {
-                        const cand = pendingCandidates[signal.from].shift();
-                        await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.log("Candidate error:", e));
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+                    logDebug('Set remote description for ' + signal.from + ' type: ' + signal.sdp.type);
+                    // Process any pending candidates
+                    if (pendingCandidates[signal.from]) {
+                        while (pendingCandidates[signal.from].length) {
+                            const cand = pendingCandidates[signal.from].shift();
+                            await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => logDebug('Candidate add error: ' + e.message));
+                        }
                     }
-                }
-                if (signal.sdp.type === 'offer') {
-                    const ans = await pc.createAnswer();
-                    await pc.setLocalDescription(ans);
-                    const answerSignal = {
-                        type: 'answer',
-                        sdp: pc.localDescription,
-                        from: myUsername
-                    };
-                    db.ref('classrooms/' + classCodeRoom + '/signals/' + signal.from).push(answerSignal);
+                    if (signal.sdp.type === 'offer') {
+                        const ans = await pc.createAnswer();
+                        await pc.setLocalDescription(ans);
+                        const answerSignal = {
+                            type: 'answer',
+                            sdp: pc.localDescription,
+                            from: myUsername
+                        };
+                        db.ref('classrooms/' + classCodeRoom + '/signals/' + signal.from).push(answerSignal);
+                        logDebug('Sent answer to ' + signal.from);
+                    }
+                } catch (err) {
+                    logDebug('Error handling SDP for ' + signal.from + ': ' + err.message);
                 }
             } else if (signal.candidate) {
                 if (pc.remoteDescription && pc.remoteDescription.type) {
-                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(e => console.log("ICE error:", e));
+                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(e => logDebug('ICE add error: ' + e.message));
                 } else {
                     if (!pendingCandidates[signal.from]) pendingCandidates[signal.from] = [];
                     pendingCandidates[signal.from].push(signal.candidate);
+                    logDebug('Stored pending candidate from ' + signal.from);
                 }
             }
         }
@@ -3183,30 +3298,40 @@
                     audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
                     video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 10 } }
                 });
+                logDebug('Local media stream obtained');
 
                 const myVideo = document.getElementById('my-camera');
                 myVideo.srcObject = localStream;
                 myVideo.muted = true;
-                // Ensure mirror is applied
                 if (mirrorActive) {
                     myVideo.classList.add('mirrored');
                 } else {
                     myVideo.classList.remove('mirrored');
                 }
 
+                // Default: turn camera ON for teachers, OFF for students
                 if (!isTeacherUser) {
+                    // Students: start with camera off
                     cameraBlocked = true;
                     if (localStream.getVideoTracks().length > 0) localStream.getVideoTracks()[0].enabled = false;
                     document.getElementById('local-video-blocked').classList.remove('hidden');
                     document.getElementById('local-video-toggle').innerText = "📷 Start Cam";
                     document.getElementById('local-video-toggle').classList.add('inactive');
+                    logDebug('Student camera disabled by default');
                 } else {
                     cameraBlocked = false;
                     if (localStream.getVideoTracks().length > 0) localStream.getVideoTracks()[0].enabled = true;
+                    logDebug('Teacher camera enabled');
                 }
 
+                // Mic muted by default
+                micMuted = true;
                 if (localStream.getAudioTracks().length > 0) {
-                    localStream.getAudioTracks()[0].enabled = (!micMuted && !forceMutedByTeacher);
+                    localStream.getAudioTracks()[0].enabled = false;
+                    document.getElementById('local-mic-toggle').innerText = "🎙️ Unmute Mic";
+                    document.getElementById('local-mic-toggle').classList.add('inactive');
+                    document.getElementById('local-soundwave').classList.add('inactive');
+                    logDebug('Mic muted by default');
                 }
 
                 document.getElementById('local-video-card').addEventListener('click', function() {
@@ -3223,12 +3348,13 @@
                         const hasTrack = senders.some(s => s.track && s.track.id === track.id);
                         if (!hasTrack) {
                             pc.addTrack(track, localStream);
+                            logDebug('Added track to existing PC for ' + targetId + ': ' + track.kind);
                         }
                     });
                 }
 
             } catch (err) {
-                console.error("Camera error:", err);
+                logDebug('Camera error: ' + err.message);
                 alert("Camera/Microphone access denied. Please allow permissions.");
             }
         }
@@ -3243,10 +3369,12 @@
                 this.innerText = "🎙️ Unmute Mic";
                 this.classList.add('inactive');
                 document.getElementById('local-soundwave').classList.add('inactive');
+                logDebug('Mic muted');
             } else {
                 this.innerText = "🎙️ Mute Mic";
                 this.classList.remove('inactive');
                 document.getElementById('local-soundwave').classList.remove('inactive');
+                logDebug('Mic unmuted');
             }
         });
 
@@ -3259,10 +3387,12 @@
                 this.innerText = "📷 Start Cam";
                 this.classList.add('inactive');
                 document.getElementById('local-video-blocked').classList.remove('hidden');
+                logDebug('Camera turned off');
             } else {
                 this.innerText = "📷 Stop Cam";
                 this.classList.remove('inactive');
                 document.getElementById('local-video-blocked').classList.add('hidden');
+                logDebug('Camera turned on');
             }
         });
 
@@ -3275,10 +3405,10 @@
                 const senders = peerConnections[targetId].getSenders();
                 const sender = senders.find(s => s.track && s.track.kind === 'video');
                 if (sender) sender.replaceTrack(videoTrack);
+                logDebug('Replaced video track for ' + targetId);
             }
         });
 
-        // FIX: Mirror button toggles both class and variable
         document.getElementById('mirror-cam-btn').addEventListener('click', () => {
             const video = document.getElementById('my-camera');
             mirrorActive = !mirrorActive;
@@ -3289,6 +3419,7 @@
                 video.classList.remove('mirrored');
                 document.getElementById('mirror-cam-btn').innerText = '🪞 Mirror Off';
             }
+            logDebug('Mirror toggled: ' + mirrorActive);
         });
 
         // ============================================================
@@ -3300,6 +3431,7 @@
             document.getElementById('theory-questions-list').innerHTML = '';
             addOBJQuestion();
             addTheoryQuestion();
+            logDebug('Exam portal opened');
         });
 
         function closeExamSetup() {
@@ -3393,6 +3525,7 @@
             db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
             closeExamSetup();
             alert('Exam deployed successfully!');
+            logDebug('Exam deployed');
         }
 
         // ============================================================
@@ -3453,6 +3586,7 @@
                     submitStudentExamAnswers();
                 }
             }, 1000);
+            logDebug('Exam workspace launched');
         }
 
         function updateTimerDisplay() {
@@ -3496,6 +3630,7 @@
 
             document.getElementById('student-exam-workspace-modal').classList.remove('active');
             alert('Exam submitted successfully!');
+            logDebug('Exam submitted by ' + myUsername);
         }
 
         // ============================================================
@@ -3504,6 +3639,7 @@
         document.getElementById('teacher-gradebook-btn').addEventListener('click', () => {
             renderGradebookUI();
             document.getElementById('teacher-gradebook-modal').classList.add('active');
+            logDebug('Gradebook opened');
         });
 
         function closeGradebookModal() {
@@ -3555,6 +3691,7 @@
             };
             db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
             alert('Grades published for ' + student);
+            logDebug('Published grades for ' + student);
         }
 
         // ============================================================
@@ -3570,6 +3707,7 @@
                     <button onclick="location.reload()" style="margin-top:20px;padding:14px 40px;background:var(--blue-accent);color:#fff;border:none;border-radius:50px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;">Reconnect</button>
                 </div>
             `;
+            logDebug('Forced lockout: ' + msg);
         }
 
         // ============================================================
@@ -3605,7 +3743,7 @@
         })();
 
         console.log('🚀 Nexus Learn Ultimate Edition with Firebase loaded!');
-        console.log('✅ Audio and video connections are now automatically established with all participants.');
+        console.log('✅ Debug panel is visible. Check console and on‑screen log.');
     </script>
 </body>
 </html>
