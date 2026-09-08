@@ -129,11 +129,11 @@ def api_ai():
     elif 'exam' in query or 'test' in query:
         response = "Teachers can deploy exams using the 'Setup Exam' button. Students will see a live exam modal with a timer."
     elif 'video' in query or 'camera' in query:
-        response = "Your video is shared with all participants. Use the controls to mute mic, stop cam, flip or mirror."
+        response = "Video features have been removed in this version. Please use the chat and exam tools."
     elif 'health' in query or 'status' in query:
         response = f"Server is running. Teachers: {len(teacher_accounts)}, Pro users: {len(pro_activations)}."
     else:
-        response = "Try asking about 'login', 'pro', 'exam', or 'video'."
+        response = "Try asking about 'login', 'pro', 'exam', or 'chat'."
 
     logger.info(f'AI response: {response[:30]}...')
     return jsonify({'response': response}), 200
