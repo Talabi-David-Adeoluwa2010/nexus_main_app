@@ -208,6 +208,11 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 30px rgba(44, 62, 80, 0.06);
+            transition: transform 0.3s ease;
+        }
+        /* Hide nav when in classroom */
+        body.in-classroom .top-nav {
+            display: none;
         }
         .nav-brand {
             display: flex;
@@ -290,6 +295,9 @@
             max-width: 1440px;
             margin: 0 auto;
             padding: 120px 24px 40px;
+        }
+        body.in-classroom .container {
+            padding-top: 20px;
         }
 
         /* ---------- HOMEPAGE ---------- */
@@ -716,6 +724,9 @@
 
         /* ---------- CLASSROOM ---------- */
         .classroom-container { padding-top: 100px; }
+        body.in-classroom .classroom-container {
+            padding-top: 20px;
+        }
         .classroom-header {
             display: flex;
             justify-content: space-between;
@@ -1508,7 +1519,7 @@
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
 
         /* ============================================================
-           NEW VIDEO CALL STYLES
+           VIDEO CALL STYLES
            ============================================================ */
         .video-call-overlay {
             position: fixed;
@@ -1564,6 +1575,35 @@
             padding: 4px 14px;
             border-radius: 20px;
         }
+        .call-top-bar .right .call-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .call-top-bar .right .call-actions button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .call-top-bar .right .call-actions button:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        .call-top-bar .right .call-actions button.end-call-btn {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .call-top-bar .right .call-actions button.end-call-btn:hover {
+            background: #c0392b;
+        }
+
         .call-grid-wrapper {
             flex: 1;
             display: flex;
@@ -1652,6 +1692,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .local-preview {
             position: fixed;
             bottom: 100px;
@@ -1723,9 +1764,82 @@
         .call-controls button.end-call:hover {
             background: #c0392b;
         }
-        .call-controls button .label {
+
+        /* Minimized Call Bar */
+        #minimized-call-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 3002;
+            background: rgba(20, 30, 40, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #minimized-call-bar.active {
+            display: flex;
+        }
+        #minimized-call-bar .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        #minimized-call-bar .left .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4CAF50;
+            display: inline-block;
+        }
+        #minimized-call-bar .left .call-info {
+            display: flex;
+            flex-direction: column;
+        }
+        #minimized-call-bar .left .call-info .title {
+            font-weight: 600;
+        }
+        #minimized-call-bar .left .call-info .sub {
             font-size: 12px;
-            margin-left: 4px;
+            color: #aaa;
+        }
+        #minimized-call-bar .right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        #minimized-call-bar .right .duration {
+            font-size: 14px;
+            color: #ccc;
+        }
+        #minimized-call-bar .right button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #minimized-call-bar .right button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        #minimized-call-bar .right button.end-call-mini {
+            background: #e74c3c;
+        }
+        #minimized-call-bar .right button.end-call-mini:hover {
+            background: #c0392b;
         }
 
         /* Responsive adjustments for video */
@@ -1777,6 +1891,13 @@
             .call-controls button.end-call {
                 font-size: 12px;
                 padding: 0 12px;
+            }
+            #minimized-call-bar {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            #minimized-call-bar .left .call-info .title {
+                font-size: 13px;
             }
         }
     </style>
@@ -2089,7 +2210,7 @@
             </div>
 
             <!-- ============================================================
-            VIDEO CALL OVERLAY (NEW)
+            VIDEO CALL OVERLAY (UPDATED)
             ============================================================ -->
             <div class="video-call-overlay" id="video-call-overlay">
                 <div class="call-top-bar">
@@ -2099,7 +2220,12 @@
                     </div>
                     <div class="right">
                         <span class="participant-count" id="call-participant-count">0 participants</span>
-                        <button onclick="leaveVideoCall()" style="background:none; border:none; color:#ff6b6b; font-size:20px; cursor:pointer;" title="Leave Video Call">✕</button>
+                        <div class="call-actions">
+                            <!-- Minimize button -->
+                            <button onclick="minimizeVideoCall()" title="Minimize Call">⬇️</button>
+                            <!-- End call button -->
+                            <button class="end-call-btn" onclick="leaveVideoCall()" title="End Call">✕</button>
+                        </div>
                     </div>
                 </div>
                 <div class="call-grid-wrapper">
@@ -2119,6 +2245,21 @@
                     <button class="end-call" onclick="leaveVideoCall()">
                         📞 End Call
                     </button>
+                </div>
+            </div>
+
+            <!-- Minimized Call Bar -->
+            <div id="minimized-call-bar" onclick="expandVideoCall()">
+                <div class="left">
+                    <span class="dot"></span>
+                    <div class="call-info">
+                        <span class="title" id="mini-call-title">Class Session</span>
+                        <span class="sub" id="mini-participant-count">0 participants</span>
+                    </div>
+                </div>
+                <div class="right">
+                    <span class="duration" id="mini-call-duration">00:00</span>
+                    <button class="end-call-mini" onclick="event.stopPropagation(); leaveVideoCall();" title="End Call">✕</button>
                 </div>
             </div>
         </div>
@@ -2317,6 +2458,7 @@
         let isCameraOn = false;
         let isMicOn = false;
         let participants = {};     // participantId -> { name, hasVideo, hasAudio, ... }
+        let isMinimized = false;
 
         // ============================================================
         // DEBUG LOGGING
@@ -2401,6 +2543,7 @@
             document.getElementById('classroom-section').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-home').classList.add('active');
+            document.body.classList.remove('in-classroom');
             logDebug('Navigated to Homepage');
         }
 
@@ -2411,6 +2554,7 @@
             document.getElementById('classroom-section').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-student').classList.add('active');
+            document.body.classList.remove('in-classroom');
             logDebug('Navigated to Student Login');
         }
 
@@ -2424,6 +2568,7 @@
             document.getElementById('teacher-reg-container').classList.add('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-teacher').classList.add('active');
+            document.body.classList.remove('in-classroom');
             logDebug('Navigated to Teacher Login');
         }
 
@@ -2446,6 +2591,7 @@
                 presenceRef.remove();
                 logDebug('Left classroom');
             }
+            document.body.classList.remove('in-classroom');
             location.reload();
         }
 
@@ -2589,7 +2735,7 @@
         });
 
         // ============================================================
-        // ENTER CLASSROOM (no video/audio)
+        // ENTER CLASSROOM
         // ============================================================
         async function enterClassroom() {
             if (!classCodeRoom || classCodeRoom.trim() === '') {
@@ -2603,6 +2749,7 @@
             document.getElementById('teacher-login-section').classList.add('hidden');
             document.getElementById('classroom-section').classList.remove('hidden');
             document.getElementById('app-container').classList.add('classroom-container');
+            document.body.classList.add('in-classroom');
 
             // Fetch class info
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
@@ -2610,12 +2757,13 @@
                 if (info) {
                     document.getElementById('view-class-title').innerText = info.name || 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: ' + (info.teacher || 'Unknown');
-                    // Update call overlay title
                     document.getElementById('call-class-name').innerText = info.name || 'Class Session';
+                    document.getElementById('mini-call-title').innerText = info.name || 'Class Session';
                 } else {
                     document.getElementById('view-class-title').innerText = 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: Unknown';
                     document.getElementById('call-class-name').innerText = 'Class Session';
+                    document.getElementById('mini-call-title').innerText = 'Class Session';
                 }
             });
 
@@ -2660,6 +2808,11 @@
             });
 
             logDebug('Classroom entry complete');
+
+            // Ensure socket is connected
+            if (!socket || !socket.connected) {
+                initSocket();
+            }
         }
 
         // ============================================================
@@ -3333,7 +3486,7 @@
         console.log('✅ Debug panel is visible. Check console and on‑screen log.');
 
         // ============================================================
-        // ================ NEW VIDEO CALL FUNCTIONALITY ===============
+        // ================ VIDEO CALL FUNCTIONALITY ===================
         // ============================================================
 
         // ICE servers configuration (STUN only, TURN can be added)
@@ -3467,6 +3620,7 @@
                 // Show overlay
                 document.getElementById('video-call-overlay').classList.add('active');
                 videoCallActive = true;
+                isMinimized = false;
                 // Start duration timer
                 callStartTime = Date.now();
                 updateCallDuration();
@@ -3506,6 +3660,7 @@
                         updateControlButtons();
                         document.getElementById('video-call-overlay').classList.add('active');
                         videoCallActive = true;
+                        isMinimized = false;
                         callStartTime = Date.now();
                         updateCallDuration();
                         socket.emit('video_call_join', {
@@ -3549,11 +3704,14 @@
             // Reset UI
             document.getElementById('video-call-overlay').classList.remove('active');
             document.getElementById('local-preview').style.display = 'none';
+            document.getElementById('minimized-call-bar').classList.remove('active');
             videoCallActive = false;
             isCameraOn = false;
             isMicOn = false;
+            isMinimized = false;
             clearInterval(callDurationInterval);
             document.getElementById('call-duration').innerText = '00:00';
+            document.getElementById('mini-call-duration').innerText = '00:00';
             document.getElementById('join-video-btn').textContent = '🎥 Join Video';
             document.getElementById('join-video-btn').style.background = '#4CAF50';
             updateParticipantCount(0);
@@ -3567,6 +3725,30 @@
             }
 
             logDebug('Video call ended');
+        }
+
+        // ---- Minimize Video Call ----
+        function minimizeVideoCall() {
+            if (!videoCallActive) return;
+            isMinimized = true;
+            document.getElementById('video-call-overlay').classList.remove('active');
+            document.getElementById('minimized-call-bar').classList.add('active');
+            // Update mini bar with current info
+            document.getElementById('mini-call-duration').innerText = document.getElementById('call-duration').innerText;
+            document.getElementById('mini-participant-count').innerText = document.getElementById('call-participant-count').innerText;
+            logDebug('Video call minimized');
+        }
+
+        // ---- Expand Video Call ----
+        function expandVideoCall() {
+            if (!videoCallActive) return;
+            isMinimized = false;
+            document.getElementById('minimized-call-bar').classList.remove('active');
+            document.getElementById('video-call-overlay').classList.add('active');
+            // Update duration and count in overlay
+            document.getElementById('call-duration').innerText = document.getElementById('mini-call-duration').innerText;
+            document.getElementById('call-participant-count').innerText = document.getElementById('mini-participant-count').innerText;
+            logDebug('Video call expanded');
         }
 
         // ---- Create Peer Connection ----
@@ -3785,7 +3967,9 @@
 
         // ---- Update Participant Count ----
         function updateParticipantCount(count) {
-            document.getElementById('call-participant-count').innerText = count + ' participants';
+            const text = count + ' participants';
+            document.getElementById('call-participant-count').innerText = text;
+            document.getElementById('mini-participant-count').innerText = text;
         }
 
         // ---- Update Call Duration ----
@@ -3796,7 +3980,9 @@
                 const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
                 const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
                 const secs = String(elapsed % 60).padStart(2, '0');
-                document.getElementById('call-duration').innerText = mins + ':' + secs;
+                const durationStr = mins + ':' + secs;
+                document.getElementById('call-duration').innerText = durationStr;
+                document.getElementById('mini-call-duration').innerText = durationStr;
             }, 1000);
         }
 
@@ -3911,21 +4097,13 @@
         function renegotiateAll() {
             for (let pid in peerConnections) {
                 const pc = peerConnections[pid];
-                // Check if we need to renegotiate (add/remove tracks)
-                // For simplicity, we'll just restart ICE or create new offer.
-                // Better: use pc.addTrack/removeTrack and then createOffer.
-                // But since we already added tracks initially, we might need to
-                // handle adding new tracks. For now, we'll create a new offer for each.
                 if (pc.signalingState === 'stable') {
                     createOffer(pid, pc);
                 }
             }
         }
 
-        // ---- Override initSocket to include new listeners ----
-        // (Already done above in the initSocket definition)
-
-        console.log('✅ Video call module loaded.');
+        console.log('✅ Video call module loaded with minimize feature.');
     </script>
 </body>
 </html>
