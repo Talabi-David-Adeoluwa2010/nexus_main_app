@@ -7,6 +7,8 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- Socket.IO client -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
         /* ============================================================
            ULTIMATE PREMIUM THEME - LIGHT BLUE & BEIGE
@@ -1504,6 +1506,279 @@
             outline: none;
         }
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
+
+        /* ============================================================
+           NEW VIDEO CALL STYLES
+           ============================================================ */
+        .video-call-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(20, 30, 40, 0.95);
+            z-index: 3000;
+            display: none;
+            flex-direction: column;
+            color: #fff;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            backdrop-filter: blur(4px);
+            overflow: hidden;
+        }
+        .video-call-overlay.active {
+            display: flex;
+        }
+        .call-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .call-top-bar .left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .call-top-bar .left .class-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .call-top-bar .left .duration {
+            font-size: 16px;
+            font-weight: 300;
+            color: #aaa;
+        }
+        .call-top-bar .right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        .call-top-bar .right .participant-count {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+        .call-grid-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .video-grid {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            max-height: calc(100vh - 160px);
+            justify-content: center;
+            align-content: center;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+        .video-grid .video-tile {
+            position: relative;
+            background: #1e2a36;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            aspect-ratio: 16/9;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-grid .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #1e2a36;
+        }
+        .video-grid .video-tile .placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: #2a3a4a;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .video-grid .video-tile .placeholder .avatar {
+            font-size: 48px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.1);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-grid .video-tile .participant-name {
+            position: absolute;
+            bottom: 8px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #fff;
+            pointer-events: none;
+        }
+        .video-grid .video-tile .mic-status {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            font-size: 16px;
+            color: #fff;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .local-preview {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 160px;
+            aspect-ratio: 16/9;
+            background: #1e2a36;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.2);
+            z-index: 3001;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .local-preview:hover {
+            transform: scale(1.02);
+        }
+        .local-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #1e2a36;
+        }
+        .call-controls {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .call-controls button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 22px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+        }
+        .call-controls button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+        .call-controls button.active {
+            background: #4CAF50;
+        }
+        .call-controls button.muted {
+            background: #e74c3c;
+        }
+        .call-controls button.end-call {
+            background: #e74c3c;
+            width: auto;
+            padding: 0 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            gap: 8px;
+        }
+        .call-controls button.end-call:hover {
+            background: #c0392b;
+        }
+        .call-controls button .label {
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        /* Responsive adjustments for video */
+        @media (max-width: 768px) {
+            .local-preview {
+                width: 100px;
+                bottom: 80px;
+                right: 10px;
+            }
+            .call-controls button {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+            .call-controls button.end-call {
+                padding: 0 16px;
+                font-size: 14px;
+            }
+            .video-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 8px;
+            }
+            .call-top-bar .left .class-name {
+                font-size: 14px;
+            }
+            .call-top-bar .left .duration {
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 480px) {
+            .local-preview {
+                width: 80px;
+                bottom: 70px;
+                right: 6px;
+            }
+            .video-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 4px;
+            }
+            .call-controls {
+                gap: 10px;
+                padding: 10px 12px;
+            }
+            .call-controls button {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+            .call-controls button.end-call {
+                font-size: 12px;
+                padding: 0 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1761,6 +2036,8 @@
                     <button id="copy-class-code-btn">📋</button>
                 </div>
                 <div class="actions">
+                    <!-- New: Join Video button -->
+                    <button id="join-video-btn" onclick="startVideoCall()" style="background:#4CAF50; color:#fff; border:none;">🎥 Join Video</button>
                     <button onclick="leaveClassroom()" class="danger">Leave</button>
                 </div>
             </div>
@@ -1809,6 +2086,40 @@
                         <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No users connected</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- ============================================================
+            VIDEO CALL OVERLAY (NEW)
+            ============================================================ -->
+            <div class="video-call-overlay" id="video-call-overlay">
+                <div class="call-top-bar">
+                    <div class="left">
+                        <span class="class-name" id="call-class-name">Class Session</span>
+                        <span class="duration" id="call-duration">00:00</span>
+                    </div>
+                    <div class="right">
+                        <span class="participant-count" id="call-participant-count">0 participants</span>
+                        <button onclick="leaveVideoCall()" style="background:none; border:none; color:#ff6b6b; font-size:20px; cursor:pointer;" title="Leave Video Call">✕</button>
+                    </div>
+                </div>
+                <div class="call-grid-wrapper">
+                    <div class="video-grid" id="video-grid"></div>
+                </div>
+                <!-- Local preview (floating) -->
+                <div class="local-preview" id="local-preview" style="display:none;">
+                    <video id="local-video" muted autoplay playsinline></video>
+                </div>
+                <div class="call-controls">
+                    <button id="toggle-camera-btn" onclick="toggleCamera()" title="Toggle Camera">
+                        🎥
+                    </button>
+                    <button id="toggle-mic-btn" onclick="toggleMicrophone()" title="Toggle Microphone">
+                        🎤
+                    </button>
+                    <button class="end-call" onclick="leaveVideoCall()">
+                        📞 End Call
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1961,7 +2272,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIREBASE + ALL FEATURES (video/audio removed)
+    JAVASCRIPT - FIREBASE + ALL FEATURES + VIDEO CALL
     ============================================================ -->
     <script>
         // ============================================================
@@ -1994,6 +2305,18 @@
         let currentExamTimeSecondsLeft = 0;
         let examGradebook = {};
         let currentZoomScale = 1;
+
+        // Video call state
+        let socket = null;
+        let localStream = null;
+        let peerConnections = {};  // participantId -> RTCPeerConnection
+        let remoteStreams = {};    // participantId -> MediaStream
+        let videoCallActive = false;
+        let callDurationInterval = null;
+        let callStartTime = null;
+        let isCameraOn = false;
+        let isMicOn = false;
+        let participants = {};     // participantId -> { name, hasVideo, hasAudio, ... }
 
         // ============================================================
         // DEBUG LOGGING
@@ -2055,6 +2378,9 @@
             document.addEventListener('gesturestart', function(e) {
                 e.preventDefault();
             });
+
+            // Initialize Socket.IO connection
+            initSocket();
         });
 
         // ============================================================
@@ -2112,6 +2438,9 @@
         }
 
         function leaveClassroom() {
+            if (videoCallActive) {
+                leaveVideoCall();
+            }
             if (classCodeRoom) {
                 const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
                 presenceRef.remove();
@@ -2281,9 +2610,12 @@
                 if (info) {
                     document.getElementById('view-class-title').innerText = info.name || 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: ' + (info.teacher || 'Unknown');
+                    // Update call overlay title
+                    document.getElementById('call-class-name').innerText = info.name || 'Class Session';
                 } else {
                     document.getElementById('view-class-title').innerText = 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: Unknown';
+                    document.getElementById('call-class-name').innerText = 'Class Session';
                 }
             });
 
@@ -2997,8 +3329,603 @@
             }
         })();
 
-        console.log('🚀 Nexus Learn Ultimate Edition (no video/audio) loaded!');
+        console.log('🚀 Nexus Learn Ultimate Edition (with video/audio) loaded!');
         console.log('✅ Debug panel is visible. Check console and on‑screen log.');
+
+        // ============================================================
+        // ================ NEW VIDEO CALL FUNCTIONALITY ===============
+        // ============================================================
+
+        // ICE servers configuration (STUN only, TURN can be added)
+        const iceServers = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        };
+
+        // Initialize Socket.IO connection
+        function initSocket() {
+            if (socket && socket.connected) return;
+            const host = window.location.host;
+            socket = io(host, { transports: ['websocket', 'polling'] });
+
+            socket.on('connect', () => {
+                logDebug('Socket.IO connected');
+            });
+
+            socket.on('disconnect', () => {
+                logDebug('Socket.IO disconnected');
+            });
+
+            socket.on('video_call_participants', (data) => {
+                const participantsList = data.participants || [];
+                logDebug('Received participants list: ' + participantsList.join(', '));
+                participantsList.forEach(p => {
+                    if (p !== myUsername) {
+                        createPeerConnection(p);
+                    }
+                });
+            });
+
+            socket.on('video_call_user_joined', (data) => {
+                const username = data.username;
+                if (username === myUsername) return;
+                logDebug('User joined: ' + username);
+                createPeerConnection(username);
+            });
+
+            socket.on('video_call_user_left', (data) => {
+                const username = data.username;
+                logDebug('User left: ' + username);
+                removePeerConnection(username);
+            });
+
+            socket.on('video_call_offer', (data) => {
+                const sender = data.sender;
+                const sdp = data.sdp;
+                logDebug('Received offer from ' + sender);
+                handleOffer(sender, sdp);
+            });
+
+            socket.on('video_call_answer', (data) => {
+                const sender = data.sender;
+                const sdp = data.sdp;
+                logDebug('Received answer from ' + sender);
+                handleAnswer(sender, sdp);
+            });
+
+            socket.on('video_call_ice_candidate', (data) => {
+                const sender = data.sender;
+                const candidate = data.candidate;
+                logDebug('Received ICE candidate from ' + sender);
+                handleIceCandidate(sender, candidate);
+            });
+
+            socket.on('video_call_error', (data) => {
+                alert('Video call error: ' + data.message);
+                logDebug('Video call error: ' + data.message);
+            });
+
+            // New listeners for camera/mic state
+            socket.on('video_call_camera_state', (data) => {
+                const sender = data.sender;
+                const state = data.state;
+                const tile = document.getElementById('video-tile-' + sender);
+                if (tile) {
+                    const video = tile.querySelector('video');
+                    const placeholder = tile.querySelector('.placeholder');
+                    if (state) {
+                        if (video) video.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                    } else {
+                        if (video) video.style.display = 'none';
+                        if (placeholder) placeholder.style.display = 'flex';
+                    }
+                }
+            });
+
+            socket.on('video_call_mic_state', (data) => {
+                const sender = data.sender;
+                const state = data.state;
+                const tile = document.getElementById('video-tile-' + sender);
+                if (tile) {
+                    const micStatus = tile.querySelector('.mic-status');
+                    if (micStatus) {
+                        micStatus.textContent = state ? '🎤' : '🚫';
+                    }
+                }
+            });
+        }
+
+        // ---- Start/Join Video Call ----
+        async function startVideoCall() {
+            if (videoCallActive) {
+                logDebug('Video call already active');
+                return;
+            }
+            if (!classCodeRoom || !myUsername) {
+                alert('You must be in a classroom to start a video call.');
+                return;
+            }
+
+            // Request camera and microphone permissions
+            try {
+                const constraints = { audio: true, video: true };
+                localStream = await navigator.mediaDevices.getUserMedia(constraints);
+                logDebug('Local media acquired');
+                isCameraOn = true;
+                isMicOn = true;
+                // Show local video
+                const localVideo = document.getElementById('local-video');
+                localVideo.srcObject = localStream;
+                document.getElementById('local-preview').style.display = 'block';
+                // Update buttons
+                updateControlButtons();
+
+                // Show overlay
+                document.getElementById('video-call-overlay').classList.add('active');
+                videoCallActive = true;
+                // Start duration timer
+                callStartTime = Date.now();
+                updateCallDuration();
+
+                // Join signaling room
+                socket.emit('video_call_join', {
+                    classroom: classCodeRoom,
+                    username: myUsername
+                });
+
+                // Update participant count (initially 1)
+                updateParticipantCount(1);
+
+                // Update join button text
+                document.getElementById('join-video-btn').textContent = '📹 In Call';
+                document.getElementById('join-video-btn').style.background = '#f39c12';
+
+                logDebug('Video call started');
+
+            } catch (err) {
+                logDebug('Error accessing media devices: ' + err.message);
+                // Handle permission denials gracefully
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    alert('Camera/Microphone access denied. You can still join with audio only or without video.\n\n' +
+                        'If you want to use video, please allow access in your browser settings and try again.');
+                    // Try to get only audio if video denied
+                    try {
+                        const audioOnly = { audio: true, video: false };
+                        localStream = await navigator.mediaDevices.getUserMedia(audioOnly);
+                        isCameraOn = false;
+                        isMicOn = true;
+                        logDebug('Audio-only stream acquired');
+                        // Proceed with audio only
+                        const localVideo = document.getElementById('local-video');
+                        localVideo.srcObject = localStream;
+                        document.getElementById('local-preview').style.display = 'block';
+                        updateControlButtons();
+                        document.getElementById('video-call-overlay').classList.add('active');
+                        videoCallActive = true;
+                        callStartTime = Date.now();
+                        updateCallDuration();
+                        socket.emit('video_call_join', {
+                            classroom: classCodeRoom,
+                            username: myUsername
+                        });
+                        updateParticipantCount(1);
+                        document.getElementById('join-video-btn').textContent = '📹 In Call';
+                        document.getElementById('join-video-btn').style.background = '#f39c12';
+                        logDebug('Video call started (audio only)');
+                    } catch (audioErr) {
+                        alert('Could not access microphone either. You can still use chat and exams.');
+                        logDebug('Audio also denied: ' + audioErr.message);
+                    }
+                } else {
+                    alert('Error accessing media: ' + err.message);
+                }
+            }
+        }
+
+        // ---- Leave Video Call ----
+        function leaveVideoCall() {
+            if (!videoCallActive) return;
+            logDebug('Leaving video call');
+
+            // Stop all peer connections
+            for (let pid in peerConnections) {
+                const pc = peerConnections[pid];
+                pc.close();
+                delete peerConnections[pid];
+                // Remove video tile
+                removeVideoTile(pid);
+            }
+
+            // Stop local stream
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+
+            // Reset UI
+            document.getElementById('video-call-overlay').classList.remove('active');
+            document.getElementById('local-preview').style.display = 'none';
+            videoCallActive = false;
+            isCameraOn = false;
+            isMicOn = false;
+            clearInterval(callDurationInterval);
+            document.getElementById('call-duration').innerText = '00:00';
+            document.getElementById('join-video-btn').textContent = '🎥 Join Video';
+            document.getElementById('join-video-btn').style.background = '#4CAF50';
+            updateParticipantCount(0);
+
+            // Notify server
+            if (socket && socket.connected) {
+                socket.emit('video_call_leave', {
+                    classroom: classCodeRoom,
+                    username: myUsername
+                });
+            }
+
+            logDebug('Video call ended');
+        }
+
+        // ---- Create Peer Connection ----
+        function createPeerConnection(remoteUserId) {
+            if (peerConnections[remoteUserId]) {
+                logDebug('Peer connection already exists for ' + remoteUserId);
+                return;
+            }
+            if (remoteUserId === myUsername) return;
+
+            logDebug('Creating peer connection for ' + remoteUserId);
+            const pc = new RTCPeerConnection(iceServers);
+            peerConnections[remoteUserId] = pc;
+
+            // Add local tracks if available
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                });
+            }
+
+            // Handle remote tracks
+            pc.ontrack = (event) => {
+                const stream = event.streams[0];
+                if (stream) {
+                    remoteStreams[remoteUserId] = stream;
+                    displayRemoteVideo(remoteUserId, stream);
+                }
+            };
+
+            // Handle ICE candidates
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('video_call_ice_candidate', {
+                        target: remoteUserId,
+                        candidate: event.candidate,
+                        sender: myUsername,
+                        classroom: classCodeRoom
+                    });
+                }
+            };
+
+            // Handle connection state changes
+            pc.onconnectionstatechange = () => {
+                const state = pc.connectionState;
+                logDebug(`Connection state with ${remoteUserId}: ${state}`);
+                if (state === 'failed' || state === 'disconnected') {
+                    // Attempt reconnection? For now, just log.
+                }
+                if (state === 'closed') {
+                    removePeerConnection(remoteUserId);
+                }
+            };
+
+            // Initiate offer if we are the caller (i.e., we are the one who created the connection)
+            // We'll create an offer for every new participant we discover.
+            // This will cause a negotiation storm in mesh, but for small classrooms it's fine.
+            // To avoid duplicates, we can use a flag, but for simplicity we'll let both sides offer.
+            // Better: we can use a simple rule: the participant with lower username offers.
+            // We'll implement the simple rule: if myUsername < remoteUserId, I will send offer.
+            if (myUsername < remoteUserId) {
+                createOffer(remoteUserId, pc);
+            } else {
+                // Wait for offer from other side
+                logDebug('Waiting for offer from ' + remoteUserId);
+            }
+        }
+
+        // ---- Create Offer ----
+        async function createOffer(remoteUserId, pc) {
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit('video_call_offer', {
+                    target: remoteUserId,
+                    sdp: offer,
+                    sender: myUsername,
+                    classroom: classCodeRoom
+                });
+                logDebug('Offer sent to ' + remoteUserId);
+            } catch (err) {
+                logDebug('Error creating offer: ' + err.message);
+            }
+        }
+
+        // ---- Handle Offer ----
+        async function handleOffer(sender, sdp) {
+            let pc = peerConnections[sender];
+            if (!pc) {
+                // Create peer connection if not exists
+                createPeerConnection(sender);
+                pc = peerConnections[sender];
+            }
+            if (!pc) return;
+
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                socket.emit('video_call_answer', {
+                    target: sender,
+                    sdp: answer,
+                    sender: myUsername,
+                    classroom: classCodeRoom
+                });
+                logDebug('Answer sent to ' + sender);
+            } catch (err) {
+                logDebug('Error handling offer: ' + err.message);
+            }
+        }
+
+        // ---- Handle Answer ----
+        async function handleAnswer(sender, sdp) {
+            const pc = peerConnections[sender];
+            if (!pc) {
+                logDebug('No peer connection for answer from ' + sender);
+                return;
+            }
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+                logDebug('Remote description set for ' + sender);
+            } catch (err) {
+                logDebug('Error setting remote description: ' + err.message);
+            }
+        }
+
+        // ---- Handle ICE Candidate ----
+        async function handleIceCandidate(sender, candidate) {
+            const pc = peerConnections[sender];
+            if (!pc) {
+                logDebug('No peer connection for ICE candidate from ' + sender);
+                return;
+            }
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                logDebug('ICE candidate added for ' + sender);
+            } catch (err) {
+                logDebug('Error adding ICE candidate: ' + err.message);
+            }
+        }
+
+        // ---- Remove Peer Connection ----
+        function removePeerConnection(remoteUserId) {
+            const pc = peerConnections[remoteUserId];
+            if (pc) {
+                pc.close();
+                delete peerConnections[remoteUserId];
+                delete remoteStreams[remoteUserId];
+                removeVideoTile(remoteUserId);
+                logDebug('Removed peer connection for ' + remoteUserId);
+                updateParticipantCount(Object.keys(peerConnections).length + 1); // +1 for self
+            }
+        }
+
+        // ---- Display Remote Video ----
+        function displayRemoteVideo(remoteUserId, stream) {
+            // Check if a tile already exists
+            let tile = document.getElementById('video-tile-' + remoteUserId);
+            if (!tile) {
+                tile = createVideoTile(remoteUserId);
+            }
+            const video = tile.querySelector('video');
+            video.srcObject = stream;
+            video.play().catch(err => {
+                logDebug('Autoplay failed for ' + remoteUserId + ': ' + err.message);
+                // Show a button to enable audio
+                const overlay = tile.querySelector('.placeholder');
+                if (overlay) {
+                    overlay.innerHTML = '<button onclick="this.parentElement.parentElement.querySelector(\'video\').play()">🔊 Click to enable audio</button>';
+                }
+            });
+            // Hide placeholder
+            const placeholder = tile.querySelector('.placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+            // Update participant name
+            const nameSpan = tile.querySelector('.participant-name');
+            if (nameSpan) nameSpan.textContent = remoteUserId;
+            // Update participant count
+            updateParticipantCount(Object.keys(peerConnections).length + 1);
+        }
+
+        // ---- Create Video Tile ----
+        function createVideoTile(remoteUserId) {
+            const grid = document.getElementById('video-grid');
+            const tile = document.createElement('div');
+            tile.className = 'video-tile';
+            tile.id = 'video-tile-' + remoteUserId;
+            tile.innerHTML = `
+                <video autoplay playsinline></video>
+                <div class="placeholder">
+                    <div class="avatar">👤</div>
+                    <div>${remoteUserId}</div>
+                </div>
+                <div class="participant-name">${remoteUserId}</div>
+                <div class="mic-status">🎤</div>
+            `;
+            grid.appendChild(tile);
+            return tile;
+        }
+
+        // ---- Remove Video Tile ----
+        function removeVideoTile(remoteUserId) {
+            const tile = document.getElementById('video-tile-' + remoteUserId);
+            if (tile) {
+                // Stop any stream
+                const video = tile.querySelector('video');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                    video.srcObject = null;
+                }
+                tile.remove();
+                logDebug('Removed video tile for ' + remoteUserId);
+            }
+            updateParticipantCount(Object.keys(peerConnections).length + 1);
+        }
+
+        // ---- Update Participant Count ----
+        function updateParticipantCount(count) {
+            document.getElementById('call-participant-count').innerText = count + ' participants';
+        }
+
+        // ---- Update Call Duration ----
+        function updateCallDuration() {
+            if (callDurationInterval) clearInterval(callDurationInterval);
+            callDurationInterval = setInterval(() => {
+                if (!callStartTime) return;
+                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const secs = String(elapsed % 60).padStart(2, '0');
+                document.getElementById('call-duration').innerText = mins + ':' + secs;
+            }, 1000);
+        }
+
+        // ---- Toggle Camera ----
+        function toggleCamera() {
+            if (!localStream) return;
+            const videoTracks = localStream.getVideoTracks();
+            if (videoTracks.length === 0) {
+                // Try to add video track if not present
+                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                    .then(stream => {
+                        const track = stream.getVideoTracks()[0];
+                        if (track) {
+                            localStream.addTrack(track);
+                            isCameraOn = true;
+                            updateControlButtons();
+                            // Notify peers? They will get the new track via renegotiation if we add it.
+                            // For simplicity, we'll renegotiate by creating an offer for each peer.
+                            renegotiateAll();
+                        }
+                    })
+                    .catch(err => {
+                        alert('Could not enable camera: ' + err.message);
+                    });
+                return;
+            }
+            // Toggle existing video track
+            const track = videoTracks[0];
+            track.enabled = !track.enabled;
+            isCameraOn = track.enabled;
+            updateControlButtons();
+            // We need to renegotiate to let peers know? Actually, track enabled state is not signaled.
+            // For peer to know, we can send a signaling message to update camera state.
+            // But we can simply rely on the fact that the track will be muted locally and
+            // the peer will see black/frozen. However, we want to show placeholder when camera off.
+            // So we'll also send a custom signal to update the UI on other side.
+            // We'll emit a 'video_call_camera_state' event.
+            socket.emit('video_call_camera_state', {
+                target: 'all', // or broadcast to room
+                classroom: classCodeRoom,
+                sender: myUsername,
+                state: isCameraOn
+            });
+            // Also update local UI
+            if (!isCameraOn) {
+                // Show placeholder for self? We'll show the local video still, but we can blur or
+                // we can just let the local video show the muted track (black).
+                // Better: we can replace the video with a placeholder if off.
+            }
+            logDebug('Camera toggled: ' + (isCameraOn ? 'on' : 'off'));
+        }
+
+        // ---- Toggle Microphone ----
+        function toggleMicrophone() {
+            if (!localStream) return;
+            const audioTracks = localStream.getAudioTracks();
+            if (audioTracks.length === 0) {
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                    .then(stream => {
+                        const track = stream.getAudioTracks()[0];
+                        if (track) {
+                            localStream.addTrack(track);
+                            isMicOn = true;
+                            updateControlButtons();
+                            renegotiateAll();
+                        }
+                    })
+                    .catch(err => {
+                        alert('Could not enable microphone: ' + err.message);
+                    });
+                return;
+            }
+            const track = audioTracks[0];
+            track.enabled = !track.enabled;
+            isMicOn = track.enabled;
+            updateControlButtons();
+            // Notify others
+            socket.emit('video_call_mic_state', {
+                target: 'all',
+                classroom: classCodeRoom,
+                sender: myUsername,
+                state: isMicOn
+            });
+            logDebug('Microphone toggled: ' + (isMicOn ? 'on' : 'off'));
+        }
+
+        // ---- Update Control Buttons UI ----
+        function updateControlButtons() {
+            const camBtn = document.getElementById('toggle-camera-btn');
+            const micBtn = document.getElementById('toggle-mic-btn');
+            if (isCameraOn) {
+                camBtn.classList.remove('muted');
+                camBtn.classList.add('active');
+                camBtn.innerHTML = '🎥';
+            } else {
+                camBtn.classList.remove('active');
+                camBtn.classList.add('muted');
+                camBtn.innerHTML = '🚫🎥';
+            }
+            if (isMicOn) {
+                micBtn.classList.remove('muted');
+                micBtn.classList.add('active');
+                micBtn.innerHTML = '🎤';
+            } else {
+                micBtn.classList.remove('active');
+                micBtn.classList.add('muted');
+                micBtn.innerHTML = '🚫🎤';
+            }
+        }
+
+        // ---- Renegotiate all peers after adding/removing tracks ----
+        function renegotiateAll() {
+            for (let pid in peerConnections) {
+                const pc = peerConnections[pid];
+                // Check if we need to renegotiate (add/remove tracks)
+                // For simplicity, we'll just restart ICE or create new offer.
+                // Better: use pc.addTrack/removeTrack and then createOffer.
+                // But since we already added tracks initially, we might need to
+                // handle adding new tracks. For now, we'll create a new offer for each.
+                if (pc.signalingState === 'stable') {
+                    createOffer(pid, pc);
+                }
+            }
+        }
+
+        // ---- Override initSocket to include new listeners ----
+        // (Already done above in the initSocket definition)
+
+        console.log('✅ Video call module loaded.');
     </script>
 </body>
 </html>
