@@ -1,5 +1,5 @@
-flask
-requests
-gunicorn
-simple-websocket
+Flask
+Flask-SocketIO
+eventlet
 flask-cors
+gunicorn
