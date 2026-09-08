@@ -795,101 +795,6 @@
             color: #fff;
         }
 
-        /* ---- LARGER VIDEO CARDS ---- */
-        .video-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .video-card {
-            background: var(--blue-soft);
-            border: 2px solid var(--blue-mid);
-            border-radius: var(--radius-sm);
-            width: 320px;
-            height: 240px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: var(--shadow);
-            flex-shrink: 0;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .video-card:hover {
-            border-color: var(--blue-accent);
-            box-shadow: var(--shadow-hover);
-            transform: scale(1.02);
-        }
-        .video-card video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .video-card video.mirrored { transform: scaleX(-1); }
-        .video-card .label {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            background: rgba(44, 62, 80, 0.85);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 14px;
-            color: var(--blue-light);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 2;
-            font-weight: 500;
-        }
-        .video-card .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--blue-soft);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            font-size: 15px;
-            z-index: 1;
-        }
-        .video-card .overlay span {
-            font-size: 48px;
-            margin-bottom: 8px;
-        }
-        .video-card .sound-wave {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            display: flex;
-            gap: 3px;
-            align-items: flex-end;
-            height: 18px;
-            background: rgba(44, 62, 80, 0.6);
-            padding: 4px 8px;
-            border-radius: 6px;
-            z-index: 2;
-        }
-        .video-card .sound-wave .bar {
-            width: 3px;
-            background: var(--blue-light);
-            border-radius: 2px;
-            animation: waveAnim 0.4s ease-in-out infinite alternate;
-        }
-        .video-card .sound-wave .bar:nth-child(2) { animation-delay: 0.1s; }
-        .video-card .sound-wave .bar:nth-child(3) { animation-delay: 0.2s; }
-        .video-card .sound-wave.inactive .bar {
-            animation: none;
-            height: 4px;
-            opacity: 0.3;
-        }
-        @keyframes waveAnim {
-            0% { height: 4px; }
-            100% { height: 14px; }
-        }
-
         /* ---- BEAUTIFIED CHAT BOX ---- */
         .chat-box {
             background: rgba(255, 255, 255, 0.8);
@@ -946,58 +851,6 @@
         }
         .chat-box .msg .img-container .zoom-btn:hover { background: var(--blue-accent); }
 
-        /* ---- VIDEO EXPAND MODAL ---- */
-        #video-expand-modal {
-            z-index: 3000;
-        }
-        #video-expand-modal .modal-content {
-            max-width: 95vw;
-            max-height: 95vh;
-            padding: 16px;
-            background: #000;
-            border-radius: var(--radius);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #video-expand-modal .modal-content video {
-            width: 100%;
-            height: auto;
-            max-height: 85vh;
-            object-fit: contain;
-            border-radius: var(--radius-sm);
-            background: #222;
-        }
-        #video-expand-modal .modal-content .close {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            color: #fff;
-            font-size: 32px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: none;
-            transition: var(--transition);
-        }
-        #video-expand-modal .modal-content .close:hover {
-            background: rgba(255,0,0,0.7);
-        }
-        #video-expand-modal .modal-content .expand-label {
-            color: #fff;
-            font-size: 18px;
-            margin-top: 10px;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 20px;
-            border-radius: 50px;
-        }
-
         .emoji-bar {
             display: flex;
             gap: 14px;
@@ -1017,43 +870,6 @@
             padding: 4px;
         }
         .emoji-bar span:hover { transform: scale(1.4); }
-
-        .controls-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-            justify-content: center;
-        }
-        .controls-row button {
-            padding: 12px 22px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        .controls-row button:hover {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-            transform: translateY(-2px);
-        }
-        .controls-row button.inactive {
-            background: #e74c3c;
-            color: #fff;
-            border-color: #e74c3c;
-        }
-        .controls-row button.inactive:hover {
-            background: #c0392b;
-            border-color: #c0392b;
-        }
 
         .typing-row {
             display: flex;
@@ -1319,7 +1135,7 @@
             font-family: inherit;
         }
 
-        /* ---------- DEBUG STATUS (modified to avoid overlap) ---------- */
+        /* ---------- DEBUG STATUS ---------- */
         #debug-status {
             position: fixed;
             bottom: 100px;
@@ -1345,7 +1161,6 @@
             padding: 2px 0;
             font-size: 10px;
         }
-        /* small close button for debug panel */
         #debug-status .close-debug {
             position: absolute;
             top: 2px;
@@ -1368,7 +1183,6 @@
             .nav-btn { padding: 10px 20px; font-size: 14px; }
             .nav-brand-text { font-size: 22px; }
             .container { padding-top: 110px; }
-            .video-card { width: 280px; height: 210px; }
         }
         @media (max-width: 768px) {
             .top-nav { padding: 12px 16px; flex-wrap: wrap; gap: 10px; justify-content: center; }
@@ -1380,7 +1194,6 @@
             .hero-btn .icon { font-size: 20px; }
             .hero-subtitle { font-size: 16px; }
             .container { padding: 100px 12px 20px; }
-            .video-card { width: 220px; height: 170px; }
             .auth-section { padding: 28px 20px; margin: 20px auto; }
             .modal-content { padding: 24px 18px; }
             .ai-bot .window { width: 280px; right: -10px; }
@@ -1392,7 +1205,6 @@
             .hero-btn .icon { font-size: 16px; }
             .nav-btn { font-size: 10px; padding: 6px 10px; }
             .nav-brand-text { font-size: 18px; }
-            .video-card { width: 180px; height: 140px; }
             .controls-row button { font-size: 12px; padding: 8px 14px; }
             .typing-row .input-group input { font-size: 13px; padding: 10px 14px; }
             .typing-row .input-group button { font-size: 13px; padding: 10px 16px; }
@@ -1786,8 +1598,7 @@
                     <h1 class="hero-title">Welcome to <span>Nexus Learn</span></h1>
                     <p class="hero-subtitle">Virtual Educational Classroom Portal</p>
                     <p class="hero-desc">
-                        Experience seamless virtual learning with live video conferencing, real-time chat,
-                        dynamic exam engines, and comprehensive student management tools.
+                        Experience seamless virtual learning with live chat, image sharing, dynamic exam engines, and comprehensive student management tools.
                     </p>
                     <div class="hero-actions">
                         <button class="hero-btn student" onclick="showStudentLogin()">
@@ -1801,9 +1612,7 @@
                         </button>
                     </div>
                     <div class="hero-badges">
-                        <span class="hero-badge"><span class="icon">🎥</span> Live Video</span>
-                        <span class="hero-badge"><span class="icon">🎤</span> Audio</span>
-                        <span class="hero-badge"><span class="icon">💬</span> Chat</span>
+                        <span class="hero-badge"><span class="icon">💬</span> Real-time Chat</span>
                         <span class="hero-badge"><span class="icon">📝</span> Exams</span>
                         <span class="hero-badge"><span class="icon">🛡️</span> Secure</span>
                     </div>
@@ -1825,11 +1634,6 @@
                 </div>
 
                 <div class="features-grid">
-                    <div class="feature-card">
-                        <span class="icon">📹</span>
-                        <h4>Live Video Conferencing</h4>
-                        <p>Real-time video with up to 10 participants</p>
-                    </div>
                     <div class="feature-card">
                         <span class="icon">💬</span>
                         <h4>Real-time Chat</h4>
@@ -1964,22 +1768,8 @@
             <div id="teacher-lock-panel" class="teacher-panel hidden">
                 <div class="title">🛡️ <span>Instructor Control Hub</span></div>
                 <div class="actions">
-                    <button id="teacher-global-mute-btn">🔇 Force Mute</button>
                     <button id="teacher-exam-portal-btn">📝 Setup Exam</button>
                     <button id="teacher-gradebook-btn">📊 Gradebook</button>
-                </div>
-            </div>
-
-            <div class="video-grid" id="video-layout-grid">
-                <div class="video-card" id="local-video-card">
-                    <video id="my-camera" autoplay playsinline muted class="mirrored"></video>
-                    <div class="overlay hidden" id="local-video-blocked">
-                        <span>📷</span> Camera Off
-                    </div>
-                    <div class="label" id="local-label">You</div>
-                    <div class="sound-wave" id="local-soundwave">
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    </div>
                 </div>
             </div>
 
@@ -1994,16 +1784,6 @@
                 <span onclick="sendEmojiReaction('🎉')">🎉</span>
             </div>
 
-            <div class="controls-row">
-                <button id="local-mic-toggle">🎙️ Unmute Mic</button>
-                <button id="local-video-toggle">📷 Start Cam</button>
-                <input type="file" id="file-import-input" accept="image/*" style="display:none;">
-                <button onclick="document.getElementById('file-import-input').click();">📁 Import Image</button>
-                <button id="snap-cam-btn">📷 Snap Pic</button>
-                <button id="swap-cam-btn">🔄 Flip Cam</button>
-                <button id="mirror-cam-btn">🪞 Mirror</button>
-            </div>
-
             <div class="typing-row">
                 <div class="input-group">
                     <span class="badge student">Student</span>
@@ -2015,6 +1795,10 @@
                     <input type="text" id="teacher-input-field" placeholder="Write message as Teacher..." onkeypress="handleKeyPress(event, 'teacher')">
                     <button onclick="sendMsg('teacher')">Send</button>
                 </div>
+                <div class="input-group" style="margin-top: 6px;">
+                    <input type="file" id="file-import-input" accept="image/*" style="display:none;">
+                    <button onclick="document.getElementById('file-import-input').click();" style="padding:10px 20px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-weight:600;">📁 Import Image</button>
+                </div>
             </div>
 
             <div id="admin-tracking-section" class="hidden admin-table-wrap">
@@ -2025,67 +1809,6 @@
                         <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No users connected</td></tr>
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    VIDEO EXPAND MODAL
-    ============================================================ -->
-    <div class="modal-overlay" id="video-expand-modal">
-        <div class="modal-content">
-            <button class="close" onclick="closeVideoExpand()">✕</button>
-            <video id="expand-video" autoplay playsinline style="width:100%; height:auto; max-height:85vh; object-fit:contain;"></video>
-            <div class="expand-label" id="expand-label">Participant</div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    PRO PAYMENT MODAL
-    ============================================================ -->
-    <div class="modal-overlay" id="pro-modal">
-        <div class="modal-content">
-            <button class="close" onclick="closeProPaymentModal()">✕</button>
-            <h2>⚡ <span>Nexus Pro</span></h2>
-            <p class="sub">Upgrade your experience with premium features</p>
-            <div id="pro-form-section">
-                <div style="display:flex; flex-direction:column; gap:12px;">
-                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
-                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
-                    <select id="pro-duration" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
-                        <option value="1week">1 Week</option>
-                        <option value="2weeks">2 Weeks</option>
-                        <option value="4weeks">4 Weeks</option>
-                        <option value="2months">2 Months</option>
-                        <option value="6months">6 Months</option>
-                        <option value="1year">1 Year</option>
-                    </select>
-                </div>
-                <button onclick="submitProRequest()" style="width:100%; margin-top:16px; padding:16px; background:var(--blue-accent); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">Continue</button>
-            </div>
-            <div id="pro-payment-details" class="hidden">
-                <h3 style="font-size:17px; margin-bottom:12px; color:var(--text-primary);">💳 Payment Details</h3>
-                <div style="background:var(--blue-light); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--blue-soft);">
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
-                        <span>Account Number:</span><strong>8024300891</strong>
-                        <button onclick="copyPaymentDetail('8024300891', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
-                        <span>Bank Name:</span><strong>OPay</strong>
-                        <button onclick="copyPaymentDetail('OPay', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;">
-                        <span>Account Name:</span><strong>Talabi Sunny Okunola</strong>
-                        <button onclick="copyPaymentDetail('Talabi Sunny Okunola', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
-                    </div>
-                </div>
-                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">✅ I've Made Payment</button>
-            </div>
-            <div id="pro-pending-status" class="hidden" style="text-align:center; padding:20px 0;">
-                <div style="font-size:64px; margin-bottom:16px;">⏳</div>
-                <h3 style="color:var(--text-primary); margin-bottom:8px;">Payment Pending</h3>
-                <p id="pending-message" style="color:var(--text-muted); line-height:1.7;"></p>
-                <button onclick="closeProPaymentModal()" style="margin-top:16px; padding:14px 32px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;">Close</button>
             </div>
         </div>
     </div>
@@ -2180,7 +1903,57 @@
     </div>
 
     <!-- ============================================================
-    DEBUG STATUS PANEL (with close button)
+    PRO PAYMENT MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="pro-modal">
+        <div class="modal-content">
+            <button class="close" onclick="closeProPaymentModal()">✕</button>
+            <h2>⚡ <span>Nexus Pro</span></h2>
+            <p class="sub">Upgrade your experience with premium features</p>
+            <div id="pro-form-section">
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                    <select id="pro-duration" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                        <option value="1week">1 Week</option>
+                        <option value="2weeks">2 Weeks</option>
+                        <option value="4weeks">4 Weeks</option>
+                        <option value="2months">2 Months</option>
+                        <option value="6months">6 Months</option>
+                        <option value="1year">1 Year</option>
+                    </select>
+                </div>
+                <button onclick="submitProRequest()" style="width:100%; margin-top:16px; padding:16px; background:var(--blue-accent); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">Continue</button>
+            </div>
+            <div id="pro-payment-details" class="hidden">
+                <h3 style="font-size:17px; margin-bottom:12px; color:var(--text-primary);">💳 Payment Details</h3>
+                <div style="background:var(--blue-light); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--blue-soft);">
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
+                        <span>Account Number:</span><strong>8024300891</strong>
+                        <button onclick="copyPaymentDetail('8024300891', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
+                        <span>Bank Name:</span><strong>OPay</strong>
+                        <button onclick="copyPaymentDetail('OPay', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;">
+                        <span>Account Name:</span><strong>Talabi Sunny Okunola</strong>
+                        <button onclick="copyPaymentDetail('Talabi Sunny Okunola', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
+                    </div>
+                </div>
+                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">✅ I've Made Payment</button>
+            </div>
+            <div id="pro-pending-status" class="hidden" style="text-align:center; padding:20px 0;">
+                <div style="font-size:64px; margin-bottom:16px;">⏳</div>
+                <h3 style="color:var(--text-primary); margin-bottom:8px;">Payment Pending</h3>
+                <p id="pending-message" style="color:var(--text-muted); line-height:1.7;"></p>
+                <button onclick="closeProPaymentModal()" style="margin-top:16px; padding:14px 32px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    DEBUG STATUS PANEL
     ============================================================ -->
     <div id="debug-status">
         <button class="close-debug" onclick="document.getElementById('debug-status').classList.toggle('hidden-debug')">✕</button>
@@ -2188,7 +1961,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIREBASE + ALL FEATURES (with fixes)
+    JAVASCRIPT - FIREBASE + ALL FEATURES (video/audio removed)
     ============================================================ -->
     <script>
         // ============================================================
@@ -2216,56 +1989,11 @@
         let isProUser = false;
         let proExpiryDate = null;
         let currentProRequestId = null;
-        let localStream = null;
-        let currentFacingMode = "user";
-        let micMuted = true; // default muted
-        let cameraBlocked = false; // false means camera is on
-        let forceMutedByTeacher = false;
         let activeExamConfig = null;
         let examIntervalTimer = null;
         let currentExamTimeSecondsLeft = 0;
         let examGradebook = {};
-        const peerConnections = {};
-        const pendingCandidates = {}; // per peer queue
         let currentZoomScale = 1;
-        let expandedVideoStream = null;
-        let connectedPeers = new Set();
-        let mirrorActive = true;
-        let userHasInteracted = false; // track user gesture for autoplay
-        // Map to store combined streams per peer
-        const remoteStreams = {};
-
-        // ============================================================
-        // RTC CONFIG (improved with more TURN servers)
-        // ============================================================
-        const rtcConfig = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' },
-                { urls: 'stun:openrelay.metered.ca:80' },
-                {
-                    urls: 'turn:openrelay.metered.ca:80',
-                    username: 'openrelay',
-                    credential: 'openrelay'
-                },
-                {
-                    urls: 'turn:openrelay.metered.ca:443',
-                    username: 'openrelay',
-                    credential: 'openrelay'
-                },
-                {
-                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                    username: 'openrelay',
-                    credential: 'openrelay'
-                }
-            ],
-            iceCandidatePoolSize: 10,
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require'
-        };
 
         // ============================================================
         // DEBUG LOGGING
@@ -2283,22 +2011,6 @@
 
         function showDebugPanel() {
             document.getElementById('debug-status').classList.remove('hidden-debug');
-        }
-
-        // ============================================================
-        // PERMISSION PRE-CHECK
-        // ============================================================
-        async function requestMediaPermissions() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                stream.getTracks().forEach(track => track.stop());
-                logDebug('Media permissions granted');
-                return true;
-            } catch (err) {
-                logDebug('Permission denied: ' + err.message);
-                alert('Camera and microphone access are required to join the classroom. Please allow permissions and try again.');
-                return false;
-            }
         }
 
         // ============================================================
@@ -2403,11 +2115,6 @@
             if (classCodeRoom) {
                 const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
                 presenceRef.remove();
-                for (let id in peerConnections) {
-                    peerConnections[id].close();
-                    delete peerConnections[id];
-                }
-                connectedPeers.clear();
                 logDebug('Left classroom');
             }
             location.reload();
@@ -2460,7 +2167,7 @@
         });
 
         // ============================================================
-        // CLASS CREATION - INSTANT
+        // CLASS CREATION
         // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', function() {
             const name = document.getElementById('create-classname').value.trim();
@@ -2504,9 +2211,6 @@
                 alert('Please create a class first.');
                 return;
             }
-            const ok = await requestMediaPermissions();
-            if (!ok) return;
-            userHasInteracted = true; // user gesture
             await enterClassroom();
         });
 
@@ -2518,10 +2222,6 @@
             classCodeRoom = document.getElementById('join-code').value.trim();
             isTeacherUser = false;
             if (!myUsername || !classCodeRoom) { alert('Please enter your name and class code.'); return; }
-
-            const ok = await requestMediaPermissions();
-            if (!ok) return;
-            userHasInteracted = true; // user gesture
 
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
                 if (snap.exists()) {
@@ -2560,10 +2260,9 @@
         });
 
         // ============================================================
-        // ENTER CLASSROOM (async) - FIXED VERSION
+        // ENTER CLASSROOM (no video/audio)
         // ============================================================
         async function enterClassroom() {
-            // Validate class code
             if (!classCodeRoom || classCodeRoom.trim() === '') {
                 alert('Invalid class code. Please go back and re‑enter.');
                 return;
@@ -2588,13 +2287,9 @@
                 }
             });
 
-            document.getElementById('local-label').innerText = myUsername + ' (You)' + (isProUser ? ' ⚡ PRO' : '');
             document.getElementById('classroom-code-label').innerText = classCodeRoom;
 
-            // Start local camera and mic
-            await startLocalCameraAndMic();
-
-            // ---------- PRESENCE ----------
+            // Register presence
             const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
             try {
                 await presenceRef.set({
@@ -2606,7 +2301,7 @@
                 logDebug('Presence written successfully');
             } catch (err) {
                 logDebug('ERROR writing presence: ' + err.message);
-                alert('Could not register your presence in the classroom. Please check your network or Firebase rules.');
+                alert('Could not register your presence. Please check your network or Firebase rules.');
             }
             presenceRef.onDisconnect().remove();
 
@@ -2616,7 +2311,7 @@
                 document.getElementById('admin-tracking-section').classList.remove('hidden');
             }
 
-            // ---------- MESSAGES ----------
+            // Listen for messages
             const messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
             messagesRef.off();
             messagesRef.on('child_added', (snapshot) => {
@@ -2624,87 +2319,12 @@
                 if (msg) handleIncomingMessage(msg);
             });
 
-            // ---------- SIGNALS ----------
-            const signalsRef = db.ref('classrooms/' + classCodeRoom + '/signals/' + myUsername);
-            signalsRef.off();
-            signalsRef.on('child_added', (snapshot) => {
-                const signal = snapshot.val();
-                if (signal) {
-                    if (signal.from === myUsername) {
-                        logDebug('Ignoring self‑signal');
-                        snapshot.ref.remove();
-                        return;
-                    }
-                    logDebug('Received signal from ' + signal.from + ' type: ' + (signal.type || 'candidate'));
-                    handleSignaling(signal);
-                    snapshot.ref.remove();
-                }
-            });
-
-            // ---------- PRESENCE LIST (initial + updates) ----------
+            // Listen for presence changes (for the live users table)
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
-
-            // 1. Read initial list to populate the table
-            presenceListRef.once('value', (snap) => {
+            presenceListRef.off();
+            presenceListRef.on('value', (snap) => {
                 const users = snap.val();
-                logDebug('Initial presence list loaded');
                 updateActiveUsers(users);
-                // Now connect to peers that are already present
-                if (users) {
-                    Object.keys(users).forEach(username => {
-                        if (username !== myUsername && !connectedPeers.has(username)) {
-                            logDebug('Initial peer detected: ' + username);
-                            const shouldInitiate = myUsername.localeCompare(username) < 0;
-                            if (shouldInitiate) {
-                                initiatePeerConnection(username, username, true);
-                            } else {
-                                logDebug('Waiting for ' + username + ' to initiate');
-                            }
-                            connectedPeers.add(username);
-                        }
-                    });
-                }
-            }).catch(err => {
-                logDebug('Error reading initial presence: ' + err.message);
-            });
-
-            // 2. Listen for new peers (child_added) – but skip if already processed
-            presenceListRef.off('child_added');
-            presenceListRef.on('child_added', (snap) => {
-                const user = snap.val();
-                if (!user) return;
-                const username = snap.key;
-                if (username === myUsername) return;
-                if (!connectedPeers.has(username)) {
-                    logDebug('New peer detected (child_added): ' + username);
-                    const shouldInitiate = myUsername.localeCompare(username) < 0;
-                    if (shouldInitiate) {
-                        initiatePeerConnection(username, username, true);
-                    } else {
-                        logDebug('Waiting for ' + username + ' to initiate');
-                    }
-                    connectedPeers.add(username);
-                }
-                // Refresh the table (updateActiveUsers will be called via value listener, but we also call here)
-                presenceListRef.once('value', (snap) => updateActiveUsers(snap.val()));
-            });
-
-            // 3. Listen for removals
-            presenceListRef.off('child_removed');
-            presenceListRef.on('child_removed', (snap) => {
-                const username = snap.key;
-                if (username === myUsername) return;
-                logDebug('Peer left: ' + username);
-                if (peerConnections[username]) {
-                    peerConnections[username].close();
-                    delete peerConnections[username];
-                }
-                connectedPeers.delete(username);
-                const card = document.getElementById('peer-card-' + username);
-                if (card) card.remove();
-                delete remoteStreams[username];
-                // Refresh table
-                presenceListRef.once('value', (snap) => updateActiveUsers(snap.val()));
             });
 
             logDebug('Classroom entry complete');
@@ -2760,33 +2380,6 @@
                 appendMsg(msg.name, msg.content, 'emoji_reaction');
                 return;
             }
-            if (msg.type === 'global_mic_control') {
-                if (!isTeacherUser) {
-                    const micBtn = document.getElementById('local-mic-toggle');
-                    if (msg.content === 'force_mute_on') {
-                        forceMutedByTeacher = true;
-                        if (localStream && localStream.getAudioTracks().length > 0) {
-                            localStream.getAudioTracks().forEach(t => t.enabled = false);
-                        }
-                        micBtn.innerText = "🔇 Locked";
-                        micBtn.classList.add('inactive');
-                        document.getElementById('local-soundwave').classList.add('inactive');
-                        appendMsg("SYSTEM", "Teacher muted all mics.", "text");
-                        logDebug('Teacher forced mute ON');
-                    } else if (msg.content === 'force_mute_off') {
-                        forceMutedByTeacher = false;
-                        micBtn.innerText = "🎙️ Mute Mic";
-                        micBtn.classList.remove('inactive');
-                        if (localStream && localStream.getAudioTracks().length > 0) {
-                            localStream.getAudioTracks().forEach(t => t.enabled = !micMuted);
-                        }
-                        if (!micMuted) document.getElementById('local-soundwave').classList.remove('inactive');
-                        appendMsg("SYSTEM", "Teacher unmuted all mics.", "text");
-                        logDebug('Teacher forced mute OFF');
-                    }
-                }
-                return;
-            }
             if (msg.type === 'deploy_examination') {
                 if (!isTeacherUser) {
                     const config = JSON.parse(msg.content);
@@ -2835,7 +2428,7 @@
         }
 
         // ============================================================
-        // SEND MESSAGE (with error handling)
+        // SEND MESSAGE
         // ============================================================
         function sendMsg(role) {
             const el = document.getElementById(role + '-input-field');
@@ -2858,7 +2451,7 @@
         }
 
         // ============================================================
-        // EMOJI REACTIONS (with error handling)
+        // EMOJI REACTIONS
         // ============================================================
         function sendEmojiReaction(emoji) {
             createFloatingEmoji(emoji);
@@ -2924,31 +2517,6 @@
                 this.value = ''; }
         });
 
-        document.getElementById('snap-cam-btn').addEventListener('click', () => {
-            const video = document.getElementById('my-camera');
-            const canvas = document.createElement('canvas');
-            if (localStream && video.srcObject) {
-                const ctx = canvas.getContext('2d');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-                if (video.classList.contains('mirrored')) {
-                    ctx.translate(canvas.width, 0);
-                    ctx.scale(-1, 1);
-                }
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const snap = canvas.toDataURL('image/jpeg', 0.7);
-                const msg = {
-                    name: myUsername,
-                    content: snap,
-                    type: 'image',
-                    timestamp: Date.now()
-                };
-                db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
-            } else {
-                alert("Camera not available.");
-            }
-        });
-
         // ============================================================
         // IMAGE ZOOM
         // ============================================================
@@ -2981,48 +2549,6 @@
         }
 
         // ============================================================
-        // VIDEO EXPAND
-        // ============================================================
-        function openVideoExpand(videoElement, labelText) {
-            const modal = document.getElementById('video-expand-modal');
-            const expandVideo = document.getElementById('expand-video');
-            const label = document.getElementById('expand-label');
-
-            if (videoElement.srcObject) {
-                expandVideo.srcObject = videoElement.srcObject;
-                // If the expanded video is the local camera, mute it to avoid feedback
-                const isLocal = (videoElement.id === 'my-camera');
-                if (isLocal) {
-                    expandVideo.muted = true;
-                    expandVideo.volume = 0;
-                    logDebug('Expanded local video – muted to prevent echo');
-                } else {
-                    expandVideo.muted = false;
-                    expandVideo.volume = 1.0;
-                }
-                expandVideo.play().catch(e => logDebug('Expand play error: ' + e.message));
-            } else {
-                expandVideo.src = videoElement.src;
-            }
-            label.innerText = labelText || 'Participant';
-            modal.classList.add('active');
-        }
-
-        function closeVideoExpand() {
-            const modal = document.getElementById('video-expand-modal');
-            const expandVideo = document.getElementById('expand-video');
-            if (expandVideo.srcObject) {
-                expandVideo.pause();
-                expandVideo.srcObject = null;
-            } else {
-                expandVideo.pause();
-                expandVideo.removeAttribute('src');
-                expandVideo.load();
-            }
-            modal.classList.remove('active');
-        }
-
-        // ============================================================
         // APPEND MESSAGE TO CHAT BOX
         // ============================================================
         function appendMsg(sender, content, type) {
@@ -3050,37 +2576,6 @@
             log.appendChild(d);
             log.scrollTop = log.scrollHeight;
         }
-
-        // ============================================================
-        // TEACHER CONTROLS
-        // ============================================================
-        let globalMuteLocked = false;
-        document.getElementById('teacher-global-mute-btn').addEventListener('click', function() {
-            globalMuteLocked = !globalMuteLocked;
-            if (globalMuteLocked) {
-                this.innerText = "🔊 Unlock Mics";
-                this.style.background = "#27ae60";
-                const msg = {
-                    name: myUsername,
-                    content: 'force_mute_on',
-                    type: 'global_mic_control',
-                    timestamp: Date.now()
-                };
-                db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
-                logDebug('Teacher toggled global mute ON');
-            } else {
-                this.innerText = "🔇 Force Mute";
-                this.style.background = "";
-                const msg = {
-                    name: myUsername,
-                    content: 'force_mute_off',
-                    type: 'global_mic_control',
-                    timestamp: Date.now()
-                };
-                db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
-                logDebug('Teacher toggled global mute OFF');
-            }
-        });
 
         // ============================================================
         // PRO PAYMENT
@@ -3182,384 +2677,6 @@
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
         }
-
-        // ============================================================
-        // WEBRTC SIGNALING
-        // ============================================================
-        function initiatePeerConnection(targetId, name, isInitiator) {
-            // Avoid duplicate connections
-            if (peerConnections[targetId]) {
-                logDebug('PC already exists for ' + targetId + ', reusing');
-                return peerConnections[targetId];
-            }
-
-            logDebug('Creating new PC for ' + targetId + ' (initiator: ' + isInitiator + ')');
-            const pc = new RTCPeerConnection(rtcConfig);
-            peerConnections[targetId] = pc;
-            pendingCandidates[targetId] = [];
-            remoteStreams[targetId] = null; // will be set later
-
-            // Set up ontrack BEFORE adding tracks to ensure we catch all streams
-            pc.ontrack = e => {
-                logDebug('Track received from ' + targetId + ', kind: ' + e.track.kind);
-                let card = document.getElementById('peer-card-' + targetId);
-                let video;
-
-                // Combine streams: if we already have a stream for this peer, add tracks to it
-                let remoteStream;
-                if (remoteStreams[targetId]) {
-                    remoteStream = remoteStreams[targetId];
-                    // Add the track to the existing stream if not already present
-                    if (!remoteStream.getTracks().some(t => t.id === e.track.id)) {
-                        remoteStream.addTrack(e.track);
-                        logDebug('Added track to existing remote stream for ' + targetId);
-                    }
-                } else {
-                    // First track: use the stream from event or create one
-                    remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
-                    remoteStreams[targetId] = remoteStream;
-                    logDebug('Created new remote stream for ' + targetId);
-                }
-
-                if (!card) {
-                    // Create new video card
-                    card = document.createElement('div');
-                    card.className = 'video-card';
-                    card.id = 'peer-card-' + targetId;
-                    video = document.createElement('video');
-                    video.autoplay = true;
-                    video.playsInline = true;
-                    video.muted = false;
-                    video.volume = 1.0;
-                    card.appendChild(video);
-                    const overlay = document.createElement('div');
-                    overlay.className = 'overlay hidden';
-                    overlay.id = 'peer-blocked-overlay-' + targetId;
-                    overlay.innerHTML = '<span>📷</span>Camera Off';
-                    card.appendChild(overlay);
-                    const label = document.createElement('div');
-                    label.className = 'label';
-                    label.innerText = name;
-                    card.appendChild(label);
-                    const wave = document.createElement('div');
-                    wave.className = 'sound-wave';
-                    wave.id = 'peer-wave-' + targetId;
-                    wave.innerHTML = '<div class="bar"></div><div class="bar"></div><div class="bar"></div>';
-                    card.appendChild(wave);
-                    document.getElementById('video-layout-grid').appendChild(card);
-                    logDebug('Created video card for ' + targetId);
-
-                    // Click to expand (preserve this feature)
-                    card.addEventListener('click', function() {
-                        const vid = this.querySelector('video');
-                        const lbl = this.querySelector('.label');
-                        const labelText = lbl ? lbl.innerText : name;
-                        openVideoExpand(vid, labelText);
-                        if (vid) {
-                            vid.muted = false;
-                            vid.volume = 1.0;
-                            vid.play().catch(e => logDebug('Play on click error: ' + e.message));
-                        }
-                    });
-                } else {
-                    video = card.querySelector('video');
-                }
-
-                // Attach the combined stream to the video element
-                if (video) {
-                    if (video.srcObject !== remoteStream) {
-                        video.srcObject = remoteStream;
-                        logDebug('Attached remote stream to video for ' + targetId);
-                    }
-                    video.muted = false;
-                    video.volume = 1.0;
-
-                    // Play with user gesture context
-                    const playVideo = () => {
-                        video.play().catch(err => {
-                            logDebug('Play error for ' + targetId + ': ' + err.message);
-                        });
-                    };
-                    if (userHasInteracted) {
-                        playVideo();
-                    } else {
-                        // Fallback: wait for a click on the page
-                        const clickHandler = () => {
-                            userHasInteracted = true;
-                            playVideo();
-                            document.removeEventListener('click', clickHandler);
-                        };
-                        document.addEventListener('click', clickHandler);
-                        // Show a hint if not already shown
-                        if (!document.getElementById('click-hint')) {
-                            const hint = document.createElement('div');
-                            hint.id = 'click-hint';
-                            hint.style.position = 'fixed';
-                            hint.style.bottom = '120px';
-                            hint.style.left = '50%';
-                            hint.style.transform = 'translateX(-50%)';
-                            hint.style.background = 'rgba(0,0,0,0.7)';
-                            hint.style.color = '#fff';
-                            hint.style.padding = '10px 20px';
-                            hint.style.borderRadius = '30px';
-                            hint.style.fontSize = '14px';
-                            hint.style.zIndex = '9999';
-                            hint.innerText = '👆 Click anywhere to enable audio & video';
-                            document.body.appendChild(hint);
-                            document.addEventListener('click', function removeHint() {
-                                if (document.getElementById('click-hint')) {
-                                    document.getElementById('click-hint').remove();
-                                }
-                                document.removeEventListener('click', removeHint);
-                            });
-                        }
-                    }
-                }
-            };
-
-            // Add local tracks
-            if (localStream) {
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                    logDebug('Added track to PC for ' + targetId + ': ' + track.kind);
-                });
-            } else {
-                logDebug('Warning: localStream is null when creating PC for ' + targetId);
-            }
-
-            // ICE candidate handling
-            pc.onicecandidate = e => {
-                if (e.candidate) {
-                    const signal = {
-                        type: 'ice',
-                        candidate: e.candidate,
-                        from: myUsername
-                    };
-                    db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
-                    logDebug('Sent ICE candidate to ' + targetId);
-                }
-            };
-
-            // ICE connection state monitoring + restart on failure
-            pc.oniceconnectionstatechange = () => {
-                const state = pc.iceConnectionState;
-                logDebug('ICE state for ' + targetId + ': ' + state);
-                if (state === 'failed' || state === 'disconnected') {
-                    logDebug('ICE failed/disconnected, restarting for ' + targetId);
-                    pc.restartIce();
-                }
-                if (state === 'closed' || state === 'disconnected') {
-                    // Clean up
-                    delete peerConnections[targetId];
-                    connectedPeers.delete(targetId);
-                    const card = document.getElementById('peer-card-' + targetId);
-                    if (card) card.remove();
-                    delete remoteStreams[targetId];
-                }
-            };
-
-            // If we are the initiator, create an offer
-            if (isInitiator) {
-                pc.createOffer()
-                    .then(o => pc.setLocalDescription(o))
-                    .then(() => {
-                        const signal = {
-                            type: 'offer',
-                            sdp: pc.localDescription,
-                            from: myUsername
-                        };
-                        db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
-                        logDebug('Sent offer to ' + targetId);
-                    })
-                    .catch(err => logDebug('Offer creation error: ' + err.message));
-            }
-
-            return pc;
-        }
-
-        async function handleSignaling(signal) {
-            const from = signal.from;
-            // Ignore if from self (already filtered, but double-check)
-            if (from === myUsername) return;
-
-            let pc = peerConnections[from];
-            if (!pc) {
-                // Create a passive PC if we don't have one yet
-                logDebug('Creating passive PC for ' + from + ' due to incoming signal');
-                pc = initiatePeerConnection(from, from, false);
-                connectedPeers.add(from);
-            }
-
-            if (signal.sdp) {
-                try {
-                    await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-                    logDebug('Set remote description for ' + from + ' type: ' + signal.sdp.type);
-                    // Process any pending candidates
-                    if (pendingCandidates[from] && pendingCandidates[from].length > 0) {
-                        while (pendingCandidates[from].length) {
-                            const cand = pendingCandidates[from].shift();
-                            await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => logDebug('Candidate add error: ' + e.message));
-                        }
-                    }
-                    if (signal.sdp.type === 'offer') {
-                        const ans = await pc.createAnswer();
-                        await pc.setLocalDescription(ans);
-                        const answerSignal = {
-                            type: 'answer',
-                            sdp: pc.localDescription,
-                            from: myUsername
-                        };
-                        db.ref('classrooms/' + classCodeRoom + '/signals/' + from).push(answerSignal);
-                        logDebug('Sent answer to ' + from);
-                    }
-                } catch (err) {
-                    logDebug('Error handling SDP for ' + from + ': ' + err.message);
-                }
-            } else if (signal.candidate) {
-                // If remote description is set, add candidate immediately; otherwise buffer
-                if (pc.remoteDescription && pc.remoteDescription.type) {
-                    await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(e => logDebug('ICE add error: ' + e.message));
-                } else {
-                    if (!pendingCandidates[from]) pendingCandidates[from] = [];
-                    pendingCandidates[from].push(signal.candidate);
-                    logDebug('Stored pending candidate from ' + from);
-                }
-            }
-        }
-
-        // ============================================================
-        // CAMERA & MIC
-        // ============================================================
-        async function startLocalCameraAndMic() {
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({
-                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-                    video: { facingMode: currentFacingMode, width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { max: 10 } }
-                });
-                logDebug('Local media stream obtained');
-
-                const myVideo = document.getElementById('my-camera');
-                myVideo.srcObject = localStream;
-                myVideo.muted = true;
-                if (mirrorActive) {
-                    myVideo.classList.add('mirrored');
-                } else {
-                    myVideo.classList.remove('mirrored');
-                }
-
-                // Default: turn camera ON for teachers, OFF for students
-                if (!isTeacherUser) {
-                    // Students: start with camera off
-                    cameraBlocked = true;
-                    if (localStream.getVideoTracks().length > 0) localStream.getVideoTracks()[0].enabled = false;
-                    document.getElementById('local-video-blocked').classList.remove('hidden');
-                    document.getElementById('local-video-toggle').innerText = "📷 Start Cam";
-                    document.getElementById('local-video-toggle').classList.add('inactive');
-                    logDebug('Student camera disabled by default');
-                } else {
-                    cameraBlocked = false;
-                    if (localStream.getVideoTracks().length > 0) localStream.getVideoTracks()[0].enabled = true;
-                    logDebug('Teacher camera enabled');
-                }
-
-                // Mic muted by default
-                micMuted = true;
-                if (localStream.getAudioTracks().length > 0) {
-                    localStream.getAudioTracks()[0].enabled = false;
-                    document.getElementById('local-mic-toggle').innerText = "🎙️ Unmute Mic";
-                    document.getElementById('local-mic-toggle').classList.add('inactive');
-                    document.getElementById('local-soundwave').classList.add('inactive');
-                    logDebug('Mic muted by default');
-                }
-
-                document.getElementById('local-video-card').addEventListener('click', function() {
-                    const vid = document.getElementById('my-camera');
-                    const lbl = document.getElementById('local-label');
-                    openVideoExpand(vid, lbl.innerText);
-                });
-
-                // After stream is ready, add tracks to any existing peer connections
-                for (let targetId in peerConnections) {
-                    const pc = peerConnections[targetId];
-                    const senders = pc.getSenders();
-                    localStream.getTracks().forEach(track => {
-                        const hasTrack = senders.some(s => s.track && s.track.id === track.id);
-                        if (!hasTrack) {
-                            pc.addTrack(track, localStream);
-                            logDebug('Added track to existing PC for ' + targetId + ': ' + track.kind);
-                        }
-                    });
-                }
-
-            } catch (err) {
-                logDebug('Camera error: ' + err.message);
-                alert("Camera/Microphone access denied. Please allow permissions.");
-            }
-        }
-
-        document.getElementById('local-mic-toggle').addEventListener('click', function() {
-            if (forceMutedByTeacher) { alert("Teacher has muted all mics."); return; }
-            micMuted = !micMuted;
-            if (localStream && localStream.getAudioTracks().length > 0) {
-                localStream.getAudioTracks().forEach(t => t.enabled = !micMuted);
-            }
-            if (micMuted) {
-                this.innerText = "🎙️ Unmute Mic";
-                this.classList.add('inactive');
-                document.getElementById('local-soundwave').classList.add('inactive');
-                logDebug('Mic muted');
-            } else {
-                this.innerText = "🎙️ Mute Mic";
-                this.classList.remove('inactive');
-                document.getElementById('local-soundwave').classList.remove('inactive');
-                logDebug('Mic unmuted');
-            }
-        });
-
-        document.getElementById('local-video-toggle').addEventListener('click', function() {
-            cameraBlocked = !cameraBlocked;
-            if (localStream && localStream.getVideoTracks().length > 0) {
-                localStream.getVideoTracks().forEach(t => t.enabled = !cameraBlocked);
-            }
-            if (cameraBlocked) {
-                this.innerText = "📷 Start Cam";
-                this.classList.add('inactive');
-                document.getElementById('local-video-blocked').classList.remove('hidden');
-                logDebug('Camera turned off');
-            } else {
-                this.innerText = "📷 Stop Cam";
-                this.classList.remove('inactive');
-                document.getElementById('local-video-blocked').classList.add('hidden');
-                logDebug('Camera turned on');
-            }
-        });
-
-        document.getElementById('swap-cam-btn').addEventListener('click', async () => {
-            currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
-            await startLocalCameraAndMic();
-            // After restart, replace tracks in all peer connections
-            const videoTrack = localStream.getVideoTracks()[0];
-            for (let targetId in peerConnections) {
-                const senders = peerConnections[targetId].getSenders();
-                const sender = senders.find(s => s.track && s.track.kind === 'video');
-                if (sender) sender.replaceTrack(videoTrack);
-                logDebug('Replaced video track for ' + targetId);
-            }
-        });
-
-        document.getElementById('mirror-cam-btn').addEventListener('click', () => {
-            const video = document.getElementById('my-camera');
-            mirrorActive = !mirrorActive;
-            if (mirrorActive) {
-                video.classList.add('mirrored');
-                document.getElementById('mirror-cam-btn').innerText = '🪞 Mirror On';
-            } else {
-                video.classList.remove('mirrored');
-                document.getElementById('mirror-cam-btn').innerText = '🪞 Mirror Off';
-            }
-            logDebug('Mirror toggled: ' + mirrorActive);
-        });
 
         // ============================================================
         // EXAM SYSTEM
@@ -3837,7 +2954,6 @@
         // FORCED LOCKOUT
         // ============================================================
         function handleForcedLockout(msg) {
-            if (localStream) localStream.getTracks().forEach(t => t.stop());
             document.body.innerHTML = `
                 <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--blue-light);color:var(--text-primary);text-align:center;padding:20px;">
                     <span style="font-size:72px;">🚫</span>
@@ -3881,7 +2997,7 @@
             }
         })();
 
-        console.log('🚀 Nexus Learn Ultimate Edition with Firebase loaded!');
+        console.log('🚀 Nexus Learn Ultimate Edition (no video/audio) loaded!');
         console.log('✅ Debug panel is visible. Check console and on‑screen log.');
     </script>
 </body>
