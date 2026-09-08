@@ -2560,9 +2560,15 @@
         });
 
         // ============================================================
-        // ENTER CLASSROOM (async)
+        // ENTER CLASSROOM (async) - FIXED VERSION
         // ============================================================
         async function enterClassroom() {
+            // Validate class code
+            if (!classCodeRoom || classCodeRoom.trim() === '') {
+                alert('Invalid class code. Please go back and re‑enter.');
+                return;
+            }
+
             logDebug('Entering classroom: ' + classCodeRoom + ' as ' + myUsername + (isTeacherUser ? ' (Teacher)' : ' (Student)'));
             document.getElementById('homepage-section').classList.add('hidden');
             document.getElementById('student-login-section').classList.add('hidden');
@@ -2588,14 +2594,20 @@
             // Start local camera and mic
             await startLocalCameraAndMic();
 
-            // Register presence
+            // ---------- PRESENCE ----------
             const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
-            presenceRef.set({
-                username: myUsername,
-                role: isTeacherUser ? 'instructor' : 'student',
-                is_pro: isProUser,
-                joined: Date.now()
-            });
+            try {
+                await presenceRef.set({
+                    username: myUsername,
+                    role: isTeacherUser ? 'instructor' : 'student',
+                    is_pro: isProUser,
+                    joined: Date.now()
+                });
+                logDebug('Presence written successfully');
+            } catch (err) {
+                logDebug('ERROR writing presence: ' + err.message);
+                alert('Could not register your presence in the classroom. Please check your network or Firebase rules.');
+            }
             presenceRef.onDisconnect().remove();
 
             // Teacher panel
@@ -2604,7 +2616,7 @@
                 document.getElementById('admin-tracking-section').classList.remove('hidden');
             }
 
-            // Listen for messages
+            // ---------- MESSAGES ----------
             const messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
             messagesRef.off();
             messagesRef.on('child_added', (snapshot) => {
@@ -2612,15 +2624,14 @@
                 if (msg) handleIncomingMessage(msg);
             });
 
-            // Listen for signals
+            // ---------- SIGNALS ----------
             const signalsRef = db.ref('classrooms/' + classCodeRoom + '/signals/' + myUsername);
             signalsRef.off();
             signalsRef.on('child_added', (snapshot) => {
                 const signal = snapshot.val();
                 if (signal) {
-                    // Ignore signals from self (safety)
                     if (signal.from === myUsername) {
-                        logDebug('Ignoring self-signal');
+                        logDebug('Ignoring self‑signal');
                         snapshot.ref.remove();
                         return;
                     }
@@ -2630,9 +2641,35 @@
                 }
             });
 
-            // Listen for presence changes - use child_added/removed for efficiency
+            // ---------- PRESENCE LIST (initial + updates) ----------
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
-            presenceListRef.off();
+
+            // 1. Read initial list to populate the table
+            presenceListRef.once('value', (snap) => {
+                const users = snap.val();
+                logDebug('Initial presence list loaded');
+                updateActiveUsers(users);
+                // Now connect to peers that are already present
+                if (users) {
+                    Object.keys(users).forEach(username => {
+                        if (username !== myUsername && !connectedPeers.has(username)) {
+                            logDebug('Initial peer detected: ' + username);
+                            const shouldInitiate = myUsername.localeCompare(username) < 0;
+                            if (shouldInitiate) {
+                                initiatePeerConnection(username, username, true);
+                            } else {
+                                logDebug('Waiting for ' + username + ' to initiate');
+                            }
+                            connectedPeers.add(username);
+                        }
+                    });
+                }
+            }).catch(err => {
+                logDebug('Error reading initial presence: ' + err.message);
+            });
+
+            // 2. Listen for new peers (child_added) – but skip if already processed
+            presenceListRef.off('child_added');
             presenceListRef.on('child_added', (snap) => {
                 const user = snap.val();
                 if (!user) return;
@@ -2640,22 +2677,24 @@
                 if (username === myUsername) return;
                 if (!connectedPeers.has(username)) {
                     logDebug('New peer detected (child_added): ' + username);
-                    // Determine who initiates: lower username initiates
                     const shouldInitiate = myUsername.localeCompare(username) < 0;
                     if (shouldInitiate) {
-                        logDebug('I will initiate connection to ' + username);
                         initiatePeerConnection(username, username, true);
                     } else {
                         logDebug('Waiting for ' + username + ' to initiate');
                     }
                     connectedPeers.add(username);
                 }
+                // Refresh the table (updateActiveUsers will be called via value listener, but we also call here)
+                presenceListRef.once('value', (snap) => updateActiveUsers(snap.val()));
             });
+
+            // 3. Listen for removals
+            presenceListRef.off('child_removed');
             presenceListRef.on('child_removed', (snap) => {
                 const username = snap.key;
                 if (username === myUsername) return;
                 logDebug('Peer left: ' + username);
-                // Close connection and remove card
                 if (peerConnections[username]) {
                     peerConnections[username].close();
                     delete peerConnections[username];
@@ -2664,6 +2703,8 @@
                 const card = document.getElementById('peer-card-' + username);
                 if (card) card.remove();
                 delete remoteStreams[username];
+                // Refresh table
+                presenceListRef.once('value', (snap) => updateActiveUsers(snap.val()));
             });
 
             logDebug('Classroom entry complete');
@@ -2794,7 +2835,7 @@
         }
 
         // ============================================================
-        // SEND MESSAGE
+        // SEND MESSAGE (with error handling)
         // ============================================================
         function sendMsg(role) {
             const el = document.getElementById(role + '-input-field');
@@ -2806,7 +2847,8 @@
                     type: 'text',
                     timestamp: Date.now()
                 };
-                db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+                db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+                  .catch(err => logDebug('Error sending message: ' + err.message));
                 el.value = '';
             }
         }
@@ -2816,7 +2858,7 @@
         }
 
         // ============================================================
-        // EMOJI REACTIONS
+        // EMOJI REACTIONS (with error handling)
         // ============================================================
         function sendEmojiReaction(emoji) {
             createFloatingEmoji(emoji);
@@ -2826,7 +2868,8 @@
                 type: 'emoji_reaction',
                 timestamp: Date.now()
             };
-            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+              .catch(err => logDebug('Error sending emoji: ' + err.message));
         }
 
         function createFloatingEmoji(emoji) {
