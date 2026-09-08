@@ -1319,6 +1319,48 @@
             font-family: inherit;
         }
 
+        /* ---------- DEBUG STATUS (modified to avoid overlap) ---------- */
+        #debug-status {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            max-width: 250px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.85;
+            border: 1px solid #0f0;
+            display: block;
+        }
+        #debug-status .entry {
+            margin: 2px 0;
+            border-bottom: 1px solid #333;
+            padding: 2px 0;
+            font-size: 10px;
+        }
+        /* small close button for debug panel */
+        #debug-status .close-debug {
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            color: #fff;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        #debug-status.hidden-debug {
+            display: none;
+        }
+
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 992px) {
             .hero-title { font-size: 42px; }
@@ -1359,6 +1401,7 @@
             .stats-bar { grid-template-columns: 1fr 1fr; gap: 8px; }
             .stat-item .number { font-size: 20px; }
             .container { padding-top: 90px; }
+            #debug-status { max-width: 180px; max-height: 120px; font-size: 10px; bottom: 80px; }
         }
 
         .floating-emoji-reaction {
@@ -1649,35 +1692,6 @@
             outline: none;
         }
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
-
-        /* ---- Debug status panel ---- */
-        #debug-status {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background: rgba(0,0,0,0.75);
-            color: #0f0;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            max-width: 300px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 999;
-            pointer-events: none;
-            opacity: 0.9;
-            border: 1px solid #0f0;
-            display: none;
-        }
-        #debug-status.visible {
-            display: block;
-        }
-        #debug-status .entry {
-            margin: 2px 0;
-            border-bottom: 1px solid #333;
-            padding: 2px 0;
-        }
     </style>
 </head>
 <body>
@@ -2166,14 +2180,15 @@
     </div>
 
     <!-- ============================================================
-    DEBUG STATUS PANEL
+    DEBUG STATUS PANEL (with close button)
     ============================================================ -->
-    <div id="debug-status" class="visible">
+    <div id="debug-status">
+        <button class="close-debug" onclick="document.getElementById('debug-status').classList.toggle('hidden-debug')">✕</button>
         <div id="debug-log"></div>
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIREBASE + ALL FEATURES
+    JAVASCRIPT - FIREBASE + ALL FEATURES (with fixes)
     ============================================================ -->
     <script>
         // ============================================================
@@ -2216,6 +2231,7 @@
         let expandedVideoStream = null;
         let connectedPeers = new Set();
         let mirrorActive = true;
+        let userHasInteracted = false; // NEW: track user gesture for autoplay
 
         // ============================================================
         // RTC CONFIG (improved with more TURN servers)
@@ -2264,7 +2280,7 @@
         }
 
         function showDebugPanel() {
-            document.getElementById('debug-status').classList.add('visible');
+            document.getElementById('debug-status').classList.remove('hidden-debug');
         }
 
         // ============================================================
@@ -2488,6 +2504,7 @@
             }
             const ok = await requestMediaPermissions();
             if (!ok) return;
+            userHasInteracted = true; // user gesture
             await enterClassroom();
         });
 
@@ -2502,6 +2519,7 @@
 
             const ok = await requestMediaPermissions();
             if (!ok) return;
+            userHasInteracted = true; // user gesture
 
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
                 if (snap.exists()) {
@@ -2621,7 +2639,6 @@
                                 initiatePeerConnection(username, username, true);
                             } else {
                                 logDebug('Waiting for ' + username + ' to initiate');
-                                // We'll create a passive PC when we receive an offer
                             }
                             connectedPeers.add(username);
                         }
@@ -3178,7 +3195,7 @@
                     document.getElementById('video-layout-grid').appendChild(card);
                     logDebug('Created video card for ' + targetId);
 
-                    // Click to expand and play
+                    // Click to expand (preserve this feature)
                     card.addEventListener('click', function() {
                         const vid = this.querySelector('video');
                         const lbl = this.querySelector('.label');
@@ -3194,33 +3211,57 @@
                     video = card.querySelector('video');
                 }
 
+                // Attach the stream
                 if (video) {
                     if (video.srcObject !== remoteStream) {
                         video.srcObject = remoteStream;
                     }
                     video.muted = false;
                     video.volume = 1.0;
-                    // Try to play; if blocked, user will click
-                    video.play().catch(err => {
-                        logDebug('Autoplay blocked for ' + targetId + ', waiting for user gesture');
-                        // Show a hint
-                        const hint = document.createElement('div');
-                        hint.style.position = 'absolute';
-                        hint.style.top = '50%';
-                        hint.style.left = '50%';
-                        hint.style.transform = 'translate(-50%, -50%)';
-                        hint.style.color = '#fff';
-                        hint.style.background = 'rgba(0,0,0,0.6)';
-                        hint.style.padding = '8px 16px';
-                        hint.style.borderRadius = '8px';
-                        hint.style.zIndex = '3';
-                        hint.innerText = 'Click to play';
-                        card.appendChild(hint);
-                        card.addEventListener('click', function removeHint() {
-                            hint.remove();
-                            card.removeEventListener('click', removeHint);
+
+                    // Try to play automatically; if blocked, set up a one‑time click listener on the document
+                    const playVideo = () => {
+                        video.play().catch(err => {
+                            logDebug('Play error for ' + targetId + ': ' + err.message);
                         });
-                    });
+                    };
+
+                    // If user already interacted, we can call play() (it may still fail if gesture expired)
+                    if (userHasInteracted) {
+                        playVideo();
+                    } else {
+                        // Fallback: wait for any click on the page
+                        const clickHandler = () => {
+                            userHasInteracted = true;
+                            playVideo();
+                            document.removeEventListener('click', clickHandler);
+                        };
+                        document.addEventListener('click', clickHandler);
+                        // Also show a small hint (optional)
+                        if (!document.getElementById('click-hint')) {
+                            const hint = document.createElement('div');
+                            hint.id = 'click-hint';
+                            hint.style.position = 'fixed';
+                            hint.style.bottom = '120px';
+                            hint.style.left = '50%';
+                            hint.style.transform = 'translateX(-50%)';
+                            hint.style.background = 'rgba(0,0,0,0.7)';
+                            hint.style.color = '#fff';
+                            hint.style.padding = '10px 20px';
+                            hint.style.borderRadius = '30px';
+                            hint.style.fontSize = '14px';
+                            hint.style.zIndex = '9999';
+                            hint.innerText = '👆 Click anywhere to enable audio & video';
+                            document.body.appendChild(hint);
+                            // Remove hint after first click
+                            document.addEventListener('click', function removeHint() {
+                                if (document.getElementById('click-hint')) {
+                                    document.getElementById('click-hint').remove();
+                                }
+                                document.removeEventListener('click', removeHint);
+                            });
+                        }
+                    }
                 }
             };
 
