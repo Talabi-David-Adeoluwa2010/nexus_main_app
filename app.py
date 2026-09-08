@@ -3,56 +3,31 @@ import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
-# ============================================================
-# FLASK APP CONFIG
-# ============================================================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw')
 CORS(app)
 
-# ============================================================
-# SOCKET.IO SETUP
-# ============================================================
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-# ============================================================
-# LOGGING CONFIG
-# ============================================================
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('app.log'),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler('app.log'), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
-# ============================================================
-# IN-MEMORY STORAGE
-# ============================================================
+# In-memory stores
 teacher_accounts = {"admin": "admin123"}
 pro_activations = {}
+active_participants = {}          # classroom_code -> set of usernames
+sid_to_participant = {}           # sid -> (classroom, username)
+username_to_sid = {}              # username -> sid (for direct messaging)
 
-# Active video call participants per classroom
-# Structure: { classroom_code: set_of_usernames }
-active_participants = {}
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-def mask_password(password):
-    return '*' * len(password) if password else ''
-
-# ============================================================
-# ROUTES (unchanged except adding socketio to app)
-# ============================================================
-
+# ---------- Routes ----------
 @app.route('/')
 def home():
-    logger.info('Serving index.html')
     return render_template('index.html')
 
 @app.route('/api/health', methods=['GET'])
@@ -67,28 +42,20 @@ def health():
 @app.route('/api/debug', methods=['GET'])
 def debug():
     safe_accounts = {u: '********' for u in teacher_accounts}
-    return jsonify({
-        'teacher_accounts': safe_accounts,
-        'pro_activations': pro_activations
-    }), 200
+    return jsonify({'teacher_accounts': safe_accounts, 'pro_activations': pro_activations}), 200
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
     data = request.get_json()
     if not data:
-        logger.warning('Register: missing JSON body')
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-
     username = data.get('username', '').strip()
     email = data.get('email', '').strip()
     password = data.get('password', '')
-
     if not username or not password:
         return jsonify({'success': False, 'message': 'Username and password are required.'}), 400
-
     if username in teacher_accounts:
         return jsonify({'success': False, 'message': 'Username already registered!'}), 400
-
     teacher_accounts[username] = password
     logger.info(f'User {username} registered successfully')
     return jsonify({'success': True, 'message': 'Registration successful! You can now log in.'}), 200
@@ -98,7 +65,6 @@ def api_login():
     data = request.get_json()
     if not data:
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-
     username = data.get('username', '').strip()
     password = data.get('password', '')
     if username in teacher_accounts and teacher_accounts[username] == password:
@@ -110,10 +76,7 @@ def api_ai():
     data = request.get_json()
     if not data:
         return jsonify({'response': 'I did not receive a question. Please try again.'}), 400
-
     query = data.get('query', '').lower().strip()
-    logger.info(f'AI query: {query[:50]}...')
-
     if 'login' in query:
         response = "Click 'Login as Teacher', enter your username and password, or register to create an account."
     elif 'pro' in query or 'pay' in query:
@@ -126,7 +89,6 @@ def api_ai():
         response = f"Server is running. Teachers: {len(teacher_accounts)}, Pro users: {len(pro_activations)}."
     else:
         response = "Try asking about 'login', 'pro', 'exam', 'chat', or 'video'."
-
     return jsonify({'response': response}), 200
 
 @app.route('/api/activate_pro', methods=['POST'])
@@ -134,13 +96,10 @@ def api_activate_pro():
     data = request.get_json()
     if not data:
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-
     username = data.get('username', '').strip()
     code = data.get('activation_code', '').strip().upper()
-
     if not username:
         return jsonify({'success': False, 'message': 'Username required.'}), 400
-
     if code.startswith('NEXUS-') and len(code) > 6:
         expiry_date = '2026-12-31'
         pro_activations[username] = {
@@ -148,43 +107,39 @@ def api_activate_pro():
             'activated_at': datetime.utcnow().isoformat(),
             'code': code
         }
-        return jsonify({
-            'success': True,
-            'message': 'Pro activated successfully!',
-            'expiry': expiry_date
-        }), 200
+        return jsonify({'success': True, 'message': 'Pro activated successfully!', 'expiry': expiry_date}), 200
     else:
         return jsonify({'success': False, 'message': 'Invalid activation code.'}), 400
 
-# ============================================================
-# SOCKET.IO EVENT HANDLERS
-# ============================================================
-
+# ---------- Socket.IO Handlers ----------
 @socketio.on('connect')
 def handle_connect():
     logger.info(f'Client connected: {request.sid}')
-    # No authentication here; we'll validate on join events
 
 @socketio.on('disconnect')
 def handle_disconnect():
     logger.info(f'Client disconnected: {request.sid}')
-    # Clean up: remove from any active video call rooms
-    # We'll handle this on 'video_call_leave' or by tracking sids per room
-    # For simplicity, we rely on the client to send 'video_call_leave' before disconnect,
-    # but we also need to clean up if they disconnect abruptly.
-    # We'll maintain a mapping of sid -> (classroom, username) and remove on disconnect.
-    # For now, we'll not implement full cleanup; we'll rely on the participant list
-    # being updated on explicit leave. For abrupt disconnects, we can use a timeout
-    # or remove them when they reconnect.
-
-# We'll maintain a mapping of sid to participant info for cleanup
-sid_to_participant = {}
+    # Clean up if this SID was in a video call
+    if request.sid in sid_to_participant:
+        classroom, username = sid_to_participant[request.sid]
+        # Remove from active participants
+        if classroom in active_participants:
+            active_participants[classroom].discard(username)
+            if not active_participants[classroom]:
+                del active_participants[classroom]
+        # Remove mappings
+        if username in username_to_sid:
+            del username_to_sid[username]
+        del sid_to_participant[request.sid]
+        # Notify others
+        room_name = f'classroom_{classroom}'
+        emit('video_call_user_left', {'username': username}, room=room_name, skip_sid=request.sid)
+        logger.info(f'User {username} automatically removed on disconnect')
 
 @socketio.on('video_call_join')
 def handle_video_join(data):
     classroom = data.get('classroom')
     username = data.get('username')
-
     if not classroom or not username:
         emit('video_call_error', {'message': 'Missing classroom or username'})
         return
@@ -192,8 +147,9 @@ def handle_video_join(data):
     room_name = f'classroom_{classroom}'
     join_room(room_name)
 
-    # Store sid mapping for cleanup
+    # Store mappings
     sid_to_participant[request.sid] = (classroom, username)
+    username_to_sid[username] = request.sid
 
     # Add to active participants
     if classroom not in active_participants:
@@ -202,18 +158,17 @@ def handle_video_join(data):
 
     logger.info(f'User {username} joined video call in classroom {classroom}')
 
-    # Send the current participant list to the joining user (excluding themselves)
+    # Send current participant list to the joining user
     participants = list(active_participants[classroom])
     emit('video_call_participants', {'participants': participants}, room=request.sid)
 
-    # Notify others in the room that a new participant has joined
+    # Notify others
     emit('video_call_user_joined', {'username': username}, room=room_name, skip_sid=request.sid)
 
 @socketio.on('video_call_leave')
 def handle_video_leave(data):
     classroom = data.get('classroom')
     username = data.get('username')
-
     if not classroom or not username:
         return
 
@@ -226,54 +181,14 @@ def handle_video_leave(data):
         if not active_participants[classroom]:
             del active_participants[classroom]
 
-    # Remove sid mapping
+    # Remove mappings
+    if username in username_to_sid:
+        del username_to_sid[username]
     if request.sid in sid_to_participant:
         del sid_to_participant[request.sid]
 
     logger.info(f'User {username} left video call in classroom {classroom}')
-
-    # Notify others
     emit('video_call_user_left', {'username': username}, room=room_name, skip_sid=request.sid)
-
-@socketio.on('video_call_offer')
-def handle_offer(data):
-    target = data.get('target')
-    sdp = data.get('sdp')
-    sender = data.get('sender')
-    classroom = data.get('classroom')
-
-    if not all([target, sdp, sender, classroom]):
-        return
-
-    room_name = f'classroom_{classroom}'
-    # Emit to the target only
-    emit('video_call_offer', {
-        'sender': sender,
-        'sdp': sdp
-    }, room=request.sid, include_self=False)  # We need to send to the target's sid; but we don't have target's sid easily.
-    # Better: we broadcast to the room and let clients filter by target username.
-    # However, we can store mapping of username -> sid to send directly.
-    # For simplicity, we'll broadcast to the room and clients check if they are the target.
-    # But to avoid unnecessary traffic, we can use a dict username->sid.
-    # Let's maintain a mapping of username to sid within the room.
-
-# We'll maintain a mapping of username to sid for the room
-# This is a bit complex; for now we'll broadcast and let clients filter.
-# But to be efficient, we'll store a global mapping of username->sid.
-
-# Global mapping: username -> sid (only for video call participants)
-username_to_sid = {}
-
-@socketio.on('video_call_join')
-def handle_video_join(data):
-    # ... existing code
-    username_to_sid[username] = request.sid
-
-@socketio.on('video_call_leave')
-def handle_video_leave(data):
-    # ... existing code
-    if username in username_to_sid:
-        del username_to_sid[username]
 
 @socketio.on('video_call_offer')
 def handle_offer(data):
@@ -317,12 +232,27 @@ def handle_ice_candidate(data):
     else:
         logger.warning(f'Target {target} not found for ICE candidate')
 
-# Also add a handler to get current participants (already sent on join)
-# But we can also provide an explicit endpoint if needed.
+@socketio.on('video_call_camera_state')
+def handle_camera_state(data):
+    sender = data.get('sender')
+    state = data.get('state')
+    classroom = data.get('classroom')
+    if not sender or not classroom:
+        return
+    room_name = f'classroom_{classroom}'
+    emit('video_call_camera_state', {'sender': sender, 'state': state}, room=room_name, skip_sid=request.sid)
 
-# ============================================================
-# ERROR HANDLERS
-# ============================================================
+@socketio.on('video_call_mic_state')
+def handle_mic_state(data):
+    sender = data.get('sender')
+    state = data.get('state')
+    classroom = data.get('classroom')
+    if not sender or not classroom:
+        return
+    room_name = f'classroom_{classroom}'
+    emit('video_call_mic_state', {'sender': sender, 'state': state}, room=room_name, skip_sid=request.sid)
+
+# ---------- Error Handlers ----------
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({'error': 'Not found'}), 404
@@ -331,10 +261,7 @@ def not_found(e):
 def internal_error(e):
     return jsonify({'error': 'Internal server error'}), 500
 
-# ============================================================
-# MAIN
-# ============================================================
+# ---------- Main ----------
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
-    logger.info(f'Starting Flask-SocketIO server on port {port}')
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
