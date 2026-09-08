@@ -3687,9 +3687,8 @@
 
         function updateTimerDisplay() {
             const mins = String(Math.floor(currentExamTimeSecondsLeft / 60)).padStart(2, '0');
-            const secs = String(currentExamTimeSecondsLeft % 60).padStart(2missions, ' =0');
-            document.getElementById(' [];
-exam-timer-display').innerText = mins + ':' + secs;
+            const secs = String(currentExamTimeSecondsLeft % 60).padStart(2, '0');
+            document.getElementById('exam-timer-display').innerText = mins + ':' + secs;
         }
 
         function submitStudentExamAnswers() {
@@ -3704,7 +3703,8 @@ exam-timer-display').innerText = mins + ':' + secs;
                 });
             }
 
-            const theorySub            document.querySelectorAll('.student-theory-response').forEach(t => {
+            const theorySubmissions = [];
+            document.querySelectorAll('.student-theory-response').forEach(t => {
                 const idx = parseInt(t.getAttribute('data-idx'));
                 const promptText = (activeExamConfig.theoryQuestions && activeExamConfig.theoryQuestions[idx]) ?
                     activeExamConfig.theoryQuestions[idx].prompt : "";
