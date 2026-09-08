@@ -1995,8 +1995,8 @@
             </div>
 
             <div class="controls-row">
-                <button id="local-mic-toggle">🎙️ Mute Mic</button>
-                <button id="local-video-toggle">📷 Stop Cam</button>
+                <button id="local-mic-toggle">🎙️ Unmute Mic</button>
+                <button id="local-video-toggle">📷 Start Cam</button>
                 <input type="file" id="file-import-input" accept="image/*" style="display:none;">
                 <button onclick="document.getElementById('file-import-input').click();">📁 Import Image</button>
                 <button id="snap-cam-btn">📷 Snap Pic</button>
@@ -2226,12 +2226,14 @@
         let currentExamTimeSecondsLeft = 0;
         let examGradebook = {};
         const peerConnections = {};
-        const pendingCandidates = {};
+        const pendingCandidates = {}; // per peer queue
         let currentZoomScale = 1;
         let expandedVideoStream = null;
         let connectedPeers = new Set();
         let mirrorActive = true;
-        let userHasInteracted = false; // NEW: track user gesture for autoplay
+        let userHasInteracted = false; // track user gesture for autoplay
+        // Map to store combined streams per peer
+        const remoteStreams = {};
 
         // ============================================================
         // RTC CONFIG (improved with more TURN servers)
@@ -2616,35 +2618,54 @@
             signalsRef.on('child_added', (snapshot) => {
                 const signal = snapshot.val();
                 if (signal) {
+                    // Ignore signals from self (safety)
+                    if (signal.from === myUsername) {
+                        logDebug('Ignoring self-signal');
+                        snapshot.ref.remove();
+                        return;
+                    }
                     logDebug('Received signal from ' + signal.from + ' type: ' + (signal.type || 'candidate'));
                     handleSignaling(signal);
                     snapshot.ref.remove();
                 }
             });
 
-            // Listen for presence changes (to connect to new peers)
+            // Listen for presence changes - use child_added/removed for efficiency
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
             presenceListRef.off();
-            presenceListRef.on('value', (snap) => {
-                const users = snap.val();
-                updateActiveUsers(users);
-                if (users) {
-                    Object.keys(users).forEach(username => {
-                        if (username !== myUsername && !connectedPeers.has(username)) {
-                            logDebug('New peer detected: ' + username);
-                            // Determine who initiates: lower username initiates
-                            const shouldInitiate = myUsername.localeCompare(username) < 0;
-                            if (shouldInitiate) {
-                                logDebug('I will initiate connection to ' + username);
-                                initiatePeerConnection(username, username, true);
-                            } else {
-                                logDebug('Waiting for ' + username + ' to initiate');
-                            }
-                            connectedPeers.add(username);
-                        }
-                    });
+            presenceListRef.on('child_added', (snap) => {
+                const user = snap.val();
+                if (!user) return;
+                const username = snap.key;
+                if (username === myUsername) return;
+                if (!connectedPeers.has(username)) {
+                    logDebug('New peer detected (child_added): ' + username);
+                    // Determine who initiates: lower username initiates
+                    const shouldInitiate = myUsername.localeCompare(username) < 0;
+                    if (shouldInitiate) {
+                        logDebug('I will initiate connection to ' + username);
+                        initiatePeerConnection(username, username, true);
+                    } else {
+                        logDebug('Waiting for ' + username + ' to initiate');
+                    }
+                    connectedPeers.add(username);
                 }
             });
+            presenceListRef.on('child_removed', (snap) => {
+                const username = snap.key;
+                if (username === myUsername) return;
+                logDebug('Peer left: ' + username);
+                // Close connection and remove card
+                if (peerConnections[username]) {
+                    peerConnections[username].close();
+                    delete peerConnections[username];
+                }
+                connectedPeers.delete(username);
+                const card = document.getElementById('peer-card-' + username);
+                if (card) card.remove();
+                delete remoteStreams[username];
+            });
+
             logDebug('Classroom entry complete');
         }
 
@@ -2926,9 +2947,17 @@
 
             if (videoElement.srcObject) {
                 expandVideo.srcObject = videoElement.srcObject;
-                expandVideo.muted = false;
-                expandVideo.volume = 1.0;
-                expandVideo.play().catch(e => console.log('play error:', e));
+                // If the expanded video is the local camera, mute it to avoid feedback
+                const isLocal = (videoElement.id === 'my-camera');
+                if (isLocal) {
+                    expandVideo.muted = true;
+                    expandVideo.volume = 0;
+                    logDebug('Expanded local video – muted to prevent echo');
+                } else {
+                    expandVideo.muted = false;
+                    expandVideo.volume = 1.0;
+                }
+                expandVideo.play().catch(e => logDebug('Expand play error: ' + e.message));
             } else {
                 expandVideo.src = videoElement.src;
             }
@@ -3125,50 +3154,32 @@
             const pc = new RTCPeerConnection(rtcConfig);
             peerConnections[targetId] = pc;
             pendingCandidates[targetId] = [];
+            remoteStreams[targetId] = null; // will be set later
 
-            if (localStream) {
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                    logDebug('Added track to PC for ' + targetId + ': ' + track.kind);
-                });
-            } else {
-                logDebug('Warning: localStream is null when creating PC for ' + targetId);
-            }
-
-            pc.onicecandidate = e => {
-                if (e.candidate) {
-                    const signal = {
-                        type: 'ice',
-                        candidate: e.candidate,
-                        from: myUsername
-                    };
-                    db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
-                    logDebug('Sent ICE candidate to ' + targetId);
-                }
-            };
-
-            pc.oniceconnectionstatechange = () => {
-                const state = pc.iceConnectionState;
-                logDebug('ICE state for ' + targetId + ': ' + state);
-                if (state === 'failed' || state === 'disconnected') {
-                    logDebug('ICE failed/disconnected, trying to restart ICE for ' + targetId);
-                    pc.restartIce();
-                }
-                if (state === 'closed' || state === 'disconnected') {
-                    delete peerConnections[targetId];
-                    connectedPeers.delete(targetId);
-                    const card = document.getElementById('peer-card-' + targetId);
-                    if (card) card.remove();
-                }
-            };
-
+            // Set up ontrack BEFORE adding tracks to ensure we catch all streams
             pc.ontrack = e => {
                 logDebug('Track received from ' + targetId + ', kind: ' + e.track.kind);
                 let card = document.getElementById('peer-card-' + targetId);
                 let video;
-                const remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+
+                // Combine streams: if we already have a stream for this peer, add tracks to it
+                let remoteStream;
+                if (remoteStreams[targetId]) {
+                    remoteStream = remoteStreams[targetId];
+                    // Add the track to the existing stream if not already present
+                    if (!remoteStream.getTracks().some(t => t.id === e.track.id)) {
+                        remoteStream.addTrack(e.track);
+                        logDebug('Added track to existing remote stream for ' + targetId);
+                    }
+                } else {
+                    // First track: use the stream from event or create one
+                    remoteStream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+                    remoteStreams[targetId] = remoteStream;
+                    logDebug('Created new remote stream for ' + targetId);
+                }
 
                 if (!card) {
+                    // Create new video card
                     card = document.createElement('div');
                     card.className = 'video-card';
                     card.id = 'peer-card-' + targetId;
@@ -3211,33 +3222,32 @@
                     video = card.querySelector('video');
                 }
 
-                // Attach the stream
+                // Attach the combined stream to the video element
                 if (video) {
                     if (video.srcObject !== remoteStream) {
                         video.srcObject = remoteStream;
+                        logDebug('Attached remote stream to video for ' + targetId);
                     }
                     video.muted = false;
                     video.volume = 1.0;
 
-                    // Try to play automatically; if blocked, set up a one‑time click listener on the document
+                    // Play with user gesture context
                     const playVideo = () => {
                         video.play().catch(err => {
                             logDebug('Play error for ' + targetId + ': ' + err.message);
                         });
                     };
-
-                    // If user already interacted, we can call play() (it may still fail if gesture expired)
                     if (userHasInteracted) {
                         playVideo();
                     } else {
-                        // Fallback: wait for any click on the page
+                        // Fallback: wait for a click on the page
                         const clickHandler = () => {
                             userHasInteracted = true;
                             playVideo();
                             document.removeEventListener('click', clickHandler);
                         };
                         document.addEventListener('click', clickHandler);
-                        // Also show a small hint (optional)
+                        // Show a hint if not already shown
                         if (!document.getElementById('click-hint')) {
                             const hint = document.createElement('div');
                             hint.id = 'click-hint';
@@ -3253,7 +3263,6 @@
                             hint.style.zIndex = '9999';
                             hint.innerText = '👆 Click anywhere to enable audio & video';
                             document.body.appendChild(hint);
-                            // Remove hint after first click
                             document.addEventListener('click', function removeHint() {
                                 if (document.getElementById('click-hint')) {
                                     document.getElementById('click-hint').remove();
@@ -3262,6 +3271,47 @@
                             });
                         }
                     }
+                }
+            };
+
+            // Add local tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => {
+                    pc.addTrack(track, localStream);
+                    logDebug('Added track to PC for ' + targetId + ': ' + track.kind);
+                });
+            } else {
+                logDebug('Warning: localStream is null when creating PC for ' + targetId);
+            }
+
+            // ICE candidate handling
+            pc.onicecandidate = e => {
+                if (e.candidate) {
+                    const signal = {
+                        type: 'ice',
+                        candidate: e.candidate,
+                        from: myUsername
+                    };
+                    db.ref('classrooms/' + classCodeRoom + '/signals/' + targetId).push(signal);
+                    logDebug('Sent ICE candidate to ' + targetId);
+                }
+            };
+
+            // ICE connection state monitoring + restart on failure
+            pc.oniceconnectionstatechange = () => {
+                const state = pc.iceConnectionState;
+                logDebug('ICE state for ' + targetId + ': ' + state);
+                if (state === 'failed' || state === 'disconnected') {
+                    logDebug('ICE failed/disconnected, restarting for ' + targetId);
+                    pc.restartIce();
+                }
+                if (state === 'closed' || state === 'disconnected') {
+                    // Clean up
+                    delete peerConnections[targetId];
+                    connectedPeers.delete(targetId);
+                    const card = document.getElementById('peer-card-' + targetId);
+                    if (card) card.remove();
+                    delete remoteStreams[targetId];
                 }
             };
 
@@ -3285,22 +3335,26 @@
         }
 
         async function handleSignaling(signal) {
-            let pc = peerConnections[signal.from];
+            const from = signal.from;
+            // Ignore if from self (already filtered, but double-check)
+            if (from === myUsername) return;
+
+            let pc = peerConnections[from];
             if (!pc) {
                 // Create a passive PC if we don't have one yet
-                logDebug('Creating passive PC for ' + signal.from + ' due to incoming signal');
-                pc = initiatePeerConnection(signal.from, signal.from, false);
-                connectedPeers.add(signal.from);
+                logDebug('Creating passive PC for ' + from + ' due to incoming signal');
+                pc = initiatePeerConnection(from, from, false);
+                connectedPeers.add(from);
             }
 
             if (signal.sdp) {
                 try {
                     await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
-                    logDebug('Set remote description for ' + signal.from + ' type: ' + signal.sdp.type);
+                    logDebug('Set remote description for ' + from + ' type: ' + signal.sdp.type);
                     // Process any pending candidates
-                    if (pendingCandidates[signal.from]) {
-                        while (pendingCandidates[signal.from].length) {
-                            const cand = pendingCandidates[signal.from].shift();
+                    if (pendingCandidates[from] && pendingCandidates[from].length > 0) {
+                        while (pendingCandidates[from].length) {
+                            const cand = pendingCandidates[from].shift();
                             await pc.addIceCandidate(new RTCIceCandidate(cand)).catch(e => logDebug('Candidate add error: ' + e.message));
                         }
                     }
@@ -3312,19 +3366,20 @@
                             sdp: pc.localDescription,
                             from: myUsername
                         };
-                        db.ref('classrooms/' + classCodeRoom + '/signals/' + signal.from).push(answerSignal);
-                        logDebug('Sent answer to ' + signal.from);
+                        db.ref('classrooms/' + classCodeRoom + '/signals/' + from).push(answerSignal);
+                        logDebug('Sent answer to ' + from);
                     }
                 } catch (err) {
-                    logDebug('Error handling SDP for ' + signal.from + ': ' + err.message);
+                    logDebug('Error handling SDP for ' + from + ': ' + err.message);
                 }
             } else if (signal.candidate) {
+                // If remote description is set, add candidate immediately; otherwise buffer
                 if (pc.remoteDescription && pc.remoteDescription.type) {
                     await pc.addIceCandidate(new RTCIceCandidate(signal.candidate)).catch(e => logDebug('ICE add error: ' + e.message));
                 } else {
-                    if (!pendingCandidates[signal.from]) pendingCandidates[signal.from] = [];
-                    pendingCandidates[signal.from].push(signal.candidate);
-                    logDebug('Stored pending candidate from ' + signal.from);
+                    if (!pendingCandidates[from]) pendingCandidates[from] = [];
+                    pendingCandidates[from].push(signal.candidate);
+                    logDebug('Stored pending candidate from ' + from);
                 }
             }
         }
@@ -3632,8 +3687,9 @@
 
         function updateTimerDisplay() {
             const mins = String(Math.floor(currentExamTimeSecondsLeft / 60)).padStart(2, '0');
-            const secs = String(currentExamTimeSecondsLeft % 60).padStart(2, '0');
-            document.getElementById('exam-timer-display').innerText = mins + ':' + secs;
+            const secs = String(currentExamTimeSecondsLeft % 60).padStart(2missions, ' =0');
+            document.getElementById(' [];
+exam-timer-display').innerText = mins + ':' + secs;
         }
 
         function submitStudentExamAnswers() {
@@ -3648,8 +3704,7 @@
                 });
             }
 
-            const theorySubmissions = [];
-            document.querySelectorAll('.student-theory-response').forEach(t => {
+            const theorySub            document.querySelectorAll('.student-theory-response').forEach(t => {
                 const idx = parseInt(t.getAttribute('data-idx'));
                 const promptText = (activeExamConfig.theoryQuestions && activeExamConfig.theoryQuestions[idx]) ?
                     activeExamConfig.theoryQuestions[idx].prompt : "";
