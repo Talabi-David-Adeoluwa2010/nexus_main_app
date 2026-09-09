@@ -808,6 +808,69 @@
             color: #fff;
         }
 
+        /* ---- ROLE-BASED NAVIGATION GUIDE (NEW) ---- */
+        .role-guide {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius-sm);
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+        .role-guide .icon-big {
+            font-size: 40px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .role-guide .content {
+            flex: 1;
+        }
+        .role-guide .content h4 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .role-guide .content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        .role-guide .badge-role {
+            background: var(--blue-accent);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .role-guide .badge-role.student {
+            background: #8e44ad;
+        }
+        .role-guide .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-top: 8px;
+        }
+        .role-guide .features-list span {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .role-guide .features-list span::before {
+            content: "✅";
+            font-size: 14px;
+        }
+
         /* ---- BEAUTIFIED CHAT BOX ---- */
         .chat-box {
             background: rgba(255, 255, 255, 0.8);
@@ -1050,6 +1113,10 @@
             right: 28px;
             z-index: 1500;
         }
+        /* Hide AI bot in classroom */
+        body.in-classroom .ai-bot {
+            display: none;
+        }
         .ai-bot .toggle {
             width: 64px;
             height: 64px;
@@ -1211,6 +1278,8 @@
             .modal-content { padding: 24px 18px; }
             .ai-bot .window { width: 280px; right: -10px; }
             .stats-bar { grid-template-columns: 1fr 1fr; }
+            .role-guide { flex-direction: column; align-items: stretch; text-align: center; }
+            .role-guide .features-list { justify-content: center; }
         }
         @media (max-width: 480px) {
             .hero-title { font-size: 26px; }
@@ -1243,23 +1312,7 @@
             100% { transform: translateY(-450px) scale(0.8) rotate(20deg); opacity: 0; }
         }
 
-        .credit {
-            position: fixed;
-            bottom: 14px;
-            left: 14px;
-            font-size: 11px;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 6px 16px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            z-index: 500;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-        }
-        .credit strong { color: var(--blue-dark); }
+        /* Removed .credit styles (no longer used) */
 
         .teacher-dashboard-box {
             max-width: 500px;
@@ -1519,7 +1572,7 @@
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
 
         /* ============================================================
-           VIDEO CALL STYLES
+           VIDEO CALL STYLES (UPDATED)
            ============================================================ */
         .video-call-overlay {
             position: fixed;
@@ -1552,7 +1605,24 @@
         .call-top-bar .left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
+        }
+        .call-top-bar .left .minimize-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .call-top-bar .left .minimize-btn:hover {
+            background: rgba(255,255,255,0.25);
         }
         .call-top-bar .left .class-name {
             font-size: 18px;
@@ -1693,11 +1763,13 @@
             justify-content: center;
         }
 
+        /* Local preview - larger and moved up */
         .local-preview {
             position: fixed;
-            bottom: 100px;
+            bottom: 130px;  /* moved up */
             right: 20px;
-            width: 160px;
+            width: 180px;    /* increased size */
+            height: auto;
             aspect-ratio: 16/9;
             background: #1e2a36;
             border-radius: 12px;
@@ -1717,6 +1789,8 @@
             object-fit: cover;
             background: #1e2a36;
         }
+
+        /* Call controls - moved up */
         .call-controls {
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
@@ -1726,6 +1800,7 @@
             gap: 20px;
             flex-wrap: wrap;
             border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: -0.8cm;  /* move up */
         }
         .call-controls button {
             background: rgba(255,255,255,0.1);
@@ -1845,8 +1920,8 @@
         /* Responsive adjustments for video */
         @media (max-width: 768px) {
             .local-preview {
-                width: 100px;
-                bottom: 80px;
+                width: 120px;
+                bottom: 110px;
                 right: 10px;
             }
             .call-controls button {
@@ -1868,11 +1943,14 @@
             .call-top-bar .left .duration {
                 font-size: 13px;
             }
+            .call-controls {
+                margin-top: -0.4cm;  /* slightly less on small screens */
+            }
         }
         @media (max-width: 480px) {
             .local-preview {
-                width: 80px;
-                bottom: 70px;
+                width: 90px;
+                bottom: 90px;
                 right: 6px;
             }
             .video-grid {
@@ -1882,6 +1960,7 @@
             .call-controls {
                 gap: 10px;
                 padding: 10px 12px;
+                margin-top: -0.3cm;
             }
             .call-controls button {
                 width: 38px;
@@ -1926,14 +2005,11 @@
     </div>
 
     <!-- ============================================================
-    CREDIT
+    CREDIT (removed)
     ============================================================ -->
-    <div class="credit">
-        Produced by <strong>Talabi David Adeoluwa</strong>
-    </div>
 
     <!-- ============================================================
-    AI BOT
+    AI BOT (hidden in classroom)
     ============================================================ -->
     <div class="ai-bot">
         <button class="toggle" onclick="toggleAIChat()">🤖</button>
@@ -2157,10 +2233,47 @@
                     <button id="copy-class-code-btn">📋</button>
                 </div>
                 <div class="actions">
-                    <!-- New: Join Video button -->
+                    <!-- Join Video button -->
                     <button id="join-video-btn" onclick="startVideoCall()" style="background:#4CAF50; color:#fff; border:none;">🎥 Join Video</button>
                     <button onclick="leaveClassroom()" class="danger">Leave</button>
                 </div>
+            </div>
+
+            <!-- ============================================================
+            ROLE-BASED NAVIGATION GUIDE (NEW)
+            ============================================================ -->
+            <div id="role-guide-teacher" class="role-guide hidden">
+                <div class="icon-big">👨‍🏫</div>
+                <div class="content">
+                    <h4>Instructor Dashboard</h4>
+                    <p>Welcome, Teacher! Here's what you can do:</p>
+                    <div class="features-list">
+                        <span>Create and manage classes</span>
+                        <span>Deploy exams with timer</span>
+                        <span>View student submissions</span>
+                        <span>Publish grades and feedback</span>
+                        <span>Start live video calls</span>
+                        <span>Monitor student presence</span>
+                    </div>
+                </div>
+                <span class="badge-role">Teacher</span>
+            </div>
+
+            <div id="role-guide-student" class="role-guide hidden">
+                <div class="icon-big">🎓</div>
+                <div class="content">
+                    <h4>Student Portal</h4>
+                    <p>Welcome, Student! Here's what you can do:</p>
+                    <div class="features-list">
+                        <span>Join classes with a code</span>
+                        <span>Participate in live exams</span>
+                        <span>View your grades</span>
+                        <span>Chat with classmates</span>
+                        <span>Join video calls</span>
+                        <span>Share images and emojis</span>
+                    </div>
+                </div>
+                <span class="badge-role student">Student</span>
             </div>
 
             <div id="teacher-lock-panel" class="teacher-panel hidden">
@@ -2215,15 +2328,15 @@
             <div class="video-call-overlay" id="video-call-overlay">
                 <div class="call-top-bar">
                     <div class="left">
+                        <!-- Minimize button moved to left -->
+                        <button class="minimize-btn" onclick="minimizeVideoCall()" title="Minimize Call">⬇️</button>
                         <span class="class-name" id="call-class-name">Class Session</span>
                         <span class="duration" id="call-duration">00:00</span>
                     </div>
                     <div class="right">
                         <span class="participant-count" id="call-participant-count">0 participants</span>
                         <div class="call-actions">
-                            <!-- Minimize button -->
-                            <button onclick="minimizeVideoCall()" title="Minimize Call">⬇️</button>
-                            <!-- End call button -->
+                            <!-- End call button only -->
                             <button class="end-call-btn" onclick="leaveVideoCall()" title="End Call">✕</button>
                         </div>
                     </div>
@@ -2231,7 +2344,7 @@
                 <div class="call-grid-wrapper">
                     <div class="video-grid" id="video-grid"></div>
                 </div>
-                <!-- Local preview (floating) -->
+                <!-- Local preview (floating) - moved up and larger -->
                 <div class="local-preview" id="local-preview" style="display:none;">
                     <video id="local-video" muted autoplay playsinline></video>
                 </div>
@@ -2750,6 +2863,15 @@
             document.getElementById('classroom-section').classList.remove('hidden');
             document.getElementById('app-container').classList.add('classroom-container');
             document.body.classList.add('in-classroom');
+
+            // Show role-based guide
+            if (isTeacherUser) {
+                document.getElementById('role-guide-teacher').classList.remove('hidden');
+                document.getElementById('role-guide-student').classList.add('hidden');
+            } else {
+                document.getElementById('role-guide-student').classList.remove('hidden');
+                document.getElementById('role-guide-teacher').classList.add('hidden');
+            }
 
             // Fetch class info
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
