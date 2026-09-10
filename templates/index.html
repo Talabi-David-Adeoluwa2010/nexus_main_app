@@ -7,8 +7,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-    <!-- Socket.IO client -->
-    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <!-- NOTE: Socket.IO client removed. Video is now handled by Jitsi. -->
     <style>
         /* ============================================================
            ULTIMATE PREMIUM THEME - LIGHT BLUE & BEIGE
@@ -210,10 +209,7 @@
             box-shadow: 0 4px 30px rgba(44, 62, 80, 0.06);
             transition: transform 0.3s ease;
         }
-        /* Hide nav when in classroom */
-        body.in-classroom .top-nav {
-            display: none;
-        }
+        body.in-classroom .top-nav { display: none; }
         .nav-brand {
             display: flex;
             align-items: center;
@@ -237,12 +233,7 @@
         }
         .nav-brand-text span { color: var(--blue-accent); }
 
-        .nav-links {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .nav-btn {
             padding: 14px 28px;
             border: 2px solid transparent;
@@ -272,989 +263,435 @@
             box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
         }
         .nav-btn .icon { font-size: 20px; }
-        .nav-btn.pro-btn {
-            border-color: var(--blue-mid);
-            color: var(--blue-dark);
-        }
-        .nav-btn.pro-btn:hover {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-        }
+        .nav-btn.pro-btn { border-color: var(--blue-mid); color: var(--blue-dark); }
+        .nav-btn.pro-btn:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
         .nav-btn.pro-btn.active-pro {
             background: linear-gradient(135deg, var(--blue-accent), var(--blue-dark));
-            color: #fff;
-            border-color: var(--blue-dark);
+            color: #fff; border-color: var(--blue-dark);
         }
 
         /* ---------- MAIN CONTAINER ---------- */
         .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 120px 24px 40px;
+            position: relative; z-index: 1; width: 100%; max-width: 1440px;
+            margin: 0 auto; padding: 120px 24px 40px;
         }
-        body.in-classroom .container {
-            padding-top: 20px;
-        }
+        body.in-classroom .container { padding-top: 20px; }
 
         /* ---------- HOMEPAGE ---------- */
         .homepage { display: flex; flex-direction: column; gap: 32px; }
 
         .hero {
-            text-align: center;
-            padding: 50px 30px 40px;
+            text-align: center; padding: 50px 30px 40px;
             background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border-radius: var(--radius);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
         }
         .hero::before {
-            content: '';
-            position: absolute;
-            top: -60%;
-            right: -20%;
-            width: 70%;
-            height: 200%;
+            content: ''; position: absolute; top: -60%; right: -20%; width: 70%; height: 200%;
             background: radial-gradient(circle, rgba(180, 210, 240, 0.15) 0%, transparent 70%);
             pointer-events: none;
         }
         .hero::after {
-            content: '📚 ✏️ 🎓 📝 📖 🏫';
-            position: absolute;
-            bottom: 10px;
-            right: 20px;
-            font-size: 40px;
-            opacity: 0.06;
-            letter-spacing: 10px;
-            pointer-events: none;
+            content: '📚 ✏️ 🎓 📝 📖 🏫'; position: absolute; bottom: 10px; right: 20px;
+            font-size: 40px; opacity: 0.06; letter-spacing: 10px; pointer-events: none;
         }
         .hero-title {
-            font-size: 60px;
-            font-weight: 800;
-            letter-spacing: 6px;
-            color: var(--text-primary);
-            position: relative;
-            z-index: 1;
+            font-size: 60px; font-weight: 800; letter-spacing: 6px;
+            color: var(--text-primary); position: relative; z-index: 1;
         }
         .hero-title span { color: var(--blue-accent); }
         .hero-subtitle {
-            font-size: 20px;
-            color: var(--text-secondary);
-            letter-spacing: 4px;
-            margin: 10px 0 16px;
-            font-weight: 300;
-            position: relative;
-            z-index: 1;
+            font-size: 20px; color: var(--text-secondary);
+            letter-spacing: 4px; margin: 10px 0 16px; font-weight: 300;
+            position: relative; z-index: 1;
         }
         .hero-desc {
-            max-width: 600px;
-            margin: 0 auto 28px;
-            font-size: 16px;
-            line-height: 1.9;
-            color: var(--text-muted);
-            position: relative;
-            z-index: 1;
+            max-width: 600px; margin: 0 auto 28px; font-size: 16px;
+            line-height: 1.9; color: var(--text-muted); position: relative; z-index: 1;
         }
 
         .hero-actions {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
+            display: flex; justify-content: center; gap: 24px;
+            flex-wrap: wrap; position: relative; z-index: 1;
         }
         .hero-btn {
-            padding: 18px 44px;
-            border: none;
-            border-radius: 60px;
-            font-size: 20px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: var(--shadow);
-            letter-spacing: 0.5px;
+            padding: 18px 44px; border: none; border-radius: 60px;
+            font-size: 20px; font-weight: 700; cursor: pointer;
+            transition: var(--transition); font-family: inherit;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: var(--shadow); letter-spacing: 0.5px;
         }
         .hero-btn .icon { font-size: 28px; }
-        .hero-btn.student {
-            background: linear-gradient(135deg, #5b9bd5, #2c6b9e);
-            color: #fff;
-        }
-        .hero-btn.student:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 16px 48px rgba(91, 155, 213, 0.35);
-        }
-        .hero-btn.teacher {
-            background: linear-gradient(135deg, #c4b5a5, #8b7a6b);
-            color: #fff;
-        }
-        .hero-btn.teacher:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 16px 48px rgba(139, 122, 107, 0.35);
-        }
+        .hero-btn.student { background: linear-gradient(135deg, #5b9bd5, #2c6b9e); color: #fff; }
+        .hero-btn.student:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(91, 155, 213, 0.35); }
+        .hero-btn.teacher { background: linear-gradient(135deg, #c4b5a5, #8b7a6b); color: #fff; }
+        .hero-btn.teacher:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(139, 122, 107, 0.35); }
         .hero-btn.pro-hero {
             background: linear-gradient(135deg, #f5efe6, #e8ddd0);
-            color: var(--text-primary);
-            border: 2px solid var(--blue-mid);
+            color: var(--text-primary); border: 2px solid var(--blue-mid);
         }
-        .hero-btn.pro-hero:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 16px 48px rgba(180, 210, 240, 0.4);
-        }
+        .hero-btn.pro-hero:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(180, 210, 240, 0.4); }
 
         .hero-badges {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-top: 24px;
-            position: relative;
-            z-index: 1;
+            display: flex; justify-content: center; gap: 16px;
+            flex-wrap: wrap; margin-top: 24px; position: relative; z-index: 1;
         }
         .hero-badge {
             background: rgba(255, 255, 255, 0.7);
             border: 1px solid rgba(180, 210, 240, 0.3);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            animation: badgeFloat 4s ease-in-out infinite;
+            padding: 8px 20px; border-radius: 50px; font-size: 13px;
+            color: var(--text-secondary); display: flex; align-items: center;
+            gap: 6px; font-weight: 500; animation: badgeFloat 4s ease-in-out infinite;
         }
         .hero-badge:nth-child(2) { animation-delay: 0.5s; }
         .hero-badge:nth-child(3) { animation-delay: 1s; }
         .hero-badge:nth-child(4) { animation-delay: 1.5s; }
         .hero-badge:nth-child(5) { animation-delay: 2s; }
-        @keyframes badgeFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
+        @keyframes badgeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
         .hero-badge .icon { font-size: 16px; }
 
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 16px;
-            margin-top: 10px;
-        }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-top: 10px; }
         .stat-item {
             background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: var(--radius-sm);
-            padding: 16px 12px;
-            text-align: center;
+            border-radius: var(--radius-sm); padding: 16px 12px; text-align: center;
         }
-        .stat-item .number {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--blue-accent);
-        }
-        .stat-item .label {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+        .stat-item .number { font-size: 28px; font-weight: 800; color: var(--blue-accent); }
+        .stat-item .label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
         .feature-card {
             background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius-sm);
-            padding: 24px 20px;
-            text-align: center;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
+            border-radius: var(--radius-sm); padding: 24px 20px; text-align: center;
+            transition: var(--transition); box-shadow: var(--shadow);
+            position: relative; overflow: hidden;
         }
         .feature-card::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 100%;
+            content: ''; position: absolute; top: -50%; right: -50%; width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(91, 155, 213, 0.05) 0%, transparent 70%);
             pointer-events: none;
         }
-        .feature-card:hover {
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--blue-mid);
-        }
-        .feature-card .icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .feature-card h4 {
-            font-size: 16px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            position: relative;
-            z-index: 1;
-        }
-        .feature-card p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-            position: relative;
-            z-index: 1;
-        }
+        .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-hover); border-color: var(--blue-mid); }
+        .feature-card .icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .feature-card h4 { font-size: 16px; color: var(--text-primary); margin-bottom: 4px; position: relative; z-index: 1; }
+        .feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; position: relative; z-index: 1; }
 
-        .quick-links {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            padding: 10px 0;
-        }
+        .quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 10px 0; }
         .quick-link {
             padding: 8px 20px;
             background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            border-radius: 50px; font-size: 13px; color: var(--text-secondary);
+            cursor: pointer; transition: var(--transition); font-weight: 500;
+            display: flex; align-items: center; gap: 6px;
         }
-        .quick-link:hover {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-            transform: translateY(-2px);
-        }
+        .quick-link:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); transform: translateY(-2px); }
 
         .pro-section {
             background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 2px solid var(--blue-mid);
-            border-radius: var(--radius);
-            padding: 32px 28px;
-            text-align: center;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
+            border-radius: var(--radius); padding: 32px 28px; text-align: center;
+            box-shadow: var(--shadow); position: relative; overflow: hidden;
         }
         .pro-section::before {
-            content: '⚡';
-            position: absolute;
-            top: -20px;
-            right: -10px;
-            font-size: 120px;
-            opacity: 0.04;
-            pointer-events: none;
+            content: '⚡'; position: absolute; top: -20px; right: -10px;
+            font-size: 120px; opacity: 0.04; pointer-events: none;
         }
-        .pro-section h2 {
-            font-size: 30px;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-        }
+        .pro-section h2 { font-size: 30px; color: var(--text-primary); margin-bottom: 6px; }
         .pro-section h2 span { color: var(--blue-accent); }
         .pro-section p {
-            color: var(--text-muted);
-            max-width: 500px;
-            margin: 0 auto 18px;
-            line-height: 1.6;
-            font-size: 15px;
+            color: var(--text-muted); max-width: 500px; margin: 0 auto 18px;
+            line-height: 1.6; font-size: 15px;
         }
-        .pro-features {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 18px;
-        }
+        .pro-features { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 18px; }
         .pro-tag {
             background: rgba(91, 155, 213, 0.08);
             border: 1px solid rgba(91, 155, 213, 0.15);
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            font-weight: 500;
+            padding: 6px 16px; border-radius: 50px;
+            font-size: 13px; color: var(--text-secondary); font-weight: 500;
         }
-        .pro-input-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
+        .pro-input-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 500px; margin: 0 auto; }
         .pro-input-group input {
-            flex: 1;
-            min-width: 180px;
-            padding: 14px 20px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
+            flex: 1; min-width: 180px; padding: 14px 20px;
+            border: 2px solid var(--blue-soft); border-radius: 50px;
             background: rgba(255, 255, 255, 0.6);
-            font-size: 15px;
-            color: var(--text-primary);
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
+            font-size: 15px; color: var(--text-primary);
+            font-family: inherit; outline: none; transition: var(--transition);
         }
-        .pro-input-group input:focus {
-            border-color: var(--blue-accent);
-            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.12);
-        }
+        .pro-input-group input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.12); }
         .pro-input-group button {
-            padding: 14px 32px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
+            padding: 14px 32px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: 50px; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: var(--transition); font-family: inherit;
         }
-        .pro-input-group button:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
-        }
+        .pro-input-group button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3); }
 
         /* ---------- AUTH SECTIONS ---------- */
         .auth-section {
-            max-width: 480px;
-            margin: 30px auto;
+            max-width: 480px; margin: 30px auto;
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius);
-            padding: 40px 36px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 40px 36px; box-shadow: var(--shadow);
         }
-        .auth-section h2 {
-            text-align: center;
-            font-size: 26px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
+        .auth-section h2 { text-align: center; font-size: 26px; color: var(--text-primary); margin-bottom: 4px; }
         .auth-section h2 span { color: var(--blue-accent); }
-        .auth-section .sub {
-            text-align: center;
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 24px;
-        }
-        .auth-section .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
+        .auth-section .sub { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+        .auth-section .input-group { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
         .auth-section input {
-            padding: 16px 18px;
-            border: 2px solid var(--blue-soft);
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.5);
-            font-size: 15px;
-            color: var(--text-primary);
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
+            padding: 16px 18px; border: 2px solid var(--blue-soft);
+            border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.5);
+            font-size: 15px; color: var(--text-primary);
+            font-family: inherit; outline: none; transition: var(--transition);
         }
-        .auth-section input:focus {
-            border-color: var(--blue-accent);
-            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
-        }
+        .auth-section input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .auth-section .btn {
-            padding: 16px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            width: 100%;
+            padding: 16px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: var(--radius-sm); font-size: 17px;
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+            font-family: inherit; width: 100%;
         }
-        .auth-section .btn:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
-        }
-        .auth-section .link {
-            text-align: center;
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-top: 16px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
+        .auth-section .btn:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
+        .auth-section .link { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; cursor: pointer; transition: var(--transition); }
         .auth-section .link:hover { color: var(--blue-accent); }
         .hidden { display: none !important; }
 
         /* ---------- CLASSROOM ---------- */
         .classroom-container { padding-top: 100px; }
-        body.in-classroom .classroom-container {
-            padding-top: 20px;
-        }
+        body.in-classroom .classroom-container { padding-top: 20px; }
         .classroom-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px;
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius);
-            padding: 18px 24px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 18px 24px;
+            margin-bottom: 20px; box-shadow: var(--shadow);
         }
-        .classroom-header .info h2 {
-            font-size: 22px;
-            color: var(--text-primary);
-        }
-        .classroom-header .info p {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
+        .classroom-header .info h2 { font-size: 22px; color: var(--text-primary); }
+        .classroom-header .info p { font-size: 14px; color: var(--text-muted); }
         .classroom-header .code-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--blue-light);
-            border: 1px solid var(--blue-soft);
-            padding: 8px 18px;
-            border-radius: 50px;
+            display: flex; align-items: center; gap: 10px;
+            background: var(--blue-light); border: 1px solid var(--blue-soft);
+            padding: 8px 18px; border-radius: 50px;
         }
-        .classroom-header .code-badge span {
-            font-family: monospace;
-            font-weight: bold;
-            color: var(--blue-dark);
-            font-size: 16px;
-            letter-spacing: 1px;
-        }
+        .classroom-header .code-badge span { font-family: monospace; font-weight: bold; color: var(--blue-dark); font-size: 16px; letter-spacing: 1px; }
         .classroom-header .code-badge button {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: var(--transition);
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 14px; padding: 4px 10px;
+            border-radius: 6px; transition: var(--transition);
         }
-        .classroom-header .code-badge button:hover {
-            background: var(--blue-accent);
-            color: #fff;
-        }
-        .classroom-header .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .classroom-header .code-badge button:hover { background: var(--blue-accent); color: #fff; }
+        .classroom-header .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .classroom-header .actions button {
-            padding: 10px 20px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
-            background: transparent;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
+            padding: 10px 20px; border: 2px solid var(--blue-soft);
+            border-radius: 50px; background: transparent;
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-secondary);
         }
-        .classroom-header .actions button:hover {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-        }
-        .classroom-header .actions button.danger:hover {
-            background: #e74c3c;
-            border-color: #e74c3c;
-            color: #fff;
-        }
+        .classroom-header .actions button:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
+        .classroom-header .actions button.danger:hover { background: #e74c3c; border-color: #e74c3c; color: #fff; }
 
-        /* ---- ROLE-BASED NAVIGATION GUIDE (NEW) ---- */
+        /* ---- ROLE-BASED NAVIGATION GUIDE ---- */
         .role-guide {
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius-sm);
-            padding: 18px 22px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 16px;
+            border-radius: var(--radius-sm); padding: 18px 22px;
+            margin-bottom: 16px; box-shadow: var(--shadow);
+            display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
         }
-        .role-guide .icon-big {
-            font-size: 40px;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-        .role-guide .content {
-            flex: 1;
-        }
-        .role-guide .content h4 {
-            font-size: 18px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-        .role-guide .content p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-        .role-guide .badge-role {
-            background: var(--blue-accent);
-            color: #fff;
-            padding: 4px 14px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .role-guide .badge-role.student {
-            background: #8e44ad;
-        }
-        .role-guide .features-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 16px;
-            margin-top: 8px;
-        }
-        .role-guide .features-list span {
-            font-size: 13px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .role-guide .features-list span::before {
-            content: "✅";
-            font-size: 14px;
-        }
+        .role-guide .icon-big { font-size: 40px; line-height: 1; flex-shrink: 0; }
+        .role-guide .content { flex: 1; }
+        .role-guide .content h4 { font-size: 18px; color: var(--text-primary); margin-bottom: 4px; }
+        .role-guide .content p { font-size: 14px; color: var(--text-secondary); margin: 0; }
+        .role-guide .badge-role { background: var(--blue-accent); color: #fff; padding: 4px 14px; border-radius: 50px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+        .role-guide .badge-role.student { background: #8e44ad; }
+        .role-guide .features-list { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 8px; }
+        .role-guide .features-list span { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+        .role-guide .features-list span::before { content: "✅"; font-size: 14px; }
 
-        /* ---- BEAUTIFIED CHAT BOX ---- */
+        /* ---- CHAT BOX ---- */
         .chat-box {
             background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: var(--radius-sm);
-            height: 220px;
-            overflow-y: auto;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: var(--shadow);
-            position: relative;
+            border-radius: var(--radius-sm); height: 220px;
+            overflow-y: auto; padding: 16px; margin-bottom: 12px;
+            box-shadow: var(--shadow); position: relative;
         }
         .chat-box:empty::before {
             content: "💬 No messages yet. Start the conversation!";
-            color: var(--text-muted);
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            opacity: 0.7;
-            font-style: italic;
+            color: var(--text-muted); font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            height: 100%; opacity: 0.7; font-style: italic;
         }
-        .chat-box .msg {
-            margin-bottom: 8px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
+        .chat-box .msg { margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
         .chat-box .msg strong { color: var(--blue-dark); }
-        .chat-box .msg .img-container {
-            display: inline-block;
-            position: relative;
-            margin-top: 4px;
-        }
+        .chat-box .msg .img-container { display: inline-block; position: relative; margin-top: 4px; }
         .chat-box .msg .img-container img {
-            max-width: 200px;
-            max-height: 150px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--blue-soft);
+            max-width: 200px; max-height: 150px;
+            border-radius: var(--radius-sm); border: 1px solid var(--blue-soft);
         }
         .chat-box .msg .img-container .zoom-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(44, 62, 80, 0.8);
-            color: #fff;
-            border: none;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
+            position: absolute; top: 4px; right: 4px;
+            background: rgba(44, 62, 80, 0.8); color: #fff;
+            border: none; padding: 2px 10px; border-radius: 4px;
+            font-size: 11px; cursor: pointer;
         }
         .chat-box .msg .img-container .zoom-btn:hover { background: var(--blue-accent); }
 
         .emoji-bar {
-            display: flex;
-            gap: 14px;
-            justify-content: center;
-            padding: 10px;
+            display: flex; gap: 14px; justify-content: center; padding: 10px;
             background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 60px;
-            margin-bottom: 12px;
+            border-radius: 60px; margin-bottom: 12px;
         }
-        .emoji-bar span {
-            font-size: 24px;
-            cursor: pointer;
-            transition: var(--transition);
-            padding: 4px;
-        }
+        .emoji-bar span { font-size: 24px; cursor: pointer; transition: var(--transition); padding: 4px; }
         .emoji-bar span:hover { transform: scale(1.4); }
 
-        .typing-row {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .typing-row .input-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .typing-row .input-group .badge {
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        .typing-row .input-group .badge.student {
-            background: var(--blue-light);
-            color: var(--blue-dark);
-        }
-        .typing-row .input-group .badge.teacher {
-            background: var(--beige-dark);
-            color: #8b7a6b;
-        }
+        .typing-row { display: flex; flex-direction: column; gap: 10px; }
+        .typing-row .input-group { display: flex; gap: 10px; align-items: center; }
+        .typing-row .input-group .badge { padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .typing-row .input-group .badge.student { background: var(--blue-light); color: var(--blue-dark); }
+        .typing-row .input-group .badge.teacher { background: var(--beige-dark); color: #8b7a6b; }
         .typing-row .input-group input {
-            flex: 1;
-            padding: 12px 18px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
+            flex: 1; padding: 12px 18px;
+            border: 2px solid var(--blue-soft); border-radius: 50px;
             background: rgba(255, 255, 255, 0.5);
-            font-size: 15px;
-            color: var(--text-primary);
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
+            font-size: 15px; color: var(--text-primary);
+            font-family: inherit; outline: none; transition: var(--transition);
         }
-        .typing-row .input-group input:focus {
-            border-color: var(--blue-accent);
-            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
-        }
+        .typing-row .input-group input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .typing-row .input-group button {
-            padding: 12px 24px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            white-space: nowrap;
+            padding: 12px 24px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: 50px; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; white-space: nowrap;
         }
-        .typing-row .input-group button:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
-        }
+        .typing-row .input-group button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
 
         .teacher-panel {
             background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 2px solid var(--blue-mid);
-            border-radius: var(--radius-sm);
-            padding: 16px 20px;
-            margin-bottom: 16px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius-sm); padding: 16px 20px;
+            margin-bottom: 16px; display: flex; flex-wrap: wrap;
+            justify-content: space-between; align-items: center;
+            gap: 12px; box-shadow: var(--shadow);
         }
-        .teacher-panel .title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
+        .teacher-panel .title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
         .teacher-panel .title span { color: var(--blue-accent); }
-        .teacher-panel .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .teacher-panel .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .teacher-panel .actions button {
-            padding: 8px 18px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
+            padding: 8px 18px; border: 2px solid var(--blue-soft);
+            border-radius: 50px; background: rgba(255, 255, 255, 0.5);
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-secondary);
         }
-        .teacher-panel .actions button:hover {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-        }
+        .teacher-panel .actions button:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
 
         /* ---------- MODALS ---------- */
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(44, 62, 80, 0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 2000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 2000; display: none; justify-content: center;
+            align-items: center; padding: 20px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: var(--radius);
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 36px 32px;
-            box-shadow: var(--shadow-hover);
-            position: relative;
+            border-radius: var(--radius); max-width: 600px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 36px 32px;
+            box-shadow: var(--shadow-hover); position: relative;
         }
         .modal-content .close {
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: var(--transition);
-            background: none;
-            border: none;
+            position: absolute; top: 16px; right: 20px;
+            font-size: 28px; cursor: pointer; color: var(--text-muted);
+            transition: var(--transition); background: none; border: none;
         }
         .modal-content .close:hover { color: var(--text-primary); }
-        .modal-content h2 {
-            font-size: 24px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
+        .modal-content h2 { font-size: 24px; color: var(--text-primary); margin-bottom: 4px; }
         .modal-content h2 span { color: var(--blue-accent); }
-        .modal-content .sub {
-            font-size: 15px;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-        }
+        .modal-content .sub { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
 
         /* ---------- AI BOT ---------- */
-        .ai-bot {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            z-index: 1500;
-        }
-        /* Hide AI bot in classroom */
-        body.in-classroom .ai-bot {
-            display: none;
-        }
+        .ai-bot { position: fixed; bottom: 28px; right: 28px; z-index: 1500; }
+        body.in-classroom .ai-bot { display: none; }
         .ai-bot .toggle {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            font-size: 30px;
-            cursor: pointer;
-            box-shadow: var(--shadow-hover);
+            width: 64px; height: 64px; border-radius: 50%;
+            background: var(--blue-accent); color: #fff; border: none;
+            font-size: 30px; cursor: pointer; box-shadow: var(--shadow-hover);
             transition: var(--transition);
         }
-        .ai-bot .toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 40px rgba(91, 155, 213, 0.4);
-        }
+        .ai-bot .toggle:hover { transform: scale(1.1); box-shadow: 0 8px 40px rgba(91, 155, 213, 0.4); }
         .ai-bot .window {
-            position: absolute;
-            bottom: 76px;
-            right: 0;
-            width: 320px;
-            height: 400px;
+            position: absolute; bottom: 76px; right: 0;
+            width: 320px; height: 400px;
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-hover);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
+            border-radius: var(--radius); box-shadow: var(--shadow-hover);
+            display: none; flex-direction: column; overflow: hidden;
         }
         .ai-bot .window.active { display: flex; }
         .ai-bot .window .header {
-            background: var(--blue-accent);
-            color: #fff;
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 700;
+            background: var(--blue-accent); color: #fff; padding: 14px 18px;
+            display: flex; justify-content: space-between; align-items: center; font-weight: 700;
         }
-        .ai-bot .window .header button {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .ai-bot .window .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            font-size: 14px;
-        }
+        .ai-bot .window .header button { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+        .ai-bot .window .messages { flex: 1; overflow-y: auto; padding: 16px; font-size: 14px; }
         .ai-bot .window .messages .bot {
-            background: var(--blue-light);
-            padding: 10px 14px;
-            border-radius: 16px 16px 16px 4px;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
+            background: var(--blue-light); padding: 10px 14px;
+            border-radius: 16px 16px 16px 4px; margin-bottom: 8px; color: var(--text-secondary);
         }
         .ai-bot .window .messages .user {
-            text-align: right;
-            padding: 10px 14px;
-            background: var(--blue-accent);
-            color: #fff;
-            border-radius: 16px 16px 4px 16px;
-            margin-bottom: 8px;
+            text-align: right; padding: 10px 14px;
+            background: var(--blue-accent); color: #fff;
+            border-radius: 16px 16px 4px 16px; margin-bottom: 8px;
         }
-        .ai-bot .window .input-row {
-            display: flex;
-            border-top: 1px solid var(--blue-soft);
-            padding: 10px 12px;
-            gap: 10px;
-        }
+        .ai-bot .window .input-row { display: flex; border-top: 1px solid var(--blue-soft); padding: 10px 12px; gap: 10px; }
         .ai-bot .window .input-row input {
-            flex: 1;
-            padding: 10px 16px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
+            flex: 1; padding: 10px 16px;
+            border: 2px solid var(--blue-soft); border-radius: 50px;
             background: rgba(255, 255, 255, 0.5);
-            font-family: inherit;
-            outline: none;
-            font-size: 14px;
+            font-family: inherit; outline: none; font-size: 14px;
         }
         .ai-bot .window .input-row input:focus { border-color: var(--blue-accent); }
         .ai-bot .window .input-row button {
-            padding: 10px 20px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
+            padding: 10px 20px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: 50px; font-weight: 700;
+            cursor: pointer; font-family: inherit;
         }
 
         /* ---------- DEBUG STATUS ---------- */
         #debug-status {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: #0f0;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 11px;
-            max-width: 250px;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 1000;
-            pointer-events: none;
-            opacity: 0.85;
-            border: 1px solid #0f0;
-            display: block;
+            position: fixed; bottom: 100px; right: 20px;
+            background: rgba(0,0,0,0.8); color: #0f0;
+            padding: 10px 14px; border-radius: 8px;
+            font-family: monospace; font-size: 11px;
+            max-width: 250px; max-height: 150px; overflow-y: auto;
+            z-index: 1000; pointer-events: none; opacity: 0.85;
+            border: 1px solid #0f0; display: block;
         }
-        #debug-status .entry {
-            margin: 2px 0;
-            border-bottom: 1px solid #333;
-            padding: 2px 0;
-            font-size: 10px;
-        }
+        #debug-status .entry { margin: 2px 0; border-bottom: 1px solid #333; padding: 2px 0; font-size: 10px; }
         #debug-status .close-debug {
-            position: absolute;
-            top: 2px;
-            right: 6px;
-            color: #fff;
-            background: transparent;
-            border: none;
-            font-size: 14px;
-            cursor: pointer;
-            pointer-events: auto;
+            position: absolute; top: 2px; right: 6px; color: #fff;
+            background: transparent; border: none; font-size: 14px;
+            cursor: pointer; pointer-events: auto;
         }
-        #debug-status.hidden-debug {
-            display: none;
-        }
+        #debug-status.hidden-debug { display: none; }
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 992px) {
@@ -1287,7 +724,6 @@
             .hero-btn .icon { font-size: 16px; }
             .nav-btn { font-size: 10px; padding: 6px 10px; }
             .nav-brand-text { font-size: 18px; }
-            .controls-row button { font-size: 12px; padding: 8px 14px; }
             .typing-row .input-group input { font-size: 13px; padding: 10px 14px; }
             .typing-row .input-group button { font-size: 13px; padding: 10px 16px; }
             .modal-content { padding: 20px 16px; }
@@ -1299,11 +735,8 @@
         }
 
         .floating-emoji-reaction {
-            position: fixed;
-            bottom: 10%;
-            font-size: 44px;
-            pointer-events: none;
-            z-index: 3000;
+            position: fixed; bottom: 10%; font-size: 44px;
+            pointer-events: none; z-index: 3000;
             animation: floatUp 2.5s ease-out forwards;
         }
         @keyframes floatUp {
@@ -1312,267 +745,121 @@
             100% { transform: translateY(-450px) scale(0.8) rotate(20deg); opacity: 0; }
         }
 
-        /* Removed .credit styles (no longer used) */
-
         .teacher-dashboard-box {
-            max-width: 500px;
-            margin: 0 auto 30px;
+            max-width: 500px; margin: 0 auto 30px;
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius);
-            padding: 32px 28px;
-            box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 32px 28px; box-shadow: var(--shadow);
         }
-        .teacher-dashboard-box .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .teacher-dashboard-box .header h3 {
-            font-size: 20px;
-            color: var(--text-primary);
-        }
+        .teacher-dashboard-box .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .teacher-dashboard-box .header h3 { font-size: 20px; color: var(--text-primary); }
         .teacher-dashboard-box .header button {
-            padding: 8px 18px;
-            border: 2px solid #e74c3c;
-            border-radius: 50px;
-            background: transparent;
-            color: #e74c3c;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            transition: var(--transition);
+            padding: 8px 18px; border: 2px solid #e74c3c; border-radius: 50px;
+            background: transparent; color: #e74c3c; cursor: pointer;
+            font-family: inherit; font-size: 13px; font-weight: 600; transition: var(--transition);
         }
-        .teacher-dashboard-box .header button:hover {
-            background: #e74c3c;
-            color: #fff;
-        }
-        .teacher-dashboard-box .welcome {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
-        .teacher-dashboard-box .row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
+        .teacher-dashboard-box .header button:hover { background: #e74c3c; color: #fff; }
+        .teacher-dashboard-box .welcome { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+        .teacher-dashboard-box .row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
         .teacher-dashboard-box .row input {
-            flex: 1;
-            min-width: 150px;
-            padding: 14px 18px;
-            border: 2px solid var(--blue-soft);
-            border-radius: 50px;
+            flex: 1; min-width: 150px; padding: 14px 18px;
+            border: 2px solid var(--blue-soft); border-radius: 50px;
             background: rgba(255, 255, 255, 0.5);
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            transition: var(--transition);
+            font-family: inherit; font-size: 14px; outline: none; transition: var(--transition);
         }
-        .teacher-dashboard-box .row input:focus {
-            border-color: var(--blue-accent);
-            box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1);
-        }
+        .teacher-dashboard-box .row input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .teacher-dashboard-box .row button {
-            padding: 14px 28px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            font-size: 14px;
-            white-space: nowrap;
+            padding: 14px 28px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: 50px; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; font-size: 14px; white-space: nowrap;
         }
-        .teacher-dashboard-box .row button:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25);
-        }
+        .teacher-dashboard-box .row button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
         .teacher-dashboard-box .code-box {
-            text-align: center;
-            padding: 16px;
-            background: var(--blue-light);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--blue-soft);
-            margin-top: 8px;
+            text-align: center; padding: 16px; background: var(--blue-light);
+            border-radius: var(--radius-sm); border: 1px solid var(--blue-soft); margin-top: 8px;
         }
-        .teacher-dashboard-box .code-box p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
+        .teacher-dashboard-box .code-box p { font-size: 13px; color: var(--text-muted); }
         .teacher-dashboard-box .code-box .code {
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--blue-dark);
-            letter-spacing: 3px;
-            display: block;
-            margin: 8px 0;
+            font-size: 26px; font-weight: 800; color: var(--blue-dark);
+            letter-spacing: 3px; display: block; margin: 8px 0;
         }
         .teacher-dashboard-box .code-box button {
-            padding: 10px 28px;
-            background: var(--blue-accent);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            font-size: 14px;
+            padding: 10px 28px; background: var(--blue-accent); color: #fff;
+            border: none; border-radius: 50px; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+            font-family: inherit; font-size: 14px;
         }
-        .teacher-dashboard-box .code-box button:hover {
-            background: var(--blue-dark);
-            transform: translateY(-2px);
-        }
+        .teacher-dashboard-box .code-box button:hover { background: var(--blue-dark); transform: translateY(-2px); }
 
         .admin-table-wrap {
-            margin-top: 16px;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            margin-top: 16px; background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            overflow-x: auto;
+            border-radius: var(--radius-sm); padding: 16px; overflow-x: auto;
         }
-        .admin-table-wrap h4 {
-            font-size: 15px;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-        .admin-table-wrap table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            min-width: 280px;
-        }
+        .admin-table-wrap h4 { font-size: 15px; color: var(--text-primary); margin-bottom: 10px; }
+        .admin-table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 280px; }
         .admin-table-wrap table th {
-            text-align: left;
-            padding: 10px 8px;
-            color: var(--text-muted);
-            font-weight: 600;
-            border-bottom: 2px solid var(--blue-soft);
+            text-align: left; padding: 10px 8px; color: var(--text-muted);
+            font-weight: 600; border-bottom: 2px solid var(--blue-soft);
         }
-        .admin-table-wrap table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--blue-soft);
-        }
+        .admin-table-wrap table td { padding: 10px 8px; border-bottom: 1px solid var(--blue-soft); }
         .admin-table-wrap table .block-btn {
-            padding: 4px 14px;
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 11px;
-            font-weight: 600;
-            transition: var(--transition);
+            padding: 4px 14px; background: #e74c3c; color: #fff;
+            border: none; border-radius: 50px; cursor: pointer;
+            font-family: inherit; font-size: 11px; font-weight: 600; transition: var(--transition);
         }
         .admin-table-wrap table .block-btn:hover { background: #c0392b; }
 
         .exam-question-block {
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid var(--blue-soft);
-            padding: 14px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 12px;
+            padding: 14px; border-radius: var(--radius-sm); margin-bottom: 12px;
         }
-        .exam-question-block .q-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
+        .exam-question-block .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .exam-question-block .q-header strong { color: var(--blue-dark); }
-        .exam-question-block .q-header button {
-            background: none;
-            border: none;
-            color: #e74c3c;
-            cursor: pointer;
-            font-size: 18px;
-        }
+        .exam-question-block .q-header button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 18px; }
         .exam-question-block input,
         .exam-question-block textarea,
         .exam-question-block select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 2px solid var(--blue-soft);
-            border-radius: var(--radius-sm);
+            width: 100%; padding: 10px 14px;
+            border: 2px solid var(--blue-soft); border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.5);
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            transition: var(--transition);
-            margin-bottom: 6px;
+            font-family: inherit; font-size: 14px; outline: none;
+            transition: var(--transition); margin-bottom: 6px;
         }
         .exam-question-block input:focus,
         .exam-question-block textarea:focus,
         .exam-question-block select:focus { border-color: var(--blue-accent); }
-        .exam-question-block .opt-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
+        .exam-question-block .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .exam-question-block .opt-grid input { margin-bottom: 0; }
-        .exam-question-block select {
-            width: auto;
-            display: inline-block;
-        }
+        .exam-question-block select { width: auto; display: inline-block; }
 
         .gradebook-table-wrap { overflow-x: auto; }
-        .gradebook-table-wrap table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            min-width: 450px;
-        }
+        .gradebook-table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
         .gradebook-table-wrap table th {
-            text-align: left;
-            padding: 10px 8px;
-            color: var(--text-muted);
-            font-weight: 600;
-            border-bottom: 2px solid var(--blue-soft);
+            text-align: left; padding: 10px 8px; color: var(--text-muted);
+            font-weight: 600; border-bottom: 2px solid var(--blue-soft);
         }
-        .gradebook-table-wrap table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--blue-soft);
-        }
+        .gradebook-table-wrap table td { padding: 10px 8px; border-bottom: 1px solid var(--blue-soft); }
         .gradebook-table-wrap table .publish-btn {
-            padding: 4px 14px;
-            background: #27ae60;
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 11px;
-            font-weight: 600;
-            transition: var(--transition);
+            padding: 4px 14px; background: #27ae60; color: #fff;
+            border: none; border-radius: 50px; cursor: pointer;
+            font-family: inherit; font-size: 11px; font-weight: 600; transition: var(--transition);
         }
         .gradebook-table-wrap table .publish-btn:hover { background: #1e8449; }
         .gradebook-table-wrap table input {
-            padding: 6px 10px;
-            border: 2px solid var(--blue-soft);
-            border-radius: var(--radius-sm);
-            font-family: inherit;
-            font-size: 12px;
-            width: 80px;
-            background: rgba(255, 255, 255, 0.5);
-            outline: none;
+            padding: 6px 10px; border: 2px solid var(--blue-soft);
+            border-radius: var(--radius-sm); font-family: inherit;
+            font-size: 12px; width: 80px;
+            background: rgba(255, 255, 255, 0.5); outline: none;
         }
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
 
         /* ============================================================
-           VIDEO CALL STYLES (UPDATED)
+           VIDEO CALL STYLES - JITSI INTEGRATION
            ============================================================ */
         .video-call-overlay {
             position: fixed;
@@ -1580,417 +867,117 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(20, 30, 40, 0.95);
+            background: #0f1a24;
             z-index: 3000;
             display: none;
             flex-direction: column;
             color: #fff;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            backdrop-filter: blur(4px);
             overflow: hidden;
         }
-        .video-call-overlay.active {
-            display: flex;
-        }
+        .video-call-overlay.active { display: flex; }
+
         .call-top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 24px;
-            background: rgba(0,0,0,0.3);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .call-top-bar .left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .call-top-bar .left .minimize-btn {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            font-size: 20px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .call-top-bar .left .minimize-btn:hover {
-            background: rgba(255,255,255,0.25);
-        }
-        .call-top-bar .left .class-name {
-            font-size: 18px;
-            font-weight: 600;
-        }
-        .call-top-bar .left .duration {
-            font-size: 16px;
-            font-weight: 300;
-            color: #aaa;
-        }
-        .call-top-bar .right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-size: 14px;
-            color: #ccc;
-        }
-        .call-top-bar .right .participant-count {
-            background: rgba(255,255,255,0.1);
-            padding: 4px 14px;
-            border-radius: 20px;
-        }
-        .call-top-bar .right .call-actions {
-            display: flex;
-            gap: 12px;
-        }
-        .call-top-bar .right .call-actions button {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            font-size: 20px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .call-top-bar .right .call-actions button:hover {
-            background: rgba(255,255,255,0.25);
-        }
-        .call-top-bar .right .call-actions button.end-call-btn {
-            background: #e74c3c;
-            color: #fff;
-        }
-        .call-top-bar .right .call-actions button.end-call-btn:hover {
-            background: #c0392b;
-        }
-
-        .call-grid-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        .video-grid {
-            display: grid;
-            gap: 12px;
-            width: 100%;
-            height: 100%;
-            max-height: calc(100vh - 160px);
-            justify-content: center;
-            align-content: center;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        }
-        .video-grid .video-tile {
-            position: relative;
-            background: #1e2a36;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            aspect-ratio: 16/9;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .video-grid .video-tile video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #1e2a36;
-        }
-        .video-grid .video-tile .placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            background: #2a3a4a;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        .video-grid .video-tile .placeholder .avatar {
-            font-size: 48px;
-            margin-bottom: 8px;
-            background: rgba(255,255,255,0.1);
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .video-grid .video-tile .participant-name {
-            position: absolute;
-            bottom: 8px;
-            left: 10px;
-            background: rgba(0,0,0,0.6);
-            padding: 2px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: #fff;
-            pointer-events: none;
-        }
-        .video-grid .video-tile .mic-status {
-            position: absolute;
-            bottom: 8px;
-            right: 10px;
-            font-size: 16px;
-            color: #fff;
-            background: rgba(0,0,0,0.5);
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Local preview - larger and moved up */
-        .local-preview {
-            position: fixed;
-            bottom: 130px;  /* moved up */
-            right: 20px;
-            width: 180px;    /* increased size */
-            height: auto;
-            aspect-ratio: 16/9;
-            background: #1e2a36;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.6);
-            border: 2px solid rgba(255,255,255,0.2);
-            z-index: 3001;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .local-preview:hover {
-            transform: scale(1.02);
-        }
-        .local-preview video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #1e2a36;
-        }
-
-        /* Call controls - moved up */
-        .call-controls {
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(8px);
-            padding: 14px 24px;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: -0.8cm;  /* move up */
-        }
-        .call-controls button {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            color: #fff;
-            font-size: 22px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: inherit;
-        }
-        .call-controls button:hover {
-            background: rgba(255,255,255,0.2);
-            transform: scale(1.05);
-        }
-        .call-controls button.active {
-            background: #4CAF50;
-        }
-        .call-controls button.muted {
-            background: #e74c3c;
-        }
-        .call-controls button.end-call {
-            background: #e74c3c;
-            width: auto;
-            padding: 0 24px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 600;
-            gap: 8px;
-        }
-        .call-controls button.end-call:hover {
-            background: #c0392b;
-        }
-
-        /* Minimized Call Bar */
-        #minimized-call-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 3002;
-            background: rgba(20, 30, 40, 0.95);
-            backdrop-filter: blur(10px);
             padding: 10px 20px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            font-size: 14px;
-            cursor: pointer;
+            background: rgba(0,0,0,0.55);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-wrap: wrap;
+            gap: 8px;
+            flex-shrink: 0;
         }
-        #minimized-call-bar.active {
-            display: flex;
-        }
-        #minimized-call-bar .left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        #minimized-call-bar .left .dot {
+        .call-top-bar .left { display: flex; align-items: center; gap: 12px; }
+        .call-top-bar .left .live-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
             background: #4CAF50;
-            display: inline-block;
+            box-shadow: 0 0 8px #4CAF50;
+            animation: livePulse 1.5s ease-in-out infinite;
         }
-        #minimized-call-bar .left .call-info {
-            display: flex;
-            flex-direction: column;
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.55; transform: scale(1.25); }
         }
-        #minimized-call-bar .left .call-info .title {
+        .call-top-bar .left .class-name {
+            font-size: 16px;
             font-weight: 600;
-        }
-        #minimized-call-bar .left .call-info .sub {
-            font-size: 12px;
-            color: #aaa;
-        }
-        #minimized-call-bar .right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        #minimized-call-bar .right .duration {
-            font-size: 14px;
-            color: #ccc;
-        }
-        #minimized-call-bar .right button {
-            background: rgba(255,255,255,0.1);
-            border: none;
             color: #fff;
-            font-size: 18px;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            letter-spacing: 0.3px;
+        }
+        .call-top-bar .right .leave-btn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
+            font-family: inherit;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 6px;
+            letter-spacing: 0.3px;
         }
-        #minimized-call-bar .right button:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        #minimized-call-bar .right button.end-call-mini {
-            background: #e74c3c;
-        }
-        #minimized-call-bar .right button.end-call-mini:hover {
+        .call-top-bar .right .leave-btn:hover {
             background: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(231,76,60,0.35);
         }
 
-        /* Responsive adjustments for video */
+        #jitsi-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            background: #0f1a24;
+            position: relative;
+            overflow: hidden;
+        }
+        #jitsi-container iframe {
+            width: 100% !important;
+            height: 100% !important;
+            border: 0;
+        }
+        #jitsi-container .jitsi-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a8c8e8;
+            font-size: 15px;
+            gap: 14px;
+            font-weight: 500;
+        }
+        #jitsi-container .jitsi-loading .spinner {
+            font-size: 54px;
+            animation: pulseIcon 1.5s ease-in-out infinite;
+        }
+
         @media (max-width: 768px) {
-            .local-preview {
-                width: 120px;
-                bottom: 110px;
-                right: 10px;
-            }
-            .call-controls button {
-                width: 44px;
-                height: 44px;
-                font-size: 18px;
-            }
-            .call-controls button.end-call {
-                padding: 0 16px;
-                font-size: 14px;
-            }
-            .video-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-                gap: 8px;
-            }
-            .call-top-bar .left .class-name {
-                font-size: 14px;
-            }
-            .call-top-bar .left .duration {
-                font-size: 13px;
-            }
-            .call-controls {
-                margin-top: -0.4cm;  /* slightly less on small screens */
-            }
+            .call-top-bar { padding: 8px 12px; }
+            .call-top-bar .left .class-name { font-size: 13px; }
+            .call-top-bar .right .leave-btn { padding: 8px 14px; font-size: 12px; }
         }
         @media (max-width: 480px) {
-            .local-preview {
-                width: 90px;
-                bottom: 90px;
-                right: 6px;
-            }
-            .video-grid {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                gap: 4px;
-            }
-            .call-controls {
-                gap: 10px;
-                padding: 10px 12px;
-                margin-top: -0.3cm;
-            }
-            .call-controls button {
-                width: 38px;
-                height: 38px;
-                font-size: 16px;
-            }
-            .call-controls button.end-call {
-                font-size: 12px;
-                padding: 0 12px;
-            }
-            #minimized-call-bar {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-            #minimized-call-bar .left .call-info .title {
-                font-size: 13px;
-            }
+            .call-top-bar { padding: 6px 10px; }
+            .call-top-bar .left { gap: 8px; }
+            .call-top-bar .left .class-name { font-size: 12px; }
+            .call-top-bar .right .leave-btn { padding: 6px 12px; font-size: 11px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ============================================================
-    ANIMATED EMOJI BACKGROUND
-    ============================================================ -->
+    <!-- ANIMATED EMOJI BACKGROUND -->
     <div class="emoji-bg" id="emojiBg"></div>
 
-    <!-- ============================================================
-    LOADER
-    ============================================================ -->
+    <!-- LOADER -->
     <div id="loader-screen">
         <div class="loader-icon">📚</div>
         <div class="loader-title">NEXUS LEARN</div>
@@ -2004,13 +991,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    CREDIT (removed)
-    ============================================================ -->
-
-    <!-- ============================================================
-    AI BOT (hidden in classroom)
-    ============================================================ -->
+    <!-- AI BOT -->
     <div class="ai-bot">
         <button class="toggle" onclick="toggleAIChat()">🤖</button>
         <div class="window" id="ai-window">
@@ -2028,9 +1009,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    TOP NAV
-    ============================================================ -->
+    <!-- TOP NAV -->
     <nav class="top-nav" id="main-nav">
         <div class="nav-brand" onclick="showHomepage()">
             <span class="nav-brand-icon">📚</span>
@@ -2055,17 +1034,12 @@
         </div>
     </nav>
 
-    <!-- ============================================================
-    MAIN CONTAINER
-    ============================================================ -->
+    <!-- MAIN CONTAINER -->
     <div class="container" id="app-container">
 
-        <!-- ============================================================
-        HOMEPAGE
-        ============================================================ -->
+        <!-- HOMEPAGE -->
         <div id="homepage-section">
             <div class="homepage">
-
                 <div class="hero">
                     <h1 class="hero-title">Welcome to <span>Nexus Learn</span></h1>
                     <p class="hero-subtitle">Virtual Educational Classroom Portal</p>
@@ -2152,9 +1126,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        STUDENT LOGIN
-        ============================================================ -->
+        <!-- STUDENT LOGIN -->
         <div id="student-login-section" class="hidden">
             <div class="auth-section">
                 <h2>🎓 Student <span>Login</span></h2>
@@ -2168,9 +1140,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        TEACHER LOGIN / DASHBOARD
-        ============================================================ -->
+        <!-- TEACHER LOGIN / DASHBOARD -->
         <div id="teacher-login-section" class="hidden">
             <div id="teacher-login-container">
                 <div class="auth-section">
@@ -2218,9 +1188,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-        CLASSROOM
-        ============================================================ -->
+        <!-- CLASSROOM -->
         <div id="classroom-section" class="hidden">
             <div class="classroom-header">
                 <div class="info">
@@ -2233,15 +1201,11 @@
                     <button id="copy-class-code-btn">📋</button>
                 </div>
                 <div class="actions">
-                    <!-- Join Video button -->
                     <button id="join-video-btn" onclick="startVideoCall()" style="background:#4CAF50; color:#fff; border:none;">🎥 Join Video</button>
                     <button onclick="leaveClassroom()" class="danger">Leave</button>
                 </div>
             </div>
 
-            <!-- ============================================================
-            ROLE-BASED NAVIGATION GUIDE (NEW)
-            ============================================================ -->
             <div id="role-guide-teacher" class="role-guide hidden">
                 <div class="icon-big">👨‍🏫</div>
                 <div class="content">
@@ -2322,65 +1286,23 @@
                 </table>
             </div>
 
-            <!-- ============================================================
-            VIDEO CALL OVERLAY (UPDATED)
-            ============================================================ -->
+            <!-- JITSI MEETING OVERLAY -->
             <div class="video-call-overlay" id="video-call-overlay">
                 <div class="call-top-bar">
                     <div class="left">
-                        <!-- Minimize button moved to left -->
-                        <button class="minimize-btn" onclick="minimizeVideoCall()" title="Minimize Call">⬇️</button>
+                        <span class="live-dot"></span>
                         <span class="class-name" id="call-class-name">Class Session</span>
-                        <span class="duration" id="call-duration">00:00</span>
                     </div>
                     <div class="right">
-                        <span class="participant-count" id="call-participant-count">0 participants</span>
-                        <div class="call-actions">
-                            <!-- End call button only -->
-                            <button class="end-call-btn" onclick="leaveVideoCall()" title="End Call">✕</button>
-                        </div>
+                        <button class="leave-btn" onclick="leaveVideoCall()">📞 Leave Meeting</button>
                     </div>
                 </div>
-                <div class="call-grid-wrapper">
-                    <div class="video-grid" id="video-grid"></div>
-                </div>
-                <!-- Local preview (floating) - moved up and larger -->
-                <div class="local-preview" id="local-preview" style="display:none;">
-                    <video id="local-video" muted autoplay playsinline></video>
-                </div>
-                <div class="call-controls">
-                    <button id="toggle-camera-btn" onclick="toggleCamera()" title="Toggle Camera">
-                        🎥
-                    </button>
-                    <button id="toggle-mic-btn" onclick="toggleMicrophone()" title="Toggle Microphone">
-                        🎤
-                    </button>
-                    <button class="end-call" onclick="leaveVideoCall()">
-                        📞 End Call
-                    </button>
-                </div>
-            </div>
-
-            <!-- Minimized Call Bar -->
-            <div id="minimized-call-bar" onclick="expandVideoCall()">
-                <div class="left">
-                    <span class="dot"></span>
-                    <div class="call-info">
-                        <span class="title" id="mini-call-title">Class Session</span>
-                        <span class="sub" id="mini-participant-count">0 participants</span>
-                    </div>
-                </div>
-                <div class="right">
-                    <span class="duration" id="mini-call-duration">00:00</span>
-                    <button class="end-call-mini" onclick="event.stopPropagation(); leaveVideoCall();" title="End Call">✕</button>
-                </div>
+                <div id="jitsi-container"></div>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    IMAGE ZOOM MODAL
-    ============================================================ -->
+    <!-- IMAGE ZOOM MODAL -->
     <div class="modal-overlay" id="imageZoomModal">
         <div class="modal-content" style="max-width:90%; max-height:90%; padding:24px; display:flex; flex-direction:column; align-items:center;">
             <button class="close" onclick="closeZoomModal()">✕</button>
@@ -2393,9 +1315,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    EXAM SETUP MODAL
-    ============================================================ -->
+    <!-- EXAM SETUP MODAL -->
     <div class="modal-overlay" id="teacher-exam-setup-modal">
         <div class="modal-content">
             <button class="close" onclick="closeExamSetup()">✕</button>
@@ -2425,9 +1345,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    STUDENT EXAM MODAL
-    ============================================================ -->
+    <!-- STUDENT EXAM MODAL -->
     <div class="modal-overlay" id="student-exam-workspace-modal">
         <div class="modal-content">
             <button class="close" onclick="document.getElementById('student-exam-workspace-modal').classList.remove('active')">✕</button>
@@ -2448,9 +1366,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    TEACHER GRADEBOOK MODAL
-    ============================================================ -->
+    <!-- TEACHER GRADEBOOK MODAL -->
     <div class="modal-overlay" id="teacher-gradebook-modal">
         <div class="modal-content" style="max-width:800px;">
             <button class="close" onclick="closeGradebookModal()">✕</button>
@@ -2467,9 +1383,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    PRO PAYMENT MODAL
-    ============================================================ -->
+    <!-- PRO PAYMENT MODAL -->
     <div class="modal-overlay" id="pro-modal">
         <div class="modal-content">
             <button class="close" onclick="closeProPaymentModal()">✕</button>
@@ -2517,20 +1431,18 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    DEBUG STATUS PANEL
-    ============================================================ -->
+    <!-- DEBUG STATUS PANEL -->
     <div id="debug-status">
         <button class="close-debug" onclick="document.getElementById('debug-status').classList.toggle('hidden-debug')">✕</button>
         <div id="debug-log"></div>
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIREBASE + ALL FEATURES + VIDEO CALL
-    ============================================================ -->
+         JAVASCRIPT - FIREBASE + ALL FEATURES + JITSI
+         ============================================================ -->
     <script>
         // ============================================================
-        // FIREBASE CONFIG (Your credentials)
+        // FIREBASE CONFIG
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw",
@@ -2560,18 +1472,9 @@
         let examGradebook = {};
         let currentZoomScale = 1;
 
-        // Video call state
-        let socket = null;
-        let localStream = null;
-        let peerConnections = {};  // participantId -> RTCPeerConnection
-        let remoteStreams = {};    // participantId -> MediaStream
+        // Jitsi state
+        let jitsiApi = null;
         let videoCallActive = false;
-        let callDurationInterval = null;
-        let callStartTime = null;
-        let isCameraOn = false;
-        let isMicOn = false;
-        let participants = {};     // participantId -> { name, hasVideo, hasAudio, ... }
-        let isMinimized = false;
 
         // ============================================================
         // DEBUG LOGGING
@@ -2633,9 +1536,6 @@
             document.addEventListener('gesturestart', function(e) {
                 e.preventDefault();
             });
-
-            // Initialize Socket.IO connection
-            initSocket();
         });
 
         // ============================================================
@@ -2864,7 +1764,6 @@
             document.getElementById('app-container').classList.add('classroom-container');
             document.body.classList.add('in-classroom');
 
-            // Show role-based guide
             if (isTeacherUser) {
                 document.getElementById('role-guide-teacher').classList.remove('hidden');
                 document.getElementById('role-guide-student').classList.add('hidden');
@@ -2873,25 +1772,21 @@
                 document.getElementById('role-guide-teacher').classList.add('hidden');
             }
 
-            // Fetch class info
             db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
                 const info = snap.val();
                 if (info) {
                     document.getElementById('view-class-title').innerText = info.name || 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: ' + (info.teacher || 'Unknown');
                     document.getElementById('call-class-name').innerText = info.name || 'Class Session';
-                    document.getElementById('mini-call-title').innerText = info.name || 'Class Session';
                 } else {
                     document.getElementById('view-class-title').innerText = 'Class Session';
                     document.getElementById('view-instructor').innerText = 'Instructor: Unknown';
                     document.getElementById('call-class-name').innerText = 'Class Session';
-                    document.getElementById('mini-call-title').innerText = 'Class Session';
                 }
             });
 
             document.getElementById('classroom-code-label').innerText = classCodeRoom;
 
-            // Register presence
             const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
             try {
                 await presenceRef.set({
@@ -2907,13 +1802,11 @@
             }
             presenceRef.onDisconnect().remove();
 
-            // Teacher panel
             if (isTeacherUser) {
                 document.getElementById('teacher-lock-panel').classList.remove('hidden');
                 document.getElementById('admin-tracking-section').classList.remove('hidden');
             }
 
-            // Listen for messages
             const messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
             messagesRef.off();
             messagesRef.on('child_added', (snapshot) => {
@@ -2921,7 +1814,6 @@
                 if (msg) handleIncomingMessage(msg);
             });
 
-            // Listen for presence changes (for the live users table)
             const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
             presenceListRef.off();
             presenceListRef.on('value', (snap) => {
@@ -2930,15 +1822,10 @@
             });
 
             logDebug('Classroom entry complete');
-
-            // Ensure socket is connected
-            if (!socket || !socket.connected) {
-                initSocket();
-            }
         }
 
         // ============================================================
-        // UPDATE ACTIVE USERS (Admin)
+        // UPDATE ACTIVE USERS
         // ============================================================
         function updateActiveUsers(users) {
             const list = document.getElementById('active-tracked-users-list');
@@ -2963,9 +1850,6 @@
             });
         }
 
-        // ============================================================
-        // FORCE BLOCK USER
-        // ============================================================
         function forceBlockUser(username) {
             if (confirm('Block ' + username + '?')) {
                 const blockMsg = {
@@ -3391,9 +2275,6 @@
             logDebug('Exam deployed');
         }
 
-        // ============================================================
-        // STUDENT EXAM WORKSPACE
-        // ============================================================
         function launchStudentExamWorkspace(config) {
             activeExamConfig = config;
             document.getElementById('student-exam-workspace-modal').classList.add('active');
@@ -3604,120 +2485,35 @@
             }
         })();
 
-        console.log('🚀 Nexus Learn Ultimate Edition (with video/audio) loaded!');
-        console.log('✅ Debug panel is visible. Check console and on‑screen log.');
+        console.log('🚀 Nexus Learn Ultimate Edition (Jitsi meetings) loaded!');
 
         // ============================================================
-        // ================ VIDEO CALL FUNCTIONALITY ===================
+        // JITSI VIDEO MEETING INTEGRATION
         // ============================================================
-
-        // ICE servers configuration (STUN only, TURN can be added)
-        const iceServers = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' }
-            ]
-        };
-
-        // Initialize Socket.IO connection
-        function initSocket() {
-            if (socket && socket.connected) return;
-            const host = window.location.host;
-            socket = io(host, { transports: ['websocket', 'polling'] });
-
-            socket.on('connect', () => {
-                logDebug('Socket.IO connected');
-            });
-
-            socket.on('disconnect', () => {
-                logDebug('Socket.IO disconnected');
-            });
-
-            socket.on('video_call_participants', (data) => {
-                const participantsList = data.participants || [];
-                logDebug('Received participants list: ' + participantsList.join(', '));
-                participantsList.forEach(p => {
-                    if (p !== myUsername) {
-                        createPeerConnection(p);
+        function loadScriptOnce(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-jitsi-src="' + src + '"]');
+                if (existing) {
+                    if (window.JitsiMeetExternalAPI) resolve();
+                    else {
+                        existing.addEventListener('load', () => resolve());
+                        existing.addEventListener('error', () => reject(new Error('Jitsi script failed to load')));
                     }
-                });
-            });
-
-            socket.on('video_call_user_joined', (data) => {
-                const username = data.username;
-                if (username === myUsername) return;
-                logDebug('User joined: ' + username);
-                createPeerConnection(username);
-            });
-
-            socket.on('video_call_user_left', (data) => {
-                const username = data.username;
-                logDebug('User left: ' + username);
-                removePeerConnection(username);
-            });
-
-            socket.on('video_call_offer', (data) => {
-                const sender = data.sender;
-                const sdp = data.sdp;
-                logDebug('Received offer from ' + sender);
-                handleOffer(sender, sdp);
-            });
-
-            socket.on('video_call_answer', (data) => {
-                const sender = data.sender;
-                const sdp = data.sdp;
-                logDebug('Received answer from ' + sender);
-                handleAnswer(sender, sdp);
-            });
-
-            socket.on('video_call_ice_candidate', (data) => {
-                const sender = data.sender;
-                const candidate = data.candidate;
-                logDebug('Received ICE candidate from ' + sender);
-                handleIceCandidate(sender, candidate);
-            });
-
-            socket.on('video_call_error', (data) => {
-                alert('Video call error: ' + data.message);
-                logDebug('Video call error: ' + data.message);
-            });
-
-            // New listeners for camera/mic state
-            socket.on('video_call_camera_state', (data) => {
-                const sender = data.sender;
-                const state = data.state;
-                const tile = document.getElementById('video-tile-' + sender);
-                if (tile) {
-                    const video = tile.querySelector('video');
-                    const placeholder = tile.querySelector('.placeholder');
-                    if (state) {
-                        if (video) video.style.display = 'block';
-                        if (placeholder) placeholder.style.display = 'none';
-                    } else {
-                        if (video) video.style.display = 'none';
-                        if (placeholder) placeholder.style.display = 'flex';
-                    }
+                    return;
                 }
-            });
-
-            socket.on('video_call_mic_state', (data) => {
-                const sender = data.sender;
-                const state = data.state;
-                const tile = document.getElementById('video-tile-' + sender);
-                if (tile) {
-                    const micStatus = tile.querySelector('.mic-status');
-                    if (micStatus) {
-                        micStatus.textContent = state ? '🎤' : '🚫';
-                    }
-                }
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.setAttribute('data-jitsi-src', src);
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('Failed to load ' + src));
+                document.head.appendChild(script);
             });
         }
 
-        // ---- Start/Join Video Call ----
         async function startVideoCall() {
             if (videoCallActive) {
-                logDebug('Video call already active');
+                logDebug('Jitsi meeting already active');
                 return;
             }
             if (!classCodeRoom || !myUsername) {
@@ -3725,507 +2521,139 @@
                 return;
             }
 
-            // Request camera and microphone permissions
+            const joinBtn = document.getElementById('join-video-btn');
+            const originalText = joinBtn.textContent;
+            joinBtn.textContent = '⏳ Connecting...';
+            joinBtn.disabled = true;
+
             try {
-                const constraints = { audio: true, video: true };
-                localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                logDebug('Local media acquired');
-                isCameraOn = true;
-                isMicOn = true;
-                // Show local video
-                const localVideo = document.getElementById('local-video');
-                localVideo.srcObject = localStream;
-                document.getElementById('local-preview').style.display = 'block';
-                // Update buttons
-                updateControlButtons();
-
-                // Show overlay
-                document.getElementById('video-call-overlay').classList.add('active');
-                videoCallActive = true;
-                isMinimized = false;
-                // Start duration timer
-                callStartTime = Date.now();
-                updateCallDuration();
-
-                // Join signaling room
-                socket.emit('video_call_join', {
+                const res = await httpPost('/api/jitsi/token', {
+                    username: myUsername,
                     classroom: classCodeRoom,
-                    username: myUsername
+                    is_teacher: isTeacherUser
                 });
 
-                // Update participant count (initially 1)
-                updateParticipantCount(1);
+                if (!res.success) {
+                    throw new Error(res.message || 'Failed to authorize meeting access.');
+                }
 
-                // Update join button text
-                document.getElementById('join-video-btn').textContent = '📹 In Call';
-                document.getElementById('join-video-btn').style.background = '#f39c12';
+                const domain = res.domain || '8x8.vc';
+                const appId = res.appId;
+                const roomName = res.roomName;
+                const scriptSrc = 'https://' + domain + '/' + appId + '/external_api.js';
 
-                logDebug('Video call started');
+                const overlay = document.getElementById('video-call-overlay');
+                const container = document.getElementById('jitsi-container');
+                const className = document.getElementById('view-class-title').innerText || 'Class Session';
+                document.getElementById('call-class-name').innerText = className;
 
-            } catch (err) {
-                logDebug('Error accessing media devices: ' + err.message);
-                // Handle permission denials gracefully
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    alert('Camera/Microphone access denied. You can still join with audio only or without video.\n\n' +
-                        'If you want to use video, please allow access in your browser settings and try again.');
-                    // Try to get only audio if video denied
-                    try {
-                        const audioOnly = { audio: true, video: false };
-                        localStream = await navigator.mediaDevices.getUserMedia(audioOnly);
-                        isCameraOn = false;
-                        isMicOn = true;
-                        logDebug('Audio-only stream acquired');
-                        // Proceed with audio only
-                        const localVideo = document.getElementById('local-video');
-                        localVideo.srcObject = localStream;
-                        document.getElementById('local-preview').style.display = 'block';
-                        updateControlButtons();
-                        document.getElementById('video-call-overlay').classList.add('active');
-                        videoCallActive = true;
-                        isMinimized = false;
-                        callStartTime = Date.now();
-                        updateCallDuration();
-                        socket.emit('video_call_join', {
-                            classroom: classCodeRoom,
-                            username: myUsername
-                        });
-                        updateParticipantCount(1);
-                        document.getElementById('join-video-btn').textContent = '📹 In Call';
-                        document.getElementById('join-video-btn').style.background = '#f39c12';
-                        logDebug('Video call started (audio only)');
-                    } catch (audioErr) {
-                        alert('Could not access microphone either. You can still use chat and exams.');
-                        logDebug('Audio also denied: ' + audioErr.message);
+                overlay.classList.add('active');
+                container.innerHTML = `
+                    <div class="jitsi-loading">
+                        <div class="spinner">🎥</div>
+                        <div>Preparing your classroom meeting…</div>
+                    </div>
+                `;
+
+                await loadScriptOnce(scriptSrc);
+
+                if (!window.JitsiMeetExternalAPI) {
+                    throw new Error('Jitsi API did not initialize.');
+                }
+
+                if (jitsiApi) {
+                    try { jitsiApi.dispose(); } catch (e) {}
+                    jitsiApi = null;
+                }
+
+                container.innerHTML = '';
+
+                const options = {
+                    roomName: appId + '/' + roomName,
+                    parentNode: container,
+                    width: '100%',
+                    height: '100%',
+                    jwt: res.token,
+                    userInfo: {
+                        displayName: myUsername,
+                        email: myUsername.replace(/\s+/g, '.').toLowerCase() + '@nexuslearn.local'
+                    },
+                    configOverwrite: {
+                        startWithAudioMuted: false,
+                        startWithVideoMuted: false,
+                        prejoinPageEnabled: true,
+                        prejoinConfig: { enabled: true },
+                        disableDeepLinking: true,
+                        enableWelcomePage: false,
+                        enableClosePage: false,
+                        disableInviteFunctions: true,
+                        hideConferenceSubject: true,
+                        requireDisplayName: false,
+                        toolbarButtons: [
+                            'microphone', 'camera', 'closedcaptions', 'desktop',
+                            'fullscreen', 'fodeviceselection', 'hangup', 'profile',
+                            'chat', 'raisehand', 'videoquality', 'filmstrip',
+                            'tileview', 'select-background', 'download',
+                            'help', 'mute-everyone', 'mute-video-everyone',
+                            'participants-pane', 'reactions', 'settings',
+                            'shortcuts', 'stats', 'whiteboard'
+                        ]
+                    },
+                    interfaceConfigOverwrite: {
+                        SHOW_JITSI_WATERMARK: false,
+                        SHOW_BRAND_WATERMARK: false,
+                        SHOW_WATERMARK_FOR_GUESTS: false,
+                        DEFAULT_BACKGROUND: '#0f1a24',
+                        MOBILE_APP_PROMO: false
                     }
-                } else {
-                    alert('Error accessing media: ' + err.message);
-                }
+                };
+
+                jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+
+                videoCallActive = true;
+                joinBtn.textContent = '📹 In Meeting';
+                joinBtn.style.background = '#f39c12';
+                joinBtn.disabled = false;
+
+                jitsiApi.addEventListener('videoConferenceLeft', () => { endJitsiSession(); });
+                jitsiApi.addEventListener('readyToClose', () => { endJitsiSession(); });
+
+                logDebug('Jitsi meeting started, room: ' + roomName);
+
+            } catch (err) {
+                logDebug('Error starting Jitsi meeting: ' + err.message);
+                alert('Could not start the meeting: ' + err.message);
+                endJitsiSession();
+                joinBtn.textContent = originalText;
+                joinBtn.disabled = false;
             }
         }
 
-        // ---- Leave Video Call ----
-        function leaveVideoCall() {
-            if (!videoCallActive) return;
-            logDebug('Leaving video call');
-
-            // Stop all peer connections
-            for (let pid in peerConnections) {
-                const pc = peerConnections[pid];
-                pc.close();
-                delete peerConnections[pid];
-                // Remove video tile
-                removeVideoTile(pid);
+        function endJitsiSession() {
+            if (jitsiApi) {
+                try { jitsiApi.dispose(); } catch (e) {}
+                jitsiApi = null;
             }
-
-            // Stop local stream
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-
-            // Reset UI
-            document.getElementById('video-call-overlay').classList.remove('active');
-            document.getElementById('local-preview').style.display = 'none';
-            document.getElementById('minimized-call-bar').classList.remove('active');
             videoCallActive = false;
-            isCameraOn = false;
-            isMicOn = false;
-            isMinimized = false;
-            clearInterval(callDurationInterval);
-            document.getElementById('call-duration').innerText = '00:00';
-            document.getElementById('mini-call-duration').innerText = '00:00';
-            document.getElementById('join-video-btn').textContent = '🎥 Join Video';
-            document.getElementById('join-video-btn').style.background = '#4CAF50';
-            updateParticipantCount(0);
-
-            // Notify server
-            if (socket && socket.connected) {
-                socket.emit('video_call_leave', {
-                    classroom: classCodeRoom,
-                    username: myUsername
-                });
+            const overlay = document.getElementById('video-call-overlay');
+            if (overlay) overlay.classList.remove('active');
+            const container = document.getElementById('jitsi-container');
+            if (container) container.innerHTML = '';
+            const joinBtn = document.getElementById('join-video-btn');
+            if (joinBtn) {
+                joinBtn.textContent = '🎥 Join Video';
+                joinBtn.style.background = '#4CAF50';
+                joinBtn.disabled = false;
             }
-
-            logDebug('Video call ended');
+            logDebug('Jitsi session ended');
         }
 
-        // ---- Minimize Video Call ----
-        function minimizeVideoCall() {
-            if (!videoCallActive) return;
-            isMinimized = true;
-            document.getElementById('video-call-overlay').classList.remove('active');
-            document.getElementById('minimized-call-bar').classList.add('active');
-            // Update mini bar with current info
-            document.getElementById('mini-call-duration').innerText = document.getElementById('call-duration').innerText;
-            document.getElementById('mini-participant-count').innerText = document.getElementById('call-participant-count').innerText;
-            logDebug('Video call minimized');
+        function leaveVideoCall() {
+            if (jitsiApi) {
+                try { jitsiApi.executeCommand('hangup'); } catch (e) {}
+            }
+            endJitsiSession();
         }
-
-        // ---- Expand Video Call ----
-        function expandVideoCall() {
-            if (!videoCallActive) return;
-            isMinimized = false;
-            document.getElementById('minimized-call-bar').classList.remove('active');
-            document.getElementById('video-call-overlay').classList.add('active');
-            // Update duration and count in overlay
-            document.getElementById('call-duration').innerText = document.getElementById('mini-call-duration').innerText;
-            document.getElementById('call-participant-count').innerText = document.getElementById('mini-participant-count').innerText;
-            logDebug('Video call expanded');
-        }
-
-        // ---- Create Peer Connection ----
-        function createPeerConnection(remoteUserId) {
-            if (peerConnections[remoteUserId]) {
-                logDebug('Peer connection already exists for ' + remoteUserId);
-                return;
-            }
-            if (remoteUserId === myUsername) return;
-
-            logDebug('Creating peer connection for ' + remoteUserId);
-            const pc = new RTCPeerConnection(iceServers);
-            peerConnections[remoteUserId] = pc;
-
-            // Add local tracks if available
-            if (localStream) {
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                });
-            }
-
-            // Handle remote tracks
-            pc.ontrack = (event) => {
-                const stream = event.streams[0];
-                if (stream) {
-                    remoteStreams[remoteUserId] = stream;
-                    displayRemoteVideo(remoteUserId, stream);
-                }
-            };
-
-            // Handle ICE candidates
-            pc.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('video_call_ice_candidate', {
-                        target: remoteUserId,
-                        candidate: event.candidate,
-                        sender: myUsername,
-                        classroom: classCodeRoom
-                    });
-                }
-            };
-
-            // Handle connection state changes
-            pc.onconnectionstatechange = () => {
-                const state = pc.connectionState;
-                logDebug(`Connection state with ${remoteUserId}: ${state}`);
-                if (state === 'failed' || state === 'disconnected') {
-                    // Attempt reconnection? For now, just log.
-                }
-                if (state === 'closed') {
-                    removePeerConnection(remoteUserId);
-                }
-            };
-
-            // Initiate offer if we are the caller (i.e., we are the one who created the connection)
-            // We'll create an offer for every new participant we discover.
-            // This will cause a negotiation storm in mesh, but for small classrooms it's fine.
-            // To avoid duplicates, we can use a flag, but for simplicity we'll let both sides offer.
-            // Better: we can use a simple rule: the participant with lower username offers.
-            // We'll implement the simple rule: if myUsername < remoteUserId, I will send offer.
-            if (myUsername < remoteUserId) {
-                createOffer(remoteUserId, pc);
-            } else {
-                // Wait for offer from other side
-                logDebug('Waiting for offer from ' + remoteUserId);
-            }
-        }
-
-        // ---- Create Offer ----
-        async function createOffer(remoteUserId, pc) {
-            try {
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                socket.emit('video_call_offer', {
-                    target: remoteUserId,
-                    sdp: offer,
-                    sender: myUsername,
-                    classroom: classCodeRoom
-                });
-                logDebug('Offer sent to ' + remoteUserId);
-            } catch (err) {
-                logDebug('Error creating offer: ' + err.message);
-            }
-        }
-
-        // ---- Handle Offer ----
-        async function handleOffer(sender, sdp) {
-            let pc = peerConnections[sender];
-            if (!pc) {
-                // Create peer connection if not exists
-                createPeerConnection(sender);
-                pc = peerConnections[sender];
-            }
-            if (!pc) return;
-
-            try {
-                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                socket.emit('video_call_answer', {
-                    target: sender,
-                    sdp: answer,
-                    sender: myUsername,
-                    classroom: classCodeRoom
-                });
-                logDebug('Answer sent to ' + sender);
-            } catch (err) {
-                logDebug('Error handling offer: ' + err.message);
-            }
-        }
-
-        // ---- Handle Answer ----
-        async function handleAnswer(sender, sdp) {
-            const pc = peerConnections[sender];
-            if (!pc) {
-                logDebug('No peer connection for answer from ' + sender);
-                return;
-            }
-            try {
-                await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-                logDebug('Remote description set for ' + sender);
-            } catch (err) {
-                logDebug('Error setting remote description: ' + err.message);
-            }
-        }
-
-        // ---- Handle ICE Candidate ----
-        async function handleIceCandidate(sender, candidate) {
-            const pc = peerConnections[sender];
-            if (!pc) {
-                logDebug('No peer connection for ICE candidate from ' + sender);
-                return;
-            }
-            try {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                logDebug('ICE candidate added for ' + sender);
-            } catch (err) {
-                logDebug('Error adding ICE candidate: ' + err.message);
-            }
-        }
-
-        // ---- Remove Peer Connection ----
-        function removePeerConnection(remoteUserId) {
-            const pc = peerConnections[remoteUserId];
-            if (pc) {
-                pc.close();
-                delete peerConnections[remoteUserId];
-                delete remoteStreams[remoteUserId];
-                removeVideoTile(remoteUserId);
-                logDebug('Removed peer connection for ' + remoteUserId);
-                updateParticipantCount(Object.keys(peerConnections).length + 1); // +1 for self
-            }
-        }
-
-        // ---- Display Remote Video ----
-        function displayRemoteVideo(remoteUserId, stream) {
-            // Check if a tile already exists
-            let tile = document.getElementById('video-tile-' + remoteUserId);
-            if (!tile) {
-                tile = createVideoTile(remoteUserId);
-            }
-            const video = tile.querySelector('video');
-            video.srcObject = stream;
-            video.play().catch(err => {
-                logDebug('Autoplay failed for ' + remoteUserId + ': ' + err.message);
-                // Show a button to enable audio
-                const overlay = tile.querySelector('.placeholder');
-                if (overlay) {
-                    overlay.innerHTML = '<button onclick="this.parentElement.parentElement.querySelector(\'video\').play()">🔊 Click to enable audio</button>';
-                }
-            });
-            // Hide placeholder
-            const placeholder = tile.querySelector('.placeholder');
-            if (placeholder) placeholder.style.display = 'none';
-            // Update participant name
-            const nameSpan = tile.querySelector('.participant-name');
-            if (nameSpan) nameSpan.textContent = remoteUserId;
-            // Update participant count
-            updateParticipantCount(Object.keys(peerConnections).length + 1);
-        }
-
-        // ---- Create Video Tile ----
-        function createVideoTile(remoteUserId) {
-            const grid = document.getElementById('video-grid');
-            const tile = document.createElement('div');
-            tile.className = 'video-tile';
-            tile.id = 'video-tile-' + remoteUserId;
-            tile.innerHTML = `
-                <video autoplay playsinline></video>
-                <div class="placeholder">
-                    <div class="avatar">👤</div>
-                    <div>${remoteUserId}</div>
-                </div>
-                <div class="participant-name">${remoteUserId}</div>
-                <div class="mic-status">🎤</div>
-            `;
-            grid.appendChild(tile);
-            return tile;
-        }
-
-        // ---- Remove Video Tile ----
-        function removeVideoTile(remoteUserId) {
-            const tile = document.getElementById('video-tile-' + remoteUserId);
-            if (tile) {
-                // Stop any stream
-                const video = tile.querySelector('video');
-                if (video && video.srcObject) {
-                    video.srcObject.getTracks().forEach(t => t.stop());
-                    video.srcObject = null;
-                }
-                tile.remove();
-                logDebug('Removed video tile for ' + remoteUserId);
-            }
-            updateParticipantCount(Object.keys(peerConnections).length + 1);
-        }
-
-        // ---- Update Participant Count ----
-        function updateParticipantCount(count) {
-            const text = count + ' participants';
-            document.getElementById('call-participant-count').innerText = text;
-            document.getElementById('mini-participant-count').innerText = text;
-        }
-
-        // ---- Update Call Duration ----
-        function updateCallDuration() {
-            if (callDurationInterval) clearInterval(callDurationInterval);
-            callDurationInterval = setInterval(() => {
-                if (!callStartTime) return;
-                const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-                const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
-                const secs = String(elapsed % 60).padStart(2, '0');
-                const durationStr = mins + ':' + secs;
-                document.getElementById('call-duration').innerText = durationStr;
-                document.getElementById('mini-call-duration').innerText = durationStr;
-            }, 1000);
-        }
-
-        // ---- Toggle Camera ----
-        function toggleCamera() {
-            if (!localStream) return;
-            const videoTracks = localStream.getVideoTracks();
-            if (videoTracks.length === 0) {
-                // Try to add video track if not present
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                    .then(stream => {
-                        const track = stream.getVideoTracks()[0];
-                        if (track) {
-                            localStream.addTrack(track);
-                            isCameraOn = true;
-                            updateControlButtons();
-                            // Notify peers? They will get the new track via renegotiation if we add it.
-                            // For simplicity, we'll renegotiate by creating an offer for each peer.
-                            renegotiateAll();
-                        }
-                    })
-                    .catch(err => {
-                        alert('Could not enable camera: ' + err.message);
-                    });
-                return;
-            }
-            // Toggle existing video track
-            const track = videoTracks[0];
-            track.enabled = !track.enabled;
-            isCameraOn = track.enabled;
-            updateControlButtons();
-            // We need to renegotiate to let peers know? Actually, track enabled state is not signaled.
-            // For peer to know, we can send a signaling message to update camera state.
-            // But we can simply rely on the fact that the track will be muted locally and
-            // the peer will see black/frozen. However, we want to show placeholder when camera off.
-            // So we'll also send a custom signal to update the UI on other side.
-            // We'll emit a 'video_call_camera_state' event.
-            socket.emit('video_call_camera_state', {
-                target: 'all', // or broadcast to room
-                classroom: classCodeRoom,
-                sender: myUsername,
-                state: isCameraOn
-            });
-            // Also update local UI
-            if (!isCameraOn) {
-                // Show placeholder for self? We'll show the local video still, but we can blur or
-                // we can just let the local video show the muted track (black).
-                // Better: we can replace the video with a placeholder if off.
-            }
-            logDebug('Camera toggled: ' + (isCameraOn ? 'on' : 'off'));
-        }
-
-        // ---- Toggle Microphone ----
-        function toggleMicrophone() {
-            if (!localStream) return;
-            const audioTracks = localStream.getAudioTracks();
-            if (audioTracks.length === 0) {
-                navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                    .then(stream => {
-                        const track = stream.getAudioTracks()[0];
-                        if (track) {
-                            localStream.addTrack(track);
-                            isMicOn = true;
-                            updateControlButtons();
-                            renegotiateAll();
-                        }
-                    })
-                    .catch(err => {
-                        alert('Could not enable microphone: ' + err.message);
-                    });
-                return;
-            }
-            const track = audioTracks[0];
-            track.enabled = !track.enabled;
-            isMicOn = track.enabled;
-            updateControlButtons();
-            // Notify others
-            socket.emit('video_call_mic_state', {
-                target: 'all',
-                classroom: classCodeRoom,
-                sender: myUsername,
-                state: isMicOn
-            });
-            logDebug('Microphone toggled: ' + (isMicOn ? 'on' : 'off'));
-        }
-
-        // ---- Update Control Buttons UI ----
-        function updateControlButtons() {
-            const camBtn = document.getElementById('toggle-camera-btn');
-            const micBtn = document.getElementById('toggle-mic-btn');
-            if (isCameraOn) {
-                camBtn.classList.remove('muted');
-                camBtn.classList.add('active');
-                camBtn.innerHTML = '🎥';
-            } else {
-                camBtn.classList.remove('active');
-                camBtn.classList.add('muted');
-                camBtn.innerHTML = '🚫🎥';
-            }
-            if (isMicOn) {
-                micBtn.classList.remove('muted');
-                micBtn.classList.add('active');
-                micBtn.innerHTML = '🎤';
-            } else {
-                micBtn.classList.remove('active');
-                micBtn.classList.add('muted');
-                micBtn.innerHTML = '🚫🎤';
-            }
-        }
-
-        // ---- Renegotiate all peers after adding/removing tracks ----
-        function renegotiateAll() {
-            for (let pid in peerConnections) {
-                const pc = peerConnections[pid];
-                if (pc.signalingState === 'stable') {
-                    createOffer(pid, pc);
-                }
-            }
-        }
-
-        console.log('✅ Video call module loaded with minimize feature.');
     </script>
 </body>
 </html>
