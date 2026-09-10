@@ -67,7 +67,7 @@ def health():
         'status': 'ok',
         'timestamp': datetime.utcnow().isoformat(),
         'teachers': len(teacher_accounts),
-        'haspro_users': len(pro_key_activations),
+        'pro_users': len(pro_activations),
         'jitsi_configured': bool(JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt),
         'diagnostics': {
             'has_app_id': bool(JITSI_APP_ID),
@@ -77,7 +77,7 @@ def health():
             'private_key_starts_correctly': JITSI_PRIVATE_KEY.startswith('-----BEGIN') if JITSI_PRIVATE_KEY else False,
             'has_pyjwt': bool(pyjwt),
             'has_path_env': bool(os.environ.get('JITSI_PRIVATE_KEY_PATH', '')),
-            '_env': bool(os.environ.get('JITSI_PRIVATE_KEY', '')),
+            'has_key_env': bool(os.environ.get('JITSI_PRIVATE_KEY', '')),
         }
     }), 200
 
