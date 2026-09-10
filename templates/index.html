@@ -4,41 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
     <title>NEXUS LEARN - Virtual Classroom</title>
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-    <!-- NOTE: Socket.IO client removed. Video is now handled by Jitsi. -->
     <style>
         /* ============================================================
-           ULTIMATE PREMIUM THEME - LIGHT BLUE & BEIGE
-           WITH MOVING EMOJIS BACKGROUND
+           NEXUS LEARN — PREMIUM THEME (LIGHT BLUE & BEIGE)
            ============================================================ */
+        * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            touch-action: manipulation;
-        }
         html, body {
-            width: 100%;
-            min-height: 100vh;
+            width: 100%; min-height: 100vh;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            overflow-x: hidden;
-            position: relative;
-            background: #e8f0fe;
+            overflow-x: hidden; position: relative; background: #e8f0fe;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* ---------- ANIMATED EMOJI BACKGROUND ---------- */
         .emoji-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; overflow: hidden;
             background: linear-gradient(135deg, #e8f0fe 0%, #f5efe6 30%, #d4e2f0 60%, #f0ebe3 100%);
             background-size: 400% 400%;
             animation: gradientMove 20s ease-in-out infinite;
@@ -48,14 +32,9 @@
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
         .floating-emoji-item {
-            position: absolute;
-            font-size: 28px;
-            opacity: 0.15;
-            animation: floatEmoji linear infinite;
-            pointer-events: none;
-            user-select: none;
+            position: absolute; font-size: 28px; opacity: 0.15;
+            animation: floatEmoji linear infinite; pointer-events: none; user-select: none;
         }
         @keyframes floatEmoji {
             0% { transform: translateY(110vh) rotate(0deg) scale(0.8); opacity: 0.05; }
@@ -63,12 +42,8 @@
             90% { opacity: 0.2; }
             100% { transform: translateY(-10vh) rotate(720deg) scale(1.2); opacity: 0.05; }
         }
-
         .shape-bg {
-            position: absolute;
-            pointer-events: none;
-            opacity: 0.06;
-            font-size: 60px;
+            position: absolute; pointer-events: none; opacity: 0.06; font-size: 60px;
             animation: floatShape 30s ease-in-out infinite alternate;
         }
         @keyframes floatShape {
@@ -91,101 +66,47 @@
             --text-secondary: #5d6d7e;
             --text-muted: #85929e;
             --white: #ffffff;
+            --green: #27ae60;
+            --red: #e74c3c;
             --shadow: 0 8px 40px rgba(44, 62, 80, 0.10);
             --shadow-hover: 0 16px 60px rgba(44, 62, 80, 0.18);
             --radius: 20px;
             --radius-sm: 12px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --nav-height: 80px;
         }
 
         /* ---------- SCROLLBAR ---------- */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--beige); }
         ::-webkit-scrollbar-thumb { background: var(--blue-mid); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--blue-accent); }
 
         /* ---------- LOADER ---------- */
         #loader-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(232, 240, 254, 0.7);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
-            padding: 20px;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(232, 240, 254, 0.75);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity 0.8s ease, visibility 0.8s ease; padding: 20px;
         }
-        #loader-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .loader-icon {
-            font-size: 80px;
-            margin-bottom: 12px;
-            animation: pulseIcon 1.8s ease-in-out infinite;
-        }
+        #loader-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-icon { font-size: 80px; margin-bottom: 12px; animation: pulseIcon 1.8s ease-in-out infinite; }
         @keyframes pulseIcon {
             0%, 100% { transform: scale(1) rotate(0deg); }
             50% { transform: scale(1.1) rotate(-5deg); }
         }
         .loader-title {
-            font-size: 52px;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: 8px;
+            font-size: 52px; font-weight: 800; color: var(--text-primary); letter-spacing: 8px;
             background: linear-gradient(135deg, var(--blue-dark), var(--blue-accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .loader-subtitle {
-            font-size: 16px;
-            color: var(--text-muted);
-            letter-spacing: 4px;
-            margin-bottom: 24px;
-            font-weight: 300;
-        }
-        .loader-progress {
-            width: 100%;
-            max-width: 300px;
-            height: 4px;
-            background: var(--beige-dark);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        .loader-progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--blue-mid), var(--blue-accent), var(--blue-dark));
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-        .loader-percent {
-            font-size: 14px;
-            color: var(--text-muted);
-            letter-spacing: 2px;
-            font-weight: 300;
-        }
-        .loader-emoji-row {
-            display: flex;
-            gap: 16px;
-            margin-top: 20px;
-            font-size: 30px;
-            animation: loaderEmojiBounce 2s ease-in-out infinite;
-        }
-        @keyframes loaderEmojiBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+        .loader-subtitle { font-size: 16px; color: var(--text-muted); letter-spacing: 4px; margin-bottom: 24px; font-weight: 300; }
+        .loader-progress { width: 100%; max-width: 300px; height: 4px; background: var(--beige-dark); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .loader-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--blue-mid), var(--blue-accent), var(--blue-dark)); border-radius: 4px; transition: width 0.3s ease; }
+        .loader-percent { font-size: 14px; color: var(--text-muted); letter-spacing: 2px; font-weight: 300; }
+        .loader-emoji-row { display: flex; gap: 16px; margin-top: 20px; font-size: 30px; animation: loaderEmojiBounce 2s ease-in-out infinite; }
+        @keyframes loaderEmojiBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .loader-emoji-row span:nth-child(2) { animation-delay: 0.2s; }
         .loader-emoji-row span:nth-child(3) { animation-delay: 0.4s; }
         .loader-emoji-row span:nth-child(4) { animation-delay: 0.6s; }
@@ -193,324 +114,237 @@
 
         /* ---------- TOP NAV ---------- */
         .top-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-bottom: 2px solid rgba(180, 210, 240, 0.3);
-            padding: 14px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 12px 32px;
+            display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 30px rgba(44, 62, 80, 0.06);
-            transition: transform 0.3s ease;
+            flex-wrap: wrap; gap: 10px;
         }
         body.in-classroom .top-nav { display: none; }
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .nav-brand-icon {
-            font-size: 36px;
-            animation: brandPulse 3s ease-in-out infinite;
-        }
-        @keyframes brandPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .nav-brand-text {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: 3px;
-        }
+        .nav-brand { display: flex; align-items: center; gap: 14px; cursor: pointer; }
+        .nav-brand-icon { font-size: 34px; animation: brandPulse 3s ease-in-out infinite; }
+        @keyframes brandPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .nav-brand-text { font-size: 26px; font-weight: 800; color: var(--text-primary); letter-spacing: 3px; }
         .nav-brand-text span { color: var(--blue-accent); }
 
-        .nav-links { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .nav-links { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .nav-btn {
-            padding: 14px 28px;
-            border: 2px solid transparent;
-            border-radius: 50px;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            font-family: inherit;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            padding: 12px 24px; border: 2px solid transparent; border-radius: 50px;
+            background: transparent; color: var(--text-secondary); font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: var(--transition); font-family: inherit; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
         }
-        .nav-btn:hover {
-            background: var(--blue-light);
-            border-color: var(--blue-mid);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.15);
-        }
-        .nav-btn.active {
-            background: var(--blue-accent);
-            color: #fff;
-            border-color: var(--blue-accent);
-            box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3);
-        }
-        .nav-btn .icon { font-size: 20px; }
+        .nav-btn:hover { background: var(--blue-light); border-color: var(--blue-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.15); }
+        .nav-btn.active { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3); }
+        .nav-btn .icon { font-size: 18px; }
         .nav-btn.pro-btn { border-color: var(--blue-mid); color: var(--blue-dark); }
         .nav-btn.pro-btn:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
-        .nav-btn.pro-btn.active-pro {
-            background: linear-gradient(135deg, var(--blue-accent), var(--blue-dark));
-            color: #fff; border-color: var(--blue-dark);
-        }
+        .nav-btn.pro-btn.active-pro { background: linear-gradient(135deg, var(--blue-accent), var(--blue-dark)); color: #fff; border-color: var(--blue-dark); }
 
         /* ---------- MAIN CONTAINER ---------- */
         .container {
-            position: relative; z-index: 1; width: 100%; max-width: 1440px;
-            margin: 0 auto; padding: 120px 24px 40px;
+            position: relative; z-index: 1; width: 100%; max-width: 1440px; margin: 0 auto;
+            padding: calc(var(--nav-height, 80px) + 26px) 24px 40px;
         }
-        body.in-classroom .container { padding-top: 20px; }
+        body.in-classroom .container { padding-top: 22px; }
 
         /* ---------- HOMEPAGE ---------- */
-        .homepage { display: flex; flex-direction: column; gap: 32px; }
+        .homepage { display: flex; flex-direction: column; gap: 28px; }
 
         .hero {
-            text-align: center; padding: 50px 30px 40px;
+            text-align: center; padding: 44px 28px 36px;
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border-radius: var(--radius);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius); border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: var(--shadow); position: relative; overflow: hidden;
         }
         .hero::before {
             content: ''; position: absolute; top: -60%; right: -20%; width: 70%; height: 200%;
-            background: radial-gradient(circle, rgba(180, 210, 240, 0.15) 0%, transparent 70%);
-            pointer-events: none;
+            background: radial-gradient(circle, rgba(180, 210, 240, 0.15) 0%, transparent 70%); pointer-events: none;
         }
         .hero::after {
             content: '📚 ✏️ 🎓 📝 📖 🏫'; position: absolute; bottom: 10px; right: 20px;
             font-size: 40px; opacity: 0.06; letter-spacing: 10px; pointer-events: none;
         }
-        .hero-title {
-            font-size: 60px; font-weight: 800; letter-spacing: 6px;
-            color: var(--text-primary); position: relative; z-index: 1;
-        }
+        .hero-title { font-size: 56px; font-weight: 800; letter-spacing: 6px; color: var(--text-primary); position: relative; z-index: 1; }
         .hero-title span { color: var(--blue-accent); }
-        .hero-subtitle {
-            font-size: 20px; color: var(--text-secondary);
-            letter-spacing: 4px; margin: 10px 0 16px; font-weight: 300;
-            position: relative; z-index: 1;
-        }
-        .hero-desc {
-            max-width: 600px; margin: 0 auto 28px; font-size: 16px;
-            line-height: 1.9; color: var(--text-muted); position: relative; z-index: 1;
-        }
+        .hero-subtitle { font-size: 19px; color: var(--text-secondary); letter-spacing: 4px; margin: 10px 0 16px; font-weight: 300; position: relative; z-index: 1; }
+        .hero-desc { max-width: 600px; margin: 0 auto 26px; font-size: 15px; line-height: 1.9; color: var(--text-muted); position: relative; z-index: 1; }
 
-        .hero-actions {
-            display: flex; justify-content: center; gap: 24px;
-            flex-wrap: wrap; position: relative; z-index: 1;
-        }
+        .hero-actions { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; position: relative; z-index: 1; }
         .hero-btn {
-            padding: 18px 44px; border: none; border-radius: 60px;
-            font-size: 20px; font-weight: 700; cursor: pointer;
-            transition: var(--transition); font-family: inherit;
-            display: flex; align-items: center; gap: 12px;
-            box-shadow: var(--shadow); letter-spacing: 0.5px;
+            padding: 16px 38px; border: none; border-radius: 60px; font-size: 18px; font-weight: 700;
+            cursor: pointer; transition: var(--transition); font-family: inherit;
+            display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); letter-spacing: 0.5px;
         }
-        .hero-btn .icon { font-size: 28px; }
+        .hero-btn .icon { font-size: 24px; }
         .hero-btn.student { background: linear-gradient(135deg, #5b9bd5, #2c6b9e); color: #fff; }
         .hero-btn.student:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(91, 155, 213, 0.35); }
         .hero-btn.teacher { background: linear-gradient(135deg, #c4b5a5, #8b7a6b); color: #fff; }
         .hero-btn.teacher:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(139, 122, 107, 0.35); }
-        .hero-btn.pro-hero {
-            background: linear-gradient(135deg, #f5efe6, #e8ddd0);
-            color: var(--text-primary); border: 2px solid var(--blue-mid);
-        }
+        .hero-btn.pro-hero { background: linear-gradient(135deg, #f5efe6, #e8ddd0); color: var(--text-primary); border: 2px solid var(--blue-mid); }
         .hero-btn.pro-hero:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 16px 48px rgba(180, 210, 240, 0.4); }
 
-        .hero-badges {
-            display: flex; justify-content: center; gap: 16px;
-            flex-wrap: wrap; margin-top: 24px; position: relative; z-index: 1;
-        }
+        .hero-badges { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 22px; position: relative; z-index: 1; }
         .hero-badge {
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(180, 210, 240, 0.3);
-            padding: 8px 20px; border-radius: 50px; font-size: 13px;
-            color: var(--text-secondary); display: flex; align-items: center;
-            gap: 6px; font-weight: 500; animation: badgeFloat 4s ease-in-out infinite;
+            background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(180, 210, 240, 0.3);
+            padding: 8px 18px; border-radius: 50px; font-size: 13px; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 6px; font-weight: 500;
+            animation: badgeFloat 4s ease-in-out infinite;
         }
         .hero-badge:nth-child(2) { animation-delay: 0.5s; }
         .hero-badge:nth-child(3) { animation-delay: 1s; }
         .hero-badge:nth-child(4) { animation-delay: 1.5s; }
         .hero-badge:nth-child(5) { animation-delay: 2s; }
         @keyframes badgeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-        .hero-badge .icon { font-size: 16px; }
+        .hero-badge .icon { font-size: 15px; }
 
-        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; margin-top: 10px; }
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
         .stat-item {
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: var(--radius-sm); padding: 16px 12px; text-align: center;
+            background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: var(--radius-sm); padding: 16px 12px; text-align: center;
         }
-        .stat-item .number { font-size: 28px; font-weight: 800; color: var(--blue-accent); }
+        .stat-item .number { font-size: 26px; font-weight: 800; color: var(--blue-accent); }
         .stat-item .label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
         .feature-card {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius-sm); padding: 24px 20px; text-align: center;
-            transition: var(--transition); box-shadow: var(--shadow);
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4); border-radius: var(--radius-sm); padding: 24px 20px;
+            text-align: center; transition: var(--transition); box-shadow: var(--shadow);
             position: relative; overflow: hidden;
         }
         .feature-card::after {
             content: ''; position: absolute; top: -50%; right: -50%; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(91, 155, 213, 0.05) 0%, transparent 70%);
-            pointer-events: none;
+            background: radial-gradient(circle, rgba(91, 155, 213, 0.05) 0%, transparent 70%); pointer-events: none;
         }
         .feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-hover); border-color: var(--blue-mid); }
-        .feature-card .icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .feature-card .icon { font-size: 38px; margin-bottom: 10px; display: block; }
         .feature-card h4 { font-size: 16px; color: var(--text-primary); margin-bottom: 4px; position: relative; z-index: 1; }
         .feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; position: relative; z-index: 1; }
 
-        .quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 10px 0; }
+        .quick-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 6px 0; }
         .quick-link {
-            padding: 8px 20px;
-            background: rgba(255, 255, 255, 0.5);
+            padding: 9px 20px; background: rgba(255, 255, 255, 0.55);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px; font-size: 13px; color: var(--text-secondary);
-            cursor: pointer; transition: var(--transition); font-weight: 500;
-            display: flex; align-items: center; gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px;
+            font-size: 13px; color: var(--text-secondary); cursor: pointer;
+            transition: var(--transition); font-weight: 500; display: flex; align-items: center; gap: 6px;
         }
         .quick-link:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); transform: translateY(-2px); }
 
         .pro-section {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 2px solid var(--blue-mid);
-            border-radius: var(--radius); padding: 32px 28px; text-align: center;
-            box-shadow: var(--shadow); position: relative; overflow: hidden;
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 2px solid var(--blue-mid); border-radius: var(--radius); padding: 32px 28px;
+            text-align: center; box-shadow: var(--shadow); position: relative; overflow: hidden;
         }
-        .pro-section::before {
-            content: '⚡'; position: absolute; top: -20px; right: -10px;
-            font-size: 120px; opacity: 0.04; pointer-events: none;
-        }
-        .pro-section h2 { font-size: 30px; color: var(--text-primary); margin-bottom: 6px; }
+        .pro-section::before { content: '⚡'; position: absolute; top: -20px; right: -10px; font-size: 120px; opacity: 0.04; pointer-events: none; }
+        .pro-section h2 { font-size: 28px; color: var(--text-primary); margin-bottom: 6px; }
         .pro-section h2 span { color: var(--blue-accent); }
-        .pro-section p {
-            color: var(--text-muted); max-width: 500px; margin: 0 auto 18px;
-            line-height: 1.6; font-size: 15px;
-        }
+        .pro-section p { color: var(--text-muted); max-width: 500px; margin: 0 auto 18px; line-height: 1.6; font-size: 15px; }
         .pro-features { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 18px; }
-        .pro-tag {
-            background: rgba(91, 155, 213, 0.08);
-            border: 1px solid rgba(91, 155, 213, 0.15);
-            padding: 6px 16px; border-radius: 50px;
-            font-size: 13px; color: var(--text-secondary); font-weight: 500;
-        }
+        .pro-tag { background: rgba(91, 155, 213, 0.08); border: 1px solid rgba(91, 155, 213, 0.15); padding: 6px 16px; border-radius: 50px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
         .pro-input-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 500px; margin: 0 auto; }
         .pro-input-group input {
-            flex: 1; min-width: 180px; padding: 14px 20px;
-            border: 2px solid var(--blue-soft); border-radius: 50px;
-            background: rgba(255, 255, 255, 0.6);
-            font-size: 15px; color: var(--text-primary);
+            flex: 1; min-width: 180px; padding: 14px 20px; border: 2px solid var(--blue-soft); border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6); font-size: 15px; color: var(--text-primary);
             font-family: inherit; outline: none; transition: var(--transition);
         }
         .pro-input-group input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.12); }
         .pro-input-group button {
-            padding: 14px 32px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: 50px; font-size: 16px; font-weight: 700;
-            cursor: pointer; transition: var(--transition); font-family: inherit;
+            padding: 14px 32px; background: var(--blue-accent); color: #fff; border: none; border-radius: 50px;
+            font-size: 16px; font-weight: 700; cursor: pointer; transition: var(--transition); font-family: inherit;
         }
         .pro-input-group button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.3); }
 
         /* ---------- AUTH SECTIONS ---------- */
         .auth-section {
-            max-width: 480px; margin: 30px auto;
-            background: rgba(255, 255, 255, 0.85);
+            max-width: 480px; margin: 20px auto;
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius); padding: 40px 36px; box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 36px 32px; box-shadow: var(--shadow);
         }
-        .auth-section h2 { text-align: center; font-size: 26px; color: var(--text-primary); margin-bottom: 4px; }
+        .auth-section h2 { text-align: center; font-size: 25px; color: var(--text-primary); margin-bottom: 4px; }
         .auth-section h2 span { color: var(--blue-accent); }
-        .auth-section .sub { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+        .auth-section .sub { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 22px; }
         .auth-section .input-group { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
         .auth-section input {
-            padding: 16px 18px; border: 2px solid var(--blue-soft);
-            border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.5);
-            font-size: 15px; color: var(--text-primary);
+            padding: 15px 18px; border: 2px solid var(--blue-soft); border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.5); font-size: 15px; color: var(--text-primary);
             font-family: inherit; outline: none; transition: var(--transition);
         }
         .auth-section input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .auth-section .btn {
-            padding: 16px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: var(--radius-sm); font-size: 17px;
-            font-weight: 700; cursor: pointer; transition: var(--transition);
-            font-family: inherit; width: 100%;
+            padding: 15px; background: var(--blue-accent); color: #fff; border: none;
+            border-radius: var(--radius-sm); font-size: 17px; font-weight: 700;
+            cursor: pointer; transition: var(--transition); font-family: inherit; width: 100%;
         }
         .auth-section .btn:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
-        .auth-section .link { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 16px; cursor: pointer; transition: var(--transition); }
+        .auth-section .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .auth-section .link { text-align: center; font-size: 14px; color: var(--text-muted); margin-top: 14px; cursor: pointer; transition: var(--transition); }
         .auth-section .link:hover { color: var(--blue-accent); }
         .hidden { display: none !important; }
 
         /* ---------- CLASSROOM ---------- */
-        .classroom-container { padding-top: 100px; }
-        body.in-classroom .classroom-container { padding-top: 20px; }
+        .classroom-container { padding-top: 22px; }
         .classroom-header {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 12px;
-            background: rgba(255, 255, 255, 0.85);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius); padding: 18px 24px;
-            margin-bottom: 20px; box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 18px 24px; margin-bottom: 16px; box-shadow: var(--shadow);
         }
-        .classroom-header .info h2 { font-size: 22px; color: var(--text-primary); }
+        .classroom-header .info h2 { font-size: 21px; color: var(--text-primary); }
         .classroom-header .info p { font-size: 14px; color: var(--text-muted); }
         .classroom-header .code-badge {
             display: flex; align-items: center; gap: 10px;
             background: var(--blue-light); border: 1px solid var(--blue-soft);
-            padding: 8px 18px; border-radius: 50px;
+            padding: 8px 16px; border-radius: 50px;
         }
-        .classroom-header .code-badge span { font-family: monospace; font-weight: bold; color: var(--blue-dark); font-size: 16px; letter-spacing: 1px; }
+        .classroom-header .code-badge span:first-child { font-size: 12px; color: var(--text-muted); font-weight: 700; }
+        .classroom-header .code-badge #classroom-code-label { font-family: monospace; font-weight: bold; color: var(--blue-dark); font-size: 16px; letter-spacing: 1px; }
         .classroom-header .code-badge button {
-            background: none; border: none; color: var(--text-muted);
-            cursor: pointer; font-size: 14px; padding: 4px 10px;
-            border-radius: 6px; transition: var(--transition);
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 14px; padding: 4px 10px; border-radius: 6px; transition: var(--transition);
         }
         .classroom-header .code-badge button:hover { background: var(--blue-accent); color: #fff; }
         .classroom-header .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .classroom-header .actions button {
-            padding: 10px 20px; border: 2px solid var(--blue-soft);
-            border-radius: 50px; background: transparent;
-            cursor: pointer; transition: var(--transition);
+            padding: 10px 18px; border: 2px solid var(--blue-soft); border-radius: 50px;
+            background: transparent; cursor: pointer; transition: var(--transition);
             font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-secondary);
         }
         .classroom-header .actions button:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
-        .classroom-header .actions button.danger:hover { background: #e74c3c; border-color: #e74c3c; color: #fff; }
+        .classroom-header .actions button.success { background: var(--green); border-color: var(--green); color: #fff; }
+        .classroom-header .actions button.success:hover { background: #1e8449; border-color: #1e8449; }
+        .classroom-header .actions button.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
 
-        /* ---- ROLE-BASED NAVIGATION GUIDE ---- */
+        /* ---- ANNOUNCEMENT BANNER ---- */
+        .announcement-banner {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: linear-gradient(135deg, #fff8e1, #ffeeba);
+            border: 1px solid #f0d78c; border-radius: var(--radius-sm);
+            padding: 12px 18px; margin-bottom: 14px; color: #7a5c00;
+            font-weight: 600; font-size: 14px; box-shadow: var(--shadow); line-height: 1.5;
+        }
+        .announcement-banner .icon { font-size: 20px; flex-shrink: 0; }
+
+        /* ---- ROLE-BASED NAVIGATION GUIDE (BELOW CHAT) ---- */
         .role-guide {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: var(--radius-sm); padding: 18px 22px;
-            margin-bottom: 16px; box-shadow: var(--shadow);
+            margin-top: 16px; box-shadow: var(--shadow);
             display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
         }
         .role-guide .icon-big { font-size: 40px; line-height: 1; flex-shrink: 0; }
-        .role-guide .content { flex: 1; }
-        .role-guide .content h4 { font-size: 18px; color: var(--text-primary); margin-bottom: 4px; }
+        .role-guide .content { flex: 1; min-width: 180px; }
+        .role-guide .content h4 { font-size: 17px; color: var(--text-primary); margin-bottom: 4px; }
         .role-guide .content p { font-size: 14px; color: var(--text-secondary); margin: 0; }
         .role-guide .badge-role { background: var(--blue-accent); color: #fff; padding: 4px 14px; border-radius: 50px; font-size: 13px; font-weight: 600; white-space: nowrap; }
         .role-guide .badge-role.student { background: #8e44ad; }
@@ -520,31 +354,29 @@
 
         /* ---- CHAT BOX ---- */
         .chat-box {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: var(--radius-sm); height: 220px;
-            overflow-y: auto; padding: 16px; margin-bottom: 12px;
-            box-shadow: var(--shadow); position: relative;
+            border-radius: var(--radius-sm); height: 260px; overflow-y: auto;
+            padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); position: relative;
         }
         .chat-box:empty::before {
             content: "💬 No messages yet. Start the conversation!";
-            color: var(--text-muted); font-size: 16px;
-            display: flex; align-items: center; justify-content: center;
-            height: 100%; opacity: 0.7; font-style: italic;
+            color: var(--text-muted); font-size: 15px; display: flex;
+            align-items: center; justify-content: center; height: 100%;
+            opacity: 0.7; font-style: italic;
         }
-        .chat-box .msg { margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
+        .chat-box .msg { margin-bottom: 10px; font-size: 14px; line-height: 1.55; word-break: break-word; }
         .chat-box .msg strong { color: var(--blue-dark); }
+        .chat-box .msg .time { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+        .chat-box .msg.mine { background: rgba(91, 155, 213, 0.09); border-radius: 10px; padding: 6px 10px; }
+        .chat-box .msg.system { color: var(--text-muted); font-style: italic; font-size: 13px; }
+        .chat-box .msg.announce { background: #fff8e1; border-left: 3px solid #f0c040; padding: 8px 12px; border-radius: 8px; }
         .chat-box .msg .img-container { display: inline-block; position: relative; margin-top: 4px; }
-        .chat-box .msg .img-container img {
-            max-width: 200px; max-height: 150px;
-            border-radius: var(--radius-sm); border: 1px solid var(--blue-soft);
-        }
+        .chat-box .msg .img-container img { max-width: 220px; max-height: 160px; border-radius: var(--radius-sm); border: 1px solid var(--blue-soft); display: block; }
         .chat-box .msg .img-container .zoom-btn {
-            position: absolute; top: 4px; right: 4px;
-            background: rgba(44, 62, 80, 0.8); color: #fff;
-            border: none; padding: 2px 10px; border-radius: 4px;
-            font-size: 11px; cursor: pointer;
+            position: absolute; top: 4px; right: 4px; background: rgba(44, 62, 80, 0.8);
+            color: #fff; border: none; padding: 2px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
         }
         .chat-box .msg .img-container .zoom-btn:hover { background: var(--blue-accent); }
 
@@ -563,38 +395,39 @@
         .typing-row .input-group .badge { padding: 6px 16px; border-radius: 50px; font-size: 12px; font-weight: 700; white-space: nowrap; }
         .typing-row .input-group .badge.student { background: var(--blue-light); color: var(--blue-dark); }
         .typing-row .input-group .badge.teacher { background: var(--beige-dark); color: #8b7a6b; }
-        .typing-row .input-group input {
-            flex: 1; padding: 12px 18px;
-            border: 2px solid var(--blue-soft); border-radius: 50px;
-            background: rgba(255, 255, 255, 0.5);
-            font-size: 15px; color: var(--text-primary);
-            font-family: inherit; outline: none; transition: var(--transition);
+        .typing-row .input-group input[type="text"] {
+            flex: 1; padding: 12px 18px; border: 2px solid var(--blue-soft); border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6); font-size: 15px; color: var(--text-primary);
+            font-family: inherit; outline: none; transition: var(--transition); min-width: 0;
         }
-        .typing-row .input-group input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
+        .typing-row .input-group input[type="text"]:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .typing-row .input-group button {
-            padding: 12px 24px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: 50px; font-size: 15px; font-weight: 700;
-            cursor: pointer; transition: var(--transition);
-            font-family: inherit; white-space: nowrap;
+            padding: 12px 24px; background: var(--blue-accent); color: #fff; border: none;
+            border-radius: 50px; font-size: 15px; font-weight: 700; cursor: pointer;
+            transition: var(--transition); font-family: inherit; white-space: nowrap;
         }
         .typing-row .input-group button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
+        .typing-row .image-group { justify-content: flex-start; }
+        .typing-row .image-group button {
+            background: rgba(255, 255, 255, 0.7); color: var(--blue-dark);
+            border: 2px solid var(--blue-soft); padding: 10px 20px; font-size: 14px;
+        }
+        .typing-row .image-group button:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
 
         .teacher-panel {
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 2px solid var(--blue-mid);
-            border-radius: var(--radius-sm); padding: 16px 20px;
-            margin-bottom: 16px; display: flex; flex-wrap: wrap;
-            justify-content: space-between; align-items: center;
+            border: 2px solid var(--blue-mid); border-radius: var(--radius-sm);
+            padding: 16px 20px; margin-bottom: 16px; display: flex;
+            flex-wrap: wrap; justify-content: space-between; align-items: center;
             gap: 12px; box-shadow: var(--shadow);
         }
         .teacher-panel .title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
         .teacher-panel .title span { color: var(--blue-accent); }
         .teacher-panel .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .teacher-panel .actions button {
-            padding: 8px 18px; border: 2px solid var(--blue-soft);
-            border-radius: 50px; background: rgba(255, 255, 255, 0.5);
-            cursor: pointer; transition: var(--transition);
+            padding: 9px 18px; border: 2px solid var(--blue-soft); border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6); cursor: pointer; transition: var(--transition);
             font-family: inherit; font-size: 13px; font-weight: 600; color: var(--text-secondary);
         }
         .teacher-panel .actions button:hover { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
@@ -604,46 +437,41 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(44, 62, 80, 0.5);
             backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            z-index: 2000; display: none; justify-content: center;
-            align-items: center; padding: 20px;
+            z-index: 2500; display: none; justify-content: center; align-items: center; padding: 20px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: var(--radius); max-width: 600px; width: 100%;
-            max-height: 90vh; overflow-y: auto; padding: 36px 32px;
+            max-height: 90vh; overflow-y: auto; padding: 32px 28px;
             box-shadow: var(--shadow-hover); position: relative;
         }
         .modal-content .close {
-            position: absolute; top: 16px; right: 20px;
-            font-size: 28px; cursor: pointer; color: var(--text-muted);
-            transition: var(--transition); background: none; border: none;
+            position: absolute; top: 14px; right: 18px; font-size: 26px; cursor: pointer;
+            color: var(--text-muted); transition: var(--transition); background: none; border: none;
         }
         .modal-content .close:hover { color: var(--text-primary); }
-        .modal-content h2 { font-size: 24px; color: var(--text-primary); margin-bottom: 4px; }
+        .modal-content h2 { font-size: 23px; color: var(--text-primary); margin-bottom: 4px; }
         .modal-content h2 span { color: var(--blue-accent); }
-        .modal-content .sub { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; }
+        .modal-content .sub { font-size: 15px; color: var(--text-muted); margin-bottom: 18px; }
 
         /* ---------- AI BOT ---------- */
-        .ai-bot { position: fixed; bottom: 28px; right: 28px; z-index: 1500; }
+        .ai-bot { position: fixed; bottom: 24px; right: 24px; z-index: 1500; }
         body.in-classroom .ai-bot { display: none; }
         .ai-bot .toggle {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: var(--blue-accent); color: #fff; border: none;
-            font-size: 30px; cursor: pointer; box-shadow: var(--shadow-hover);
-            transition: var(--transition);
+            width: 62px; height: 62px; border-radius: 50%; background: var(--blue-accent);
+            color: #fff; border: none; font-size: 28px; cursor: pointer;
+            box-shadow: var(--shadow-hover); transition: var(--transition);
         }
         .ai-bot .toggle:hover { transform: scale(1.1); box-shadow: 0 8px 40px rgba(91, 155, 213, 0.4); }
         .ai-bot .window {
-            position: absolute; bottom: 76px; right: 0;
-            width: 320px; height: 400px;
-            background: rgba(255, 255, 255, 0.95);
+            position: absolute; bottom: 74px; right: 0; width: 320px; height: 400px;
+            background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: var(--radius); box-shadow: var(--shadow-hover);
-            display: none; flex-direction: column; overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.5); border-radius: var(--radius);
+            box-shadow: var(--shadow-hover); display: none; flex-direction: column; overflow: hidden;
         }
         .ai-bot .window.active { display: flex; }
         .ai-bot .window .header {
@@ -652,92 +480,66 @@
         }
         .ai-bot .window .header button { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
         .ai-bot .window .messages { flex: 1; overflow-y: auto; padding: 16px; font-size: 14px; }
-        .ai-bot .window .messages .bot {
-            background: var(--blue-light); padding: 10px 14px;
-            border-radius: 16px 16px 16px 4px; margin-bottom: 8px; color: var(--text-secondary);
-        }
-        .ai-bot .window .messages .user {
-            text-align: right; padding: 10px 14px;
-            background: var(--blue-accent); color: #fff;
-            border-radius: 16px 16px 4px 16px; margin-bottom: 8px;
-        }
+        .ai-bot .window .messages .bot { background: var(--blue-light); padding: 10px 14px; border-radius: 16px 16px 16px 4px; margin-bottom: 8px; color: var(--text-secondary); }
+        .ai-bot .window .messages .user { text-align: right; padding: 10px 14px; background: var(--blue-accent); color: #fff; border-radius: 16px 16px 4px 16px; margin-bottom: 8px; }
         .ai-bot .window .input-row { display: flex; border-top: 1px solid var(--blue-soft); padding: 10px 12px; gap: 10px; }
         .ai-bot .window .input-row input {
-            flex: 1; padding: 10px 16px;
-            border: 2px solid var(--blue-soft); border-radius: 50px;
-            background: rgba(255, 255, 255, 0.5);
-            font-family: inherit; outline: none; font-size: 14px;
+            flex: 1; padding: 10px 16px; border: 2px solid var(--blue-soft); border-radius: 50px;
+            background: rgba(255, 255, 255, 0.6); font-family: inherit; outline: none; font-size: 14px; min-width: 0;
         }
         .ai-bot .window .input-row input:focus { border-color: var(--blue-accent); }
         .ai-bot .window .input-row button {
             padding: 10px 20px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: 50px; font-weight: 700;
-            cursor: pointer; font-family: inherit;
+            border: none; border-radius: 50px; font-weight: 700; cursor: pointer; font-family: inherit;
         }
-
-        /* ---------- DEBUG STATUS ---------- */
-        #debug-status {
-            position: fixed; bottom: 100px; right: 20px;
-            background: rgba(0,0,0,0.8); color: #0f0;
-            padding: 10px 14px; border-radius: 8px;
-            font-family: monospace; font-size: 11px;
-            max-width: 250px; max-height: 150px; overflow-y: auto;
-            z-index: 1000; pointer-events: none; opacity: 0.85;
-            border: 1px solid #0f0; display: block;
-        }
-        #debug-status .entry { margin: 2px 0; border-bottom: 1px solid #333; padding: 2px 0; font-size: 10px; }
-        #debug-status .close-debug {
-            position: absolute; top: 2px; right: 6px; color: #fff;
-            background: transparent; border: none; font-size: 14px;
-            cursor: pointer; pointer-events: auto;
-        }
-        #debug-status.hidden-debug { display: none; }
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 992px) {
-            .hero-title { font-size: 42px; }
-            .hero-btn { padding: 14px 32px; font-size: 17px; }
-            .nav-btn { padding: 10px 20px; font-size: 14px; }
-            .nav-brand-text { font-size: 22px; }
-            .container { padding-top: 110px; }
+            .hero-title { font-size: 40px; }
+            .hero-btn { padding: 14px 28px; font-size: 16px; }
+            .nav-btn { padding: 10px 18px; font-size: 14px; }
+            .nav-brand-text { font-size: 21px; }
         }
         @media (max-width: 768px) {
-            .top-nav { padding: 12px 16px; flex-wrap: wrap; gap: 10px; justify-content: center; }
+            .top-nav { padding: 10px 14px; justify-content: center; }
             .nav-links { justify-content: center; gap: 6px; }
             .nav-btn { padding: 8px 14px; font-size: 12px; }
-            .nav-btn .icon { font-size: 14px; }
-            .hero-title { font-size: 32px; letter-spacing: 2px; }
-            .hero-btn { padding: 12px 24px; font-size: 15px; }
-            .hero-btn .icon { font-size: 20px; }
-            .hero-subtitle { font-size: 16px; }
-            .container { padding: 100px 12px 20px; }
-            .auth-section { padding: 28px 20px; margin: 20px auto; }
-            .modal-content { padding: 24px 18px; }
-            .ai-bot .window { width: 280px; right: -10px; }
+            .nav-btn .icon { font-size: 13px; }
+            .hero-title { font-size: 30px; letter-spacing: 2px; }
+            .hero-btn { padding: 12px 22px; font-size: 14px; }
+            .hero-btn .icon { font-size: 18px; }
+            .hero-subtitle { font-size: 15px; }
+            .container { padding-left: 12px; padding-right: 12px; }
+            .auth-section { padding: 26px 18px; }
+            .modal-content { padding: 24px 16px; }
+            .ai-bot .window { width: 290px; right: -8px; }
             .stats-bar { grid-template-columns: 1fr 1fr; }
             .role-guide { flex-direction: column; align-items: stretch; text-align: center; }
             .role-guide .features-list { justify-content: center; }
+            .chat-box { height: 220px; }
         }
         @media (max-width: 480px) {
-            .hero-title { font-size: 26px; }
-            .hero-btn { padding: 10px 18px; font-size: 13px; }
-            .hero-btn .icon { font-size: 16px; }
-            .nav-btn { font-size: 10px; padding: 6px 10px; }
-            .nav-brand-text { font-size: 18px; }
-            .typing-row .input-group input { font-size: 13px; padding: 10px 14px; }
+            .hero-title { font-size: 24px; }
+            .hero-btn { padding: 10px 16px; font-size: 12.5px; }
+            .hero-btn .icon { font-size: 15px; }
+            .nav-btn { font-size: 10.5px; padding: 6px 10px; }
+            .nav-brand-text { font-size: 17px; }
+            .nav-brand-icon { font-size: 26px; }
+            .typing-row .input-group input[type="text"] { font-size: 13px; padding: 10px 14px; }
             .typing-row .input-group button { font-size: 13px; padding: 10px 16px; }
-            .modal-content { padding: 20px 16px; }
+            .typing-row .input-group .badge { display: none; }
+            .modal-content { padding: 20px 14px; }
             .pro-input-group input { min-width: 100px; }
             .stats-bar { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .stat-item .number { font-size: 20px; }
-            .container { padding-top: 90px; }
-            #debug-status { max-width: 180px; max-height: 120px; font-size: 10px; bottom: 80px; }
+            .stat-item .number { font-size: 19px; }
+            .classroom-header { padding: 14px; }
+            .classroom-header .actions button { padding: 8px 12px; font-size: 12px; }
         }
 
+        /* ---------- FLOATING EMOJI REACTIONS ---------- */
         .floating-emoji-reaction {
-            position: fixed; bottom: 10%; font-size: 44px;
-            pointer-events: none; z-index: 3000;
-            animation: floatUp 2.5s ease-out forwards;
+            position: fixed; bottom: 10%; font-size: 44px; pointer-events: none;
+            z-index: 3500; animation: floatUp 2.5s ease-out forwards;
         }
         @keyframes floatUp {
             0% { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 0; }
@@ -745,34 +547,33 @@
             100% { transform: translateY(-450px) scale(0.8) rotate(20deg); opacity: 0; }
         }
 
+        /* ---------- TEACHER DASHBOARD ---------- */
         .teacher-dashboard-box {
-            max-width: 500px; margin: 0 auto 30px;
-            background: rgba(255, 255, 255, 0.85);
+            max-width: 520px; margin: 0 auto 30px;
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--radius); padding: 32px 28px; box-shadow: var(--shadow);
+            border-radius: var(--radius); padding: 30px 26px; box-shadow: var(--shadow);
         }
-        .teacher-dashboard-box .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .teacher-dashboard-box .header h3 { font-size: 20px; color: var(--text-primary); }
+        .teacher-dashboard-box .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+        .teacher-dashboard-box .header h3 { font-size: 19px; color: var(--text-primary); }
         .teacher-dashboard-box .header button {
-            padding: 8px 18px; border: 2px solid #e74c3c; border-radius: 50px;
-            background: transparent; color: #e74c3c; cursor: pointer;
+            padding: 8px 16px; border: 2px solid var(--red); border-radius: 50px;
+            background: transparent; color: var(--red); cursor: pointer;
             font-family: inherit; font-size: 13px; font-weight: 600; transition: var(--transition);
         }
-        .teacher-dashboard-box .header button:hover { background: #e74c3c; color: #fff; }
+        .teacher-dashboard-box .header button:hover { background: var(--red); color: #fff; }
         .teacher-dashboard-box .welcome { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
-        .teacher-dashboard-box .row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+        .teacher-dashboard-box .row { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
         .teacher-dashboard-box .row input {
-            flex: 1; min-width: 150px; padding: 14px 18px;
-            border: 2px solid var(--blue-soft); border-radius: 50px;
-            background: rgba(255, 255, 255, 0.5);
+            flex: 1; min-width: 150px; padding: 13px 18px; border: 2px solid var(--blue-soft);
+            border-radius: 50px; background: rgba(255, 255, 255, 0.6);
             font-family: inherit; font-size: 14px; outline: none; transition: var(--transition);
         }
         .teacher-dashboard-box .row input:focus { border-color: var(--blue-accent); box-shadow: 0 0 0 4px rgba(91, 155, 213, 0.1); }
         .teacher-dashboard-box .row button {
-            padding: 14px 28px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: 50px; font-weight: 700;
-            cursor: pointer; transition: var(--transition);
+            padding: 13px 26px; background: var(--blue-accent); color: #fff; border: none;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: var(--transition);
             font-family: inherit; font-size: 14px; white-space: nowrap;
         }
         .teacher-dashboard-box .row button:hover { background: var(--blue-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91, 155, 213, 0.25); }
@@ -781,195 +582,176 @@
             border-radius: var(--radius-sm); border: 1px solid var(--blue-soft); margin-top: 8px;
         }
         .teacher-dashboard-box .code-box p { font-size: 13px; color: var(--text-muted); }
-        .teacher-dashboard-box .code-box .code {
-            font-size: 26px; font-weight: 800; color: var(--blue-dark);
-            letter-spacing: 3px; display: block; margin: 8px 0;
-        }
+        .teacher-dashboard-box .code-box .code { font-size: 24px; font-weight: 800; color: var(--blue-dark); letter-spacing: 3px; display: block; margin: 8px 0; }
         .teacher-dashboard-box .code-box button {
-            padding: 10px 28px; background: var(--blue-accent); color: #fff;
-            border: none; border-radius: 50px; font-weight: 700;
-            cursor: pointer; transition: var(--transition);
+            padding: 10px 26px; background: var(--blue-accent); color: #fff; border: none;
+            border-radius: 50px; font-weight: 700; cursor: pointer; transition: var(--transition);
             font-family: inherit; font-size: 14px;
         }
         .teacher-dashboard-box .code-box button:hover { background: var(--blue-dark); transform: translateY(-2px); }
 
+        /* ---------- PARTICIPANTS / TABLES ---------- */
         .admin-table-wrap {
-            margin-top: 16px; background: rgba(255, 255, 255, 0.7);
+            margin-top: 16px; background: rgba(255, 255, 255, 0.82);
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: var(--radius-sm); padding: 16px; overflow-x: auto;
+            border-radius: var(--radius-sm); padding: 16px; overflow-x: auto; box-shadow: var(--shadow);
         }
-        .admin-table-wrap h4 { font-size: 15px; color: var(--text-primary); margin-bottom: 10px; }
-        .admin-table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 280px; }
-        .admin-table-wrap table th {
-            text-align: left; padding: 10px 8px; color: var(--text-muted);
-            font-weight: 600; border-bottom: 2px solid var(--blue-soft);
+        .admin-table-wrap .table-head {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
         }
+        .admin-table-wrap h4 { font-size: 15px; color: var(--text-primary); }
+        .admin-table-wrap .count-pill {
+            background: var(--blue-light); color: var(--blue-dark); font-size: 12px;
+            font-weight: 700; padding: 3px 12px; border-radius: 50px;
+        }
+        .admin-table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 260px; }
+        .admin-table-wrap table th { text-align: left; padding: 10px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--blue-soft); }
         .admin-table-wrap table td { padding: 10px 8px; border-bottom: 1px solid var(--blue-soft); }
         .admin-table-wrap table .block-btn {
-            padding: 4px 14px; background: #e74c3c; color: #fff;
-            border: none; border-radius: 50px; cursor: pointer;
-            font-family: inherit; font-size: 11px; font-weight: 600; transition: var(--transition);
+            padding: 4px 14px; background: var(--red); color: #fff; border: none;
+            border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 11px;
+            font-weight: 600; transition: var(--transition);
         }
         .admin-table-wrap table .block-btn:hover { background: #c0392b; }
 
+        /* ---------- EXAM BLOCKS ---------- */
         .exam-question-block {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid var(--blue-soft);
+            background: rgba(255, 255, 255, 0.6); border: 1px solid var(--blue-soft);
             padding: 14px; border-radius: var(--radius-sm); margin-bottom: 12px;
         }
         .exam-question-block .q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .exam-question-block .q-header strong { color: var(--blue-dark); }
-        .exam-question-block .q-header button { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 18px; }
-        .exam-question-block input,
-        .exam-question-block textarea,
-        .exam-question-block select {
-            width: 100%; padding: 10px 14px;
-            border: 2px solid var(--blue-soft); border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.5);
-            font-family: inherit; font-size: 14px; outline: none;
-            transition: var(--transition); margin-bottom: 6px;
+        .exam-question-block .q-header button { background: none; border: none; color: var(--red); cursor: pointer; font-size: 18px; }
+        .exam-question-block input, .exam-question-block textarea, .exam-question-block select {
+            width: 100%; padding: 10px 14px; border: 2px solid var(--blue-soft);
+            border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.6);
+            font-family: inherit; font-size: 14px; outline: none; transition: var(--transition); margin-bottom: 6px;
         }
-        .exam-question-block input:focus,
-        .exam-question-block textarea:focus,
-        .exam-question-block select:focus { border-color: var(--blue-accent); }
+        .exam-question-block input:focus, .exam-question-block textarea:focus, .exam-question-block select:focus { border-color: var(--blue-accent); }
         .exam-question-block .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         .exam-question-block .opt-grid input { margin-bottom: 0; }
         .exam-question-block select { width: auto; display: inline-block; }
 
         .gradebook-table-wrap { overflow-x: auto; }
         .gradebook-table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
-        .gradebook-table-wrap table th {
-            text-align: left; padding: 10px 8px; color: var(--text-muted);
-            font-weight: 600; border-bottom: 2px solid var(--blue-soft);
-        }
-        .gradebook-table-wrap table td { padding: 10px 8px; border-bottom: 1px solid var(--blue-soft); }
+        .gradebook-table-wrap table th { text-align: left; padding: 10px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid var(--blue-soft); }
+        .gradebook-table-wrap table td { padding: 10px 8px; border-bottom: 1px solid var(--blue-soft); vertical-align: top; }
         .gradebook-table-wrap table .publish-btn {
-            padding: 4px 14px; background: #27ae60; color: #fff;
-            border: none; border-radius: 50px; cursor: pointer;
-            font-family: inherit; font-size: 11px; font-weight: 600; transition: var(--transition);
+            padding: 4px 14px; background: var(--green); color: #fff; border: none;
+            border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 600; transition: var(--transition);
         }
         .gradebook-table-wrap table .publish-btn:hover { background: #1e8449; }
         .gradebook-table-wrap table input {
-            padding: 6px 10px; border: 2px solid var(--blue-soft);
-            border-radius: var(--radius-sm); font-family: inherit;
-            font-size: 12px; width: 80px;
-            background: rgba(255, 255, 255, 0.5); outline: none;
+            padding: 6px 10px; border: 2px solid var(--blue-soft); border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 12px; width: 80px; background: rgba(255, 255, 255, 0.6); outline: none;
         }
         .gradebook-table-wrap table input:focus { border-color: var(--blue-accent); }
 
         /* ============================================================
-           VIDEO CALL STYLES - JITSI INTEGRATION
+           VIDEO CALL (JITSI) — FULLSCREEN + MINIMIZED (PICTURE-IN-PICTURE)
            ============================================================ */
         .video-call-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #0f1a24;
-            z-index: 3000;
-            display: none;
-            flex-direction: column;
-            color: #fff;
-            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            overflow: hidden;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0f1a24; z-index: 3000; display: none; flex-direction: column;
+            color: #fff; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .video-call-overlay.active { display: flex; }
 
         .call-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background: rgba(0,0,0,0.55);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 18px; background: rgba(0,0,0,0.6);
             border-bottom: 1px solid rgba(255,255,255,0.08);
-            flex-wrap: wrap;
-            gap: 8px;
-            flex-shrink: 0;
+            flex-wrap: wrap; gap: 8px; flex-shrink: 0;
         }
-        .call-top-bar .left { display: flex; align-items: center; gap: 12px; }
+        .call-top-bar .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
         .call-top-bar .left .live-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #4CAF50;
-            box-shadow: 0 0 8px #4CAF50;
-            animation: livePulse 1.5s ease-in-out infinite;
+            width: 10px; height: 10px; border-radius: 50%; background: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50; animation: livePulse 1.5s ease-in-out infinite; flex-shrink: 0;
         }
         @keyframes livePulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.55; transform: scale(1.25); }
         }
         .call-top-bar .left .class-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            letter-spacing: 0.3px;
+            font-size: 15px; font-weight: 600; color: #fff; letter-spacing: 0.3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw;
         }
-        .call-top-bar .right .leave-btn {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            letter-spacing: 0.3px;
+        .minimize-btn {
+            background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.22);
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+            flex-shrink: 0; font-family: inherit; line-height: 1;
         }
-        .call-top-bar .right .leave-btn:hover {
-            background: #c0392b;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(231,76,60,0.35);
-        }
+        .minimize-btn:hover { background: var(--blue-accent); border-color: var(--blue-accent); transform: translateY(-1px); }
 
-        #jitsi-container {
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            min-height: 0;
-            background: #0f1a24;
-            position: relative;
-            overflow: hidden;
+        .call-top-bar .right .leave-btn {
+            background: var(--red); color: #fff; border: none; padding: 10px 20px;
+            border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer;
+            font-family: inherit; transition: all 0.2s; display: flex; align-items: center;
+            gap: 6px; letter-spacing: 0.3px; white-space: nowrap;
         }
-        #jitsi-container iframe {
-            width: 100% !important;
-            height: 100% !important;
-            border: 0;
-        }
+        .call-top-bar .right .leave-btn:hover { background: #c0392b; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(231,76,60,0.35); }
+
+        #jitsi-container { flex: 1; width: 100%; height: 100%; min-height: 0; background: #0f1a24; position: relative; overflow: hidden; }
+        #jitsi-container iframe { width: 100% !important; height: 100% !important; border: 0; display: block; }
         #jitsi-container .jitsi-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #a8c8e8;
-            font-size: 15px;
-            gap: 14px;
-            font-weight: 500;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: #a8c8e8; font-size: 15px; gap: 14px; font-weight: 500; text-align: center; padding: 20px;
         }
-        #jitsi-container .jitsi-loading .spinner {
-            font-size: 54px;
-            animation: pulseIcon 1.5s ease-in-out infinite;
+        #jitsi-container .jitsi-loading .spinner { font-size: 54px; animation: pulseIcon 1.5s ease-in-out infinite; }
+
+        /* --- MINIMIZED (FLOATING) STATE --- */
+        .video-call-overlay.minimized {
+            top: auto; left: auto; right: 18px; bottom: 18px;
+            width: 360px; height: 270px; border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+            border: 2px solid rgba(91,155,213,0.65);
+            z-index: 3200;
         }
+        .video-call-overlay.minimized .call-top-bar { padding: 6px 10px; border-radius: 14px 14px 0 0; }
+        .video-call-overlay.minimized .call-top-bar .left { gap: 8px; }
+        .video-call-overlay.minimized .call-top-bar .left .live-dot { width: 8px; height: 8px; }
+        .video-call-overlay.minimized .call-top-bar .left .class-name { font-size: 11px; max-width: 150px; }
+        .video-call-overlay.minimized .minimize-btn { width: 28px; height: 28px; font-size: 13px; }
+        .video-call-overlay.minimized .call-top-bar .right .leave-btn { padding: 6px 12px; font-size: 11px; }
+        .video-call-overlay.minimized #jitsi-container { border-radius: 0 0 14px 14px; }
 
         @media (max-width: 768px) {
             .call-top-bar { padding: 8px 12px; }
-            .call-top-bar .left .class-name { font-size: 13px; }
+            .call-top-bar .left .class-name { font-size: 12.5px; max-width: 34vw; }
             .call-top-bar .right .leave-btn { padding: 8px 14px; font-size: 12px; }
+            .minimize-btn { width: 32px; height: 32px; font-size: 14px; }
+            .video-call-overlay.minimized { width: 250px; height: 190px; right: 10px; bottom: 10px; }
+            .video-call-overlay.minimized .call-top-bar .left .class-name { max-width: 90px; }
         }
         @media (max-width: 480px) {
             .call-top-bar { padding: 6px 10px; }
             .call-top-bar .left { gap: 8px; }
-            .call-top-bar .left .class-name { font-size: 12px; }
+            .call-top-bar .left .class-name { font-size: 11px; max-width: 30vw; }
             .call-top-bar .right .leave-btn { padding: 6px 12px; font-size: 11px; }
+            .video-call-overlay.minimized { width: 210px; height: 160px; }
+            .video-call-overlay.minimized .call-top-bar .right .leave-btn { font-size: 10px; padding: 5px 9px; }
         }
+
+        /* ---------- TOAST ---------- */
+        #toast-container {
+            position: fixed; top: 90px; right: 20px; z-index: 5000;
+            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+        }
+        .toast {
+            background: rgba(44, 62, 80, 0.95); color: #fff; padding: 12px 20px;
+            border-radius: 12px; font-size: 14px; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+            max-width: 320px;
+        }
+        .toast.success { background: rgba(39, 174, 96, 0.96); }
+        .toast.error { background: rgba(231, 76, 60, 0.96); }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(40px); } }
     </style>
 </head>
 <body>
@@ -990,6 +772,9 @@
             <span>📚</span><span>✏️</span><span>🎓</span><span>📝</span><span>📖</span><span>🏫</span>
         </div>
     </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container"></div>
 
     <!-- AI BOT -->
     <div class="ai-bot">
@@ -1044,7 +829,8 @@
                     <h1 class="hero-title">Welcome to <span>Nexus Learn</span></h1>
                     <p class="hero-subtitle">Virtual Educational Classroom Portal</p>
                     <p class="hero-desc">
-                        Experience seamless virtual learning with live chat, image sharing, dynamic exam engines, and comprehensive student management tools.
+                        Experience seamless virtual learning with live chat, image sharing, dynamic exam engines,
+                        HD video meetings, and comprehensive student management tools.
                     </p>
                     <div class="hero-actions">
                         <button class="hero-btn student" onclick="showStudentLogin()">
@@ -1059,7 +845,8 @@
                     </div>
                     <div class="hero-badges">
                         <span class="hero-badge"><span class="icon">💬</span> Real-time Chat</span>
-                        <span class="hero-badge"><span class="icon">📝</span> Exams</span>
+                        <span class="hero-badge"><span class="icon">📝</span> Live Exams</span>
+                        <span class="hero-badge"><span class="icon">🎥</span> HD Video</span>
                         <span class="hero-badge"><span class="icon">🛡️</span> Secure</span>
                     </div>
                 </div>
@@ -1076,7 +863,6 @@
                     <span class="quick-link" onclick="showTeacherLogin()">👨‍🏫 Teacher Dashboard</span>
                     <span class="quick-link" onclick="showProPaymentModal()">⚡ Pro Upgrade</span>
                     <span class="quick-link" onclick="toggleAIChat()">🤖 Ask AI</span>
-                    <span class="quick-link">📚 About Nexus</span>
                 </div>
 
                 <div class="features-grid">
@@ -1091,17 +877,17 @@
                         <p>Create and auto-grade exams instantly</p>
                     </div>
                     <div class="feature-card">
-                        <span class="icon">🛡️</span>
-                        <h4>Secure Admin Controls</h4>
-                        <p>Full teacher control over the classroom</p>
+                        <span class="icon">🎥</span>
+                        <h4>HD Video Meetings</h4>
+                        <p>Floating picture-in-picture classroom calls</p>
                     </div>
                     <div class="feature-card">
                         <span class="icon">📊</span>
-                        <h4>Analytics Dashboard</h4>
-                        <p>Track student performance in real-time</p>
+                        <h4>Gradebook</h4>
+                        <p>Track and publish student performance</p>
                     </div>
                     <div class="feature-card">
-                        <span class="icon">🎓</span>
+                        <span class="icon">⚡</span>
                         <h4>Pro Features</h4>
                         <p>Unlock premium tools and unlimited access</p>
                     </div>
@@ -1119,7 +905,7 @@
                         <span class="pro-tag">✅ Analytics</span>
                     </div>
                     <div class="pro-input-group">
-                        <input type="text" id="pro-code-input" maxlength="14" placeholder="Enter Pro Code (NEXUS-XXXXXXXX)" style="text-transform:uppercase;">
+                        <input type="text" id="pro-code-input" maxlength="20" placeholder="Enter Pro Code (NEXUS-XXXXXXXX)" style="text-transform:uppercase;">
                         <button onclick="activateProCode()">Activate Pro</button>
                     </div>
                 </div>
@@ -1130,10 +916,10 @@
         <div id="student-login-section" class="hidden">
             <div class="auth-section">
                 <h2>🎓 Student <span>Login</span></h2>
-                <p class="sub">Enter your details to join the classroom</p>
+                <p class="sub">Enter your details to join your classroom</p>
                 <div class="input-group">
-                    <input type="text" id="join-name" placeholder="Your Full Name">
-                    <input type="text" id="join-code" placeholder="Class Code (e.g. XXXX-XXXX-XXXX)">
+                    <input type="text" id="join-name" placeholder="Your Full Name" autocomplete="name">
+                    <input type="text" id="join-code" placeholder="Class Code (e.g. ABCD-EFGH-IJKL-MNOP)" autocomplete="off" style="text-transform:uppercase;">
                 </div>
                 <button class="btn" id="join-btn">Join Classroom</button>
                 <div class="link" onclick="showHomepage()">← Back to Homepage</div>
@@ -1147,8 +933,8 @@
                     <h2>👨‍🏫 Teacher <span>Login</span></h2>
                     <p class="sub">Access your instructor dashboard</p>
                     <div class="input-group">
-                        <input type="text" id="login-identity" placeholder="Username">
-                        <input type="password" id="login-password" placeholder="Password">
+                        <input type="text" id="login-identity" placeholder="Username" autocomplete="username">
+                        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
                     </div>
                     <button class="btn" id="login-btn">Secure Login</button>
                     <div class="link" onclick="showTeacherRegister()">Need an account? Register as instructor</div>
@@ -1161,9 +947,9 @@
                     <h2>📝 Register <span>Instructor</span></h2>
                     <p class="sub">Create your teacher account (free)</p>
                     <div class="input-group">
-                        <input type="text" id="reg-username" placeholder="Username">
-                        <input type="email" id="reg-email" placeholder="Email Address">
-                        <input type="password" id="reg-password" placeholder="Password">
+                        <input type="text" id="reg-username" placeholder="Username" autocomplete="username">
+                        <input type="email" id="reg-email" placeholder="Email Address" autocomplete="email">
+                        <input type="password" id="reg-password" placeholder="Password (min 6 characters)" autocomplete="new-password">
                     </div>
                     <button class="btn" id="register-btn">Complete Registration</button>
                     <div class="link" onclick="showTeacherLogin()">Back to Login</div>
@@ -1193,51 +979,23 @@
             <div class="classroom-header">
                 <div class="info">
                     <h2 id="view-class-title">Class Session</h2>
-                    <p id="view-instructor" style="color:var(--text-muted); font-size:14px;"></p>
+                    <p id="view-instructor">Instructor: —</p>
                 </div>
                 <div class="code-badge">
-                    <span>CODE:</span>
-                    <span id="classroom-code-label">XXXX-XXXX-XXXX</span>
-                    <button id="copy-class-code-btn">📋</button>
+                    <span>CODE</span>
+                    <span id="classroom-code-label">----</span>
+                    <button id="copy-class-code-btn" title="Copy class code">📋</button>
                 </div>
                 <div class="actions">
-                    <button id="join-video-btn" onclick="startVideoCall()" style="background:#4CAF50; color:#fff; border:none;">🎥 Join Video</button>
+                    <button id="raise-hand-btn">✋ Raise Hand</button>
+                    <button id="join-video-btn" class="success" onclick="startVideoCall()">🎥 Join Video</button>
                     <button onclick="leaveClassroom()" class="danger">Leave</button>
                 </div>
             </div>
 
-            <div id="role-guide-teacher" class="role-guide hidden">
-                <div class="icon-big">👨‍🏫</div>
-                <div class="content">
-                    <h4>Instructor Dashboard</h4>
-                    <p>Welcome, Teacher! Here's what you can do:</p>
-                    <div class="features-list">
-                        <span>Create and manage classes</span>
-                        <span>Deploy exams with timer</span>
-                        <span>View student submissions</span>
-                        <span>Publish grades and feedback</span>
-                        <span>Start live video calls</span>
-                        <span>Monitor student presence</span>
-                    </div>
-                </div>
-                <span class="badge-role">Teacher</span>
-            </div>
-
-            <div id="role-guide-student" class="role-guide hidden">
-                <div class="icon-big">🎓</div>
-                <div class="content">
-                    <h4>Student Portal</h4>
-                    <p>Welcome, Student! Here's what you can do:</p>
-                    <div class="features-list">
-                        <span>Join classes with a code</span>
-                        <span>Participate in live exams</span>
-                        <span>View your grades</span>
-                        <span>Chat with classmates</span>
-                        <span>Join video calls</span>
-                        <span>Share images and emojis</span>
-                    </div>
-                </div>
-                <span class="badge-role student">Student</span>
+            <div id="announcement-banner" class="announcement-banner hidden">
+                <span class="icon">📢</span>
+                <span id="announcement-text"></span>
             </div>
 
             <div id="teacher-lock-panel" class="teacher-panel hidden">
@@ -1245,9 +1003,12 @@
                 <div class="actions">
                     <button id="teacher-exam-portal-btn">📝 Setup Exam</button>
                     <button id="teacher-gradebook-btn">📊 Gradebook</button>
+                    <button id="teacher-announce-btn">📢 Announce</button>
+                    <button id="teacher-attendance-btn">📥 Attendance</button>
                 </div>
             </div>
 
+            <!-- CHAT -->
             <div class="chat-box" id="text-chat-log"></div>
 
             <div class="emoji-bar">
@@ -1259,54 +1020,80 @@
                 <span onclick="sendEmojiReaction('🎉')">🎉</span>
             </div>
 
+            <!-- MESSAGE INPUT (ROLE-BASED, ONLY ONE VISIBLE) -->
             <div class="typing-row">
-                <div class="input-group">
+                <div class="input-group hidden" id="student-input-group">
                     <span class="badge student">Student</span>
-                    <input type="text" id="student-input-field" placeholder="Write message as Student..." onkeypress="handleKeyPress(event, 'student')">
+                    <input type="text" id="student-input-field" placeholder="Write a message as Student..." onkeypress="handleKeyPress(event, 'student')">
                     <button onclick="sendMsg('student')">Send</button>
                 </div>
-                <div class="input-group">
+                <div class="input-group hidden" id="teacher-input-group">
                     <span class="badge teacher">Teacher</span>
-                    <input type="text" id="teacher-input-field" placeholder="Write message as Teacher..." onkeypress="handleKeyPress(event, 'teacher')">
+                    <input type="text" id="teacher-input-field" placeholder="Write a message as Teacher..." onkeypress="handleKeyPress(event, 'teacher')">
                     <button onclick="sendMsg('teacher')">Send</button>
                 </div>
-                <div class="input-group" style="margin-top: 6px;">
+                <div class="input-group image-group">
                     <input type="file" id="file-import-input" accept="image/*" style="display:none;">
-                    <button onclick="document.getElementById('file-import-input').click();" style="padding:10px 20px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-weight:600;">📁 Import Image</button>
+                    <button onclick="document.getElementById('file-import-input').click();">📁 Share Image</button>
                 </div>
             </div>
 
-            <div id="admin-tracking-section" class="hidden admin-table-wrap">
-                <h4>🛡️ Live Users</h4>
+            <!-- ROLE DASHBOARDS (MOVED BELOW THE MESSAGE INPUT) -->
+            <div id="role-guide-teacher" class="role-guide hidden">
+                <div class="icon-big">👨‍🏫</div>
+                <div class="content">
+                    <h4>Instructor Dashboard</h4>
+                    <p>Welcome, Teacher! Here's what you can do:</p>
+                    <div class="features-list">
+                        <span>Create and manage classes</span>
+                        <span>Deploy exams with timer</span>
+                        <span>View student submissions</span>
+                        <span>Publish grades and feedback</span>
+                        <span>Start live video calls</span>
+                        <span>Send announcements</span>
+                    </div>
+                </div>
+                <span class="badge-role">Teacher</span>
+            </div>
+
+            <div id="role-guide-student" class="role-guide hidden">
+                <div class="icon-big">🎓</div>
+                <div class="content">
+                    <h4>Student Portal</h4>
+                    <p>Welcome, Student! Here's what you can do:</p>
+                    <div class="features-list">
+                        <span>Join live exams</span>
+                        <span>View your grades</span>
+                        <span>Chat with classmates</span>
+                        <span>Join video calls</span>
+                        <span>Share images and emojis</span>
+                        <span>Raise your hand</span>
+                    </div>
+                </div>
+                <span class="badge-role student">Student</span>
+            </div>
+
+            <!-- PARTICIPANTS -->
+            <div id="participants-section" class="admin-table-wrap">
+                <div class="table-head">
+                    <h4>👥 Participants</h4>
+                    <span class="count-pill" id="participant-count">0 online</span>
+                </div>
                 <table>
                     <thead><tr><th>Username</th><th>Role</th><th>Action</th></tr></thead>
                     <tbody id="active-tracked-users-list">
-                        <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted);">No users connected</td></tr>
+                        <tr><td colspan="3" style="text-align:center; padding:18px; color:var(--text-muted);">No users connected</td></tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- JITSI MEETING OVERLAY -->
-            <div class="video-call-overlay" id="video-call-overlay">
-                <div class="call-top-bar">
-                    <div class="left">
-                        <span class="live-dot"></span>
-                        <span class="class-name" id="call-class-name">Class Session</span>
-                    </div>
-                    <div class="right">
-                        <button class="leave-btn" onclick="leaveVideoCall()">📞 Leave Meeting</button>
-                    </div>
-                </div>
-                <div id="jitsi-container"></div>
             </div>
         </div>
     </div>
 
     <!-- IMAGE ZOOM MODAL -->
     <div class="modal-overlay" id="imageZoomModal">
-        <div class="modal-content" style="max-width:90%; max-height:90%; padding:24px; display:flex; flex-direction:column; align-items:center;">
+        <div class="modal-content" style="max-width:92%; max-height:92%; padding:22px; display:flex; flex-direction:column; align-items:center;">
             <button class="close" onclick="closeZoomModal()">✕</button>
-            <img id="zoomModalImg" src="" alt="Zoomed" style="max-width:100%; max-height:70vh; border-radius:var(--radius-sm);">
+            <img id="zoomModalImg" src="" alt="Zoomed" style="max-width:100%; max-height:70vh; border-radius:var(--radius-sm); transition: transform 0.2s;">
             <div style="display:flex; gap:12px; margin-top:16px; flex-wrap:wrap; justify-content:center;">
                 <button onclick="zoomIn()" style="padding:10px 22px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:600;">➕ Zoom In</button>
                 <button onclick="zoomOut()" style="padding:10px 22px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-weight:600;">➖ Zoom Out</button>
@@ -1321,12 +1108,12 @@
             <button class="close" onclick="closeExamSetup()">✕</button>
             <h2>📝 <span>Exam Setup</span></h2>
             <p class="sub">Configure your classroom examination</p>
-            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-                <div style="flex:1; min-width:120px;">
-                    <label style="font-size:14px; color:var(--text-muted); font-weight:600;">Timer (minutes):</label>
-                    <input type="number" id="exam-minutes" value="10" style="width:100%; padding:12px 16px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; background:rgba(255,255,255,0.5);">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; align-items:flex-end;">
+                <div style="flex:1; min-width:130px;">
+                    <label style="font-size:13px; color:var(--text-muted); font-weight:600;">Timer (minutes):</label>
+                    <input type="number" id="exam-minutes" value="10" min="1" max="180" style="width:100%; padding:12px 16px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; background:rgba(255,255,255,0.6); outline:none;">
                 </div>
-                <div style="display:flex; gap:20px; align-items:center;">
+                <div style="display:flex; gap:20px; align-items:center; padding-bottom:10px;">
                     <label style="font-size:14px; color:var(--text-secondary); font-weight:600;"><input type="checkbox" id="exam-has-obj" checked onchange="toggleOBJ()"> OBJ</label>
                     <label style="font-size:14px; color:var(--text-secondary); font-weight:600;"><input type="checkbox" id="exam-has-theory" checked onchange="toggleTheory()"> Theory</label>
                 </div>
@@ -1341,18 +1128,18 @@
                 <button onclick="addTheoryQuestion()" style="padding:8px 20px; background:var(--blue-accent); color:#fff; border:none; border-radius:50px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; margin-bottom:12px;">+ Add Question</button>
                 <div id="theory-questions-list"></div>
             </div>
-            <button onclick="deployClassExam()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">🚀 Deploy Exam</button>
+            <button onclick="deployClassExam()" style="width:100%; margin-top:16px; padding:16px; background:var(--green); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">🚀 Deploy Exam</button>
         </div>
     </div>
 
     <!-- STUDENT EXAM MODAL -->
     <div class="modal-overlay" id="student-exam-workspace-modal">
         <div class="modal-content">
-            <button class="close" onclick="document.getElementById('student-exam-workspace-modal').classList.remove('active')">✕</button>
+            <button class="close" onclick="closeStudentExam()">✕</button>
             <h2>📝 <span>Live Exam</span></h2>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px;">
                 <p class="sub" style="margin:0;">Answer all questions before time runs out</p>
-                <strong id="exam-timer-display" style="font-size:28px; color:#e74c3c; font-family:monospace;">00:00</strong>
+                <strong id="exam-timer-display" style="font-size:26px; color:var(--red); font-family:monospace;">00:00</strong>
             </div>
             <div id="student-obj-display-section" class="hidden">
                 <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Section A: Objectives</h4>
@@ -1362,13 +1149,13 @@
                 <h4 style="font-size:16px; color:var(--text-primary); margin-bottom:8px;">Section B: Theory</h4>
                 <div id="student-theory-questions-container"></div>
             </div>
-            <button onclick="submitStudentExamAnswers()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">📝 Submit Exam</button>
+            <button onclick="submitStudentExamAnswers()" style="width:100%; margin-top:16px; padding:16px; background:var(--green); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">📝 Submit Exam</button>
         </div>
     </div>
 
     <!-- TEACHER GRADEBOOK MODAL -->
     <div class="modal-overlay" id="teacher-gradebook-modal">
-        <div class="modal-content" style="max-width:800px;">
+        <div class="modal-content" style="max-width:820px;">
             <button class="close" onclick="closeGradebookModal()">✕</button>
             <h2>📊 <span>Gradebook</span></h2>
             <p class="sub">Review and grade student submissions</p>
@@ -1391,9 +1178,9 @@
             <p class="sub">Upgrade your experience with premium features</p>
             <div id="pro-form-section">
                 <div style="display:flex; flex-direction:column; gap:12px;">
-                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
-                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
-                    <select id="pro-duration" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.5);">
+                    <input type="text" id="pro-full-name" placeholder="Full Name" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.6);">
+                    <input type="text" id="pro-phone" placeholder="Phone Number" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.6);">
+                    <select id="pro-duration" style="padding:14px 18px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; outline:none; background:rgba(255,255,255,0.6);">
                         <option value="1week">1 Week</option>
                         <option value="2weeks">2 Weeks</option>
                         <option value="4weeks">4 Weeks</option>
@@ -1407,20 +1194,20 @@
             <div id="pro-payment-details" class="hidden">
                 <h3 style="font-size:17px; margin-bottom:12px; color:var(--text-primary);">💳 Payment Details</h3>
                 <div style="background:var(--blue-light); padding:16px; border-radius:var(--radius-sm); border:1px solid var(--blue-soft);">
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px; gap:10px;">
                         <span>Account Number:</span><strong>8024300891</strong>
                         <button onclick="copyPaymentDetail('8024300891', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--blue-soft); font-size:14px; gap:10px;">
                         <span>Bank Name:</span><strong>OPay</strong>
                         <button onclick="copyPaymentDetail('OPay', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:14px; gap:10px;">
                         <span>Account Name:</span><strong>Talabi Sunny Okunola</strong>
                         <button onclick="copyPaymentDetail('Talabi Sunny Okunola', this)" style="background:var(--blue-accent); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">Copy</button>
                     </div>
                 </div>
-                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:16px; background:#27ae60; color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">✅ I've Made Payment</button>
+                <button onclick="confirmProPayment()" style="width:100%; margin-top:16px; padding:16px; background:var(--green); color:#fff; border:none; border-radius:var(--radius-sm); font-weight:700; cursor:pointer; transition:var(--transition); font-family:inherit; font-size:16px;">✅ I've Made Payment</button>
             </div>
             <div id="pro-pending-status" class="hidden" style="text-align:center; padding:20px 0;">
                 <div style="font-size:64px; margin-bottom:16px;">⏳</div>
@@ -1431,14 +1218,25 @@
         </div>
     </div>
 
-    <!-- DEBUG STATUS PANEL -->
-    <div id="debug-status">
-        <button class="close-debug" onclick="document.getElementById('debug-status').classList.toggle('hidden-debug')">✕</button>
-        <div id="debug-log"></div>
+    <!-- ============================================================
+         JITSI VIDEO CALL OVERLAY
+         ============================================================ -->
+    <div class="video-call-overlay" id="video-call-overlay">
+        <div class="call-top-bar">
+            <div class="left">
+                <button class="minimize-btn" id="minimize-call-btn" onclick="toggleMinimizeVideoCall()" title="Minimize / Restore">⬇️</button>
+                <span class="live-dot"></span>
+                <span class="class-name" id="call-class-name">Class Session</span>
+            </div>
+            <div class="right">
+                <button class="leave-btn" onclick="leaveVideoCall()">📞 Leave</button>
+            </div>
+        </div>
+        <div id="jitsi-container"></div>
     </div>
 
     <!-- ============================================================
-         JAVASCRIPT - FIREBASE + ALL FEATURES + JITSI
+         JAVASCRIPT
          ============================================================ -->
     <script>
         // ============================================================
@@ -1465,124 +1263,201 @@
         let isTeacherUser = false;
         let isProUser = false;
         let proExpiryDate = null;
-        let currentProRequestId = null;
         let activeExamConfig = null;
         let examIntervalTimer = null;
         let currentExamTimeSecondsLeft = 0;
         let examGradebook = {};
         let currentZoomScale = 1;
+        let examSubmitted = false;
+        let joinedAt = 0;
+        let messagesRef = null;
+        let presenceListRef = null;
+        let lastPresence = {};
 
         // Jitsi state
         let jitsiApi = null;
         let videoCallActive = false;
+        let videoCallMinimized = false;
 
         // ============================================================
-        // DEBUG LOGGING
+        // HELPERS
         // ============================================================
-        const debugLog = document.getElementById('debug-log');
-        function logDebug(msg) {
-            const entry = document.createElement('div');
-            entry.className = 'entry';
-            const now = new Date().toLocaleTimeString();
-            entry.textContent = `[${now}] ${msg}`;
-            debugLog.appendChild(entry);
-            debugLog.scrollTop = debugLog.scrollHeight;
-            console.log(`[DEBUG] ${msg}`);
+        function logDebug(msg) { console.log('[NEXUS]', msg); }
+
+        function showToast(message, type) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast' + (type ? ' ' + type : '');
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
         }
 
-        function showDebugPanel() {
-            document.getElementById('debug-status').classList.remove('hidden-debug');
+        async function httpPost(url, data) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            let json;
+            try { json = await res.json(); } catch (e) { json = { success: false, message: 'Invalid server response' }; }
+            return json;
+        }
+
+        function escapeHtml(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function formatTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         // ============================================================
-        // LOADER
+        // DYNAMIC NAV HEIGHT
+        // ============================================================
+        function syncNavHeight() {
+            const nav = document.getElementById('main-nav');
+            if (!nav) return;
+            const h = nav.offsetHeight;
+            document.documentElement.style.setProperty('--nav-height', h + 'px');
+        }
+        window.addEventListener('resize', syncNavHeight);
+        window.addEventListener('orientationchange', () => setTimeout(syncNavHeight, 200));
+
+        // ============================================================
+        // NOTIFICATION SOUND
+        // ============================================================
+        let audioCtx = null;
+        function playPing() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.25);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.26);
+            } catch (e) { /* ignore */ }
+        }
+
+        // ============================================================
+        // BOOT
         // ============================================================
         window.addEventListener('DOMContentLoaded', () => {
-            showDebugPanel();
+            syncNavHeight();
+
+            // Loader
             const bar = document.getElementById('load-bar');
             const text = document.getElementById('load-text');
             let progress = 0;
             const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 8) + 2;
+                progress += Math.floor(Math.random() * 9) + 3;
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
-                    setTimeout(() => {
-                        document.getElementById('loader-screen').classList.add('hidden');
-                    }, 400);
+                    setTimeout(() => document.getElementById('loader-screen').classList.add('hidden'), 350);
                 }
                 bar.style.width = progress + '%';
                 text.innerText = progress + '%';
-            }, 50);
+            }, 45);
 
+            // Restore saved names
+            const savedStudent = localStorage.getItem('nexus_student_name');
+            if (savedStudent) document.getElementById('join-name').value = savedStudent;
+
+            // Auto-login teacher
             const savedTeacher = localStorage.getItem('nexus_teacher_username');
             if (savedTeacher) {
                 currentTeacherUser = savedTeacher;
                 myUsername = savedTeacher;
                 isTeacherUser = true;
-                showTeacherLogin();
-                document.getElementById('teacher-login-container').classList.add('hidden');
-                document.getElementById('teacher-dashboard').classList.remove('hidden');
-                document.getElementById('saved-teacher-welcome').innerText = 'Logged in as: ' + savedTeacher;
-                document.getElementById('nav-teacher').classList.add('active');
-                document.getElementById('nav-home').classList.remove('active');
+                showTeacherDashboard();
                 logDebug('Teacher auto-login: ' + savedTeacher);
             }
 
+            // Force uppercase inputs
             document.getElementById('pro-code-input').addEventListener('input', function(e) {
                 e.target.value = e.target.value.toUpperCase();
             });
-
-            document.addEventListener('gesturestart', function(e) {
-                e.preventDefault();
+            document.getElementById('join-code').addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
             });
-        });
 
-        // ============================================================
-        // HTTP HELPERS
-        // ============================================================
-        async function httpPost(url, data) {
-            const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            return await res.json();
-        }
+            // Prevent iOS gesture zoom
+            document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+            // Emoji background
+            createEmojiBackground();
+
+            setTimeout(syncNavHeight, 400);
+            setTimeout(syncNavHeight, 1200);
+        });
 
         // ============================================================
         // NAVIGATION
         // ============================================================
-        function showHomepage() {
-            document.getElementById('homepage-section').classList.remove('hidden');
+        function setActiveNav(id) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active');
+        }
+
+        function hideAllSections() {
+            document.getElementById('homepage-section').classList.add('hidden');
             document.getElementById('student-login-section').classList.add('hidden');
             document.getElementById('teacher-login-section').classList.add('hidden');
             document.getElementById('classroom-section').classList.add('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('nav-home').classList.add('active');
+        }
+
+        function showHomepage() {
+            hideAllSections();
+            document.getElementById('homepage-section').classList.remove('hidden');
+            setActiveNav('nav-home');
             document.body.classList.remove('in-classroom');
-            logDebug('Navigated to Homepage');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            logDebug('Homepage');
         }
 
         function showStudentLogin() {
-            document.getElementById('homepage-section').classList.add('hidden');
+            hideAllSections();
             document.getElementById('student-login-section').classList.remove('hidden');
-            document.getElementById('teacher-login-section').classList.add('hidden');
-            document.getElementById('classroom-section').classList.add('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('nav-student').classList.add('active');
+            setActiveNav('nav-student');
             document.body.classList.remove('in-classroom');
-            logDebug('Navigated to Student Login');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            logDebug('Student login');
         }
 
         function showTeacherLogin() {
-            document.getElementById('homepage-section').classList.add('hidden');
-            document.getElementById('student-login-section').classList.add('hidden');
+            hideAllSections();
             document.getElementById('teacher-login-section').classList.remove('hidden');
-            document.getElementById('classroom-section').classList.add('hidden');
             document.getElementById('teacher-dashboard').classList.add('hidden');
             document.getElementById('teacher-login-container').classList.remove('hidden');
             document.getElementById('teacher-reg-container').classList.add('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('nav-teacher').classList.add('active');
+            setActiveNav('nav-teacher');
             document.body.classList.remove('in-classroom');
-            logDebug('Navigated to Teacher Login');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            logDebug('Teacher login');
+        }
+
+        function showTeacherDashboard() {
+            hideAllSections();
+            document.getElementById('teacher-login-section').classList.remove('hidden');
+            document.getElementById('teacher-login-container').classList.add('hidden');
+            document.getElementById('teacher-reg-container').classList.add('hidden');
+            document.getElementById('teacher-dashboard').classList.remove('hidden');
+            document.getElementById('saved-teacher-welcome').innerText =
+                'Logged in as: ' + currentTeacherUser + (isProUser ? ' ⚡ PRO' : '');
+            setActiveNav('nav-teacher');
+            document.body.classList.remove('in-classroom');
+            logDebug('Teacher dashboard');
         }
 
         function showTeacherRegister() {
@@ -1592,28 +1467,11 @@
 
         function logoutTeacher() {
             localStorage.removeItem('nexus_teacher_username');
-            location.reload();
-        }
-
-        function leaveClassroom() {
-            if (videoCallActive) {
-                leaveVideoCall();
-            }
-            if (classCodeRoom) {
-                const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
-                presenceRef.remove();
-                logDebug('Left classroom');
-            }
-            document.body.classList.remove('in-classroom');
-            location.reload();
-        }
-
-        function copyToClipboard(text, btn) {
-            navigator.clipboard.writeText(text).then(() => {
-                const orig = btn.innerText;
-                btn.innerText = '✓';
-                setTimeout(() => { btn.innerText = orig; }, 2000);
-            });
+            currentTeacherUser = "";
+            isTeacherUser = false;
+            myUsername = "";
+            showHomepage();
+            showToast('Logged out successfully', 'success');
         }
 
         // ============================================================
@@ -1623,128 +1481,125 @@
             const username = document.getElementById('reg-username').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
-            if (!username || !password) { alert('Username and password are required.'); return; }
-            const data = await httpPost('/api/register', { username, email, password });
-            alert(data.message);
-            logDebug('Registration response: ' + data.message);
-            if (data.success) showTeacherLogin();
+            const btn = document.getElementById('register-btn');
+
+            if (!username || !password) { showToast('Username and password are required.', 'error'); return; }
+            if (username.length < 3) { showToast('Username must be at least 3 characters.', 'error'); return; }
+            if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+            if (!/^[A-Za-z0-9_.-]+$/.test(username)) {
+                showToast('Username can only contain letters, numbers, _ . -', 'error'); return;
+            }
+
+            btn.disabled = true; btn.textContent = '⏳ Creating account...';
+            try {
+                const data = await httpPost('/api/register', { username, email, password });
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('reg-username').value = '';
+                    document.getElementById('reg-email').value = '';
+                    document.getElementById('reg-password').value = '';
+                    showTeacherLogin();
+                } else {
+                    showToast(data.message || 'Registration failed.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error: ' + err.message, 'error');
+            }
+            btn.disabled = false; btn.textContent = 'Complete Registration';
         });
 
         document.getElementById('login-btn').addEventListener('click', async () => {
             const username = document.getElementById('login-identity').value.trim();
             const password = document.getElementById('login-password').value;
-            if (!username || !password) { alert('Please enter username and password.'); return; }
-            const data = await httpPost('/api/login', { username, password });
-            logDebug('Login response: ' + data.message);
-            if (data.success) {
-                currentTeacherUser = data.username;
-                myUsername = data.username;
-                isTeacherUser = true;
-                localStorage.setItem('nexus_teacher_username', data.username);
-                document.getElementById('teacher-login-container').classList.add('hidden');
-                document.getElementById('teacher-dashboard').classList.remove('hidden');
-                document.getElementById('saved-teacher-welcome').innerText = 'Logged in as: ' + data.username + (isProUser ? ' ⚡ PRO' : '');
-                if (isProUser) {
-                    document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
-                    document.getElementById('nav-pro').classList.add('active-pro');
+            const btn = document.getElementById('login-btn');
+
+            if (!username || !password) { showToast('Please enter username and password.', 'error'); return; }
+
+            btn.disabled = true; btn.textContent = '⏳ Verifying...';
+            try {
+                const data = await httpPost('/api/login', { username, password });
+                if (data.success) {
+                    currentTeacherUser = data.username;
+                    myUsername = data.username;
+                    isTeacherUser = true;
+                    localStorage.setItem('nexus_teacher_username', data.username);
+                    document.getElementById('login-password').value = '';
+                    showTeacherDashboard();
+                    showToast('Welcome back, ' + data.username + '!', 'success');
+                } else {
+                    showToast(data.message || 'Invalid username or password.', 'error');
                 }
-                logDebug('Teacher logged in: ' + data.username);
-            } else {
-                alert(data.message);
+            } catch (err) {
+                showToast('Network error: ' + err.message, 'error');
             }
+            btn.disabled = false; btn.textContent = 'Secure Login';
         });
 
         // ============================================================
-        // CLASS CREATION
+        // CLASS CREATION (TEACHER)
         // ============================================================
-        document.getElementById('create-class-btn').addEventListener('click', function() {
+        document.getElementById('create-class-btn').addEventListener('click', async function() {
             const name = document.getElementById('create-classname').value.trim();
-            if (!name) { alert('Enter a class name.'); return; }
-            if (!currentTeacherUser) { alert('You must be logged in as a teacher first.'); return; }
+            if (!name) { showToast('Enter a class name.', 'error'); return; }
+            if (!currentTeacherUser) { showToast('You must be logged in as a teacher first.', 'error'); return; }
 
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = '';
             for (let i = 0; i < 4; i++) {
-                for (let j = 0; j < 4; j++) {
-                    code += chars[Math.floor(Math.random() * chars.length)];
-                }
+                for (let j = 0; j < 4; j++) code += chars[Math.floor(Math.random() * chars.length)];
                 if (i < 3) code += '-';
             }
             classCodeRoom = code;
+            myUsername = currentTeacherUser;
 
             document.getElementById('display-class-code').innerText = code;
             document.getElementById('generated-code-box').classList.remove('hidden');
-            myUsername = currentTeacherUser;
 
-            alert('Class "' + name + '" created! Code: ' + code);
-            logDebug('Class created: ' + name + ' code: ' + code);
-
-            const classRef = db.ref('classrooms/' + classCodeRoom);
-            classRef.update({
-                info: {
-                    name: name,
-                    teacher: currentTeacherUser,
-                    created_at: Date.now()
-                }
-            }).then(() => {
-                logDebug('Class saved to Firebase.');
-            }).catch(err => {
-                logDebug('Class save error: ' + err.message);
-                alert('Class created but could not be saved to Firebase. It may not persist after refresh.');
-            });
+            try {
+                await db.ref('classrooms/' + classCodeRoom).update({
+                    info: { name: name, teacher: currentTeacherUser, created_at: Date.now() }
+                });
+                showToast('Class "' + name + '" created! Code: ' + code, 'success');
+            } catch (err) {
+                showToast('Class created but could not be saved: ' + err.message, 'error');
+            }
+            logDebug('Class created: ' + name + ' / ' + code);
         });
 
         document.getElementById('enter-classroom-btn').addEventListener('click', async () => {
-            if (!myUsername || !classCodeRoom) {
-                alert('Please create a class first.');
-                return;
-            }
+            if (!myUsername || !classCodeRoom) { showToast('Please create a class first.', 'error'); return; }
             await enterClassroom();
         });
 
         // ============================================================
-        // STUDENT JOIN
+        // STUDENT JOIN — ONLY EXISTING CLASSROOMS
         // ============================================================
         document.getElementById('join-btn').addEventListener('click', async () => {
-            myUsername = document.getElementById('join-name').value.trim();
-            classCodeRoom = document.getElementById('join-code').value.trim();
-            isTeacherUser = false;
-            if (!myUsername || !classCodeRoom) { alert('Please enter your name and class code.'); return; }
+            const name = document.getElementById('join-name').value.trim();
+            let code = document.getElementById('join-code').value.trim().toUpperCase().replace(/\s+/g, '');
+            const btn = document.getElementById('join-btn');
 
-            db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
-                if (snap.exists()) {
-                    enterClassroom();
-                } else {
-                    const classRef = db.ref('classrooms/' + classCodeRoom);
-                    classRef.update({
-                        info: {
-                            name: 'Class (auto-created)',
-                            teacher: 'Unknown',
-                            created_at: Date.now()
-                        }
-                    }).then(() => {
-                        enterClassroom();
-                    }).catch(err => {
-                        alert('Could not verify class. Please check the code and try again.');
-                        logDebug('Class verify error: ' + err.message);
-                    });
+            if (!name) { showToast('Please enter your full name.', 'error'); return; }
+            if (!code) { showToast('Please enter the class code.', 'error'); return; }
+
+            btn.disabled = true; btn.textContent = '⏳ Verifying class...';
+
+            try {
+                const snap = await db.ref('classrooms/' + code + '/info').once('value');
+                if (!snap.exists()) {
+                    showToast('❌ No classroom found with that code. Please confirm it with your teacher.', 'error');
+                    btn.disabled = false; btn.textContent = 'Join Classroom';
+                    return;
                 }
-            }).catch(err => {
-                logDebug('Error checking class: ' + err.message);
-                const classRef = db.ref('classrooms/' + classCodeRoom);
-                classRef.update({
-                    info: {
-                        name: 'Class (auto-created)',
-                        teacher: 'Unknown',
-                        created_at: Date.now()
-                    }
-                }).then(() => {
-                    enterClassroom();
-                }).catch(err2 => {
-                    alert('Could not verify class. Please check the code and try again.');
-                    logDebug('Error creating class: ' + err2.message);
-                });
-            });
+                myUsername = name;
+                classCodeRoom = code;
+                isTeacherUser = false;
+                localStorage.setItem('nexus_student_name', name);
+                await enterClassroom();
+            } catch (err) {
+                showToast('Could not verify the class code: ' + err.message, 'error');
+            }
+            btn.disabled = false; btn.textContent = 'Join Classroom';
         });
 
         // ============================================================
@@ -1752,41 +1607,52 @@
         // ============================================================
         async function enterClassroom() {
             if (!classCodeRoom || classCodeRoom.trim() === '') {
-                alert('Invalid class code. Please go back and re‑enter.');
+                showToast('Invalid class code.', 'error');
                 return;
             }
 
-            logDebug('Entering classroom: ' + classCodeRoom + ' as ' + myUsername + (isTeacherUser ? ' (Teacher)' : ' (Student)'));
-            document.getElementById('homepage-section').classList.add('hidden');
-            document.getElementById('student-login-section').classList.add('hidden');
-            document.getElementById('teacher-login-section').classList.add('hidden');
+            joinedAt = Date.now();
+            document.getElementById('text-chat-log').innerHTML = '';
+            document.getElementById('announcement-banner').classList.add('hidden');
+
+            hideAllSections();
             document.getElementById('classroom-section').classList.remove('hidden');
             document.getElementById('app-container').classList.add('classroom-container');
             document.body.classList.add('in-classroom');
+            window.scrollTo({ top: 0 });
 
+            // Role based UI
             if (isTeacherUser) {
                 document.getElementById('role-guide-teacher').classList.remove('hidden');
                 document.getElementById('role-guide-student').classList.add('hidden');
+                document.getElementById('teacher-lock-panel').classList.remove('hidden');
+                document.getElementById('teacher-input-group').classList.remove('hidden');
+                document.getElementById('student-input-group').classList.add('hidden');
             } else {
                 document.getElementById('role-guide-student').classList.remove('hidden');
                 document.getElementById('role-guide-teacher').classList.add('hidden');
+                document.getElementById('teacher-lock-panel').classList.add('hidden');
+                document.getElementById('student-input-group').classList.remove('hidden');
+                document.getElementById('teacher-input-group').classList.add('hidden');
             }
-
-            db.ref('classrooms/' + classCodeRoom + '/info').once('value').then(snap => {
-                const info = snap.val();
-                if (info) {
-                    document.getElementById('view-class-title').innerText = info.name || 'Class Session';
-                    document.getElementById('view-instructor').innerText = 'Instructor: ' + (info.teacher || 'Unknown');
-                    document.getElementById('call-class-name').innerText = info.name || 'Class Session';
-                } else {
-                    document.getElementById('view-class-title').innerText = 'Class Session';
-                    document.getElementById('view-instructor').innerText = 'Instructor: Unknown';
-                    document.getElementById('call-class-name').innerText = 'Class Session';
-                }
-            });
 
             document.getElementById('classroom-code-label').innerText = classCodeRoom;
 
+            // Class info
+            try {
+                const snap = await db.ref('classrooms/' + classCodeRoom + '/info').once('value');
+                const info = snap.val();
+                const clsName = (info && info.name) ? info.name : 'Class Session';
+                document.getElementById('view-class-title').innerText = clsName;
+                document.getElementById('view-instructor').innerText =
+                    'Instructor: ' + ((info && info.teacher) ? info.teacher : 'Unknown');
+                document.getElementById('call-class-name').innerText = clsName;
+            } catch (e) {
+                document.getElementById('view-class-title').innerText = 'Class Session';
+                document.getElementById('view-instructor').innerText = 'Instructor: Unknown';
+            }
+
+            // Presence
             const presenceRef = db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername);
             try {
                 await presenceRef.set({
@@ -1795,133 +1661,181 @@
                     is_pro: isProUser,
                     joined: Date.now()
                 });
-                logDebug('Presence written successfully');
+                presenceRef.onDisconnect().remove();
             } catch (err) {
-                logDebug('ERROR writing presence: ' + err.message);
-                alert('Could not register your presence. Please check your network or Firebase rules.');
-            }
-            presenceRef.onDisconnect().remove();
-
-            if (isTeacherUser) {
-                document.getElementById('teacher-lock-panel').classList.remove('hidden');
-                document.getElementById('admin-tracking-section').classList.remove('hidden');
+                showToast('Could not register your presence: ' + err.message, 'error');
             }
 
-            const messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
-            messagesRef.off();
+            // Messages
+            if (messagesRef) messagesRef.off();
+            messagesRef = db.ref('classrooms/' + classCodeRoom + '/messages');
             messagesRef.on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 if (msg) handleIncomingMessage(msg);
             });
 
-            const presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
-            presenceListRef.off();
-            presenceListRef.on('value', (snap) => {
-                const users = snap.val();
-                updateActiveUsers(users);
-            });
+            // Presence list
+            if (presenceListRef) presenceListRef.off();
+            presenceListRef = db.ref('classrooms/' + classCodeRoom + '/presence');
+            presenceListRef.on('value', (snap) => updateActiveUsers(snap.val()));
 
-            logDebug('Classroom entry complete');
+            logDebug('Entered classroom: ' + classCodeRoom + ' as ' + myUsername);
         }
 
         // ============================================================
-        // UPDATE ACTIVE USERS
+        // PARTICIPANTS LIST
         // ============================================================
         function updateActiveUsers(users) {
+            lastPresence = users || {};
             const list = document.getElementById('active-tracked-users-list');
+            const countEl = document.getElementById('participant-count');
             list.innerHTML = '';
-            if (!users) {
+
+            if (!users || Object.keys(users).length === 0) {
                 list.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-muted);">No users connected</td></tr>';
+                if (countEl) countEl.textContent = '0 online';
                 return;
             }
-            Object.values(users).forEach(u => {
+
+            const entries = Object.values(users);
+            if (countEl) countEl.textContent = entries.length + ' online';
+
+            entries.forEach(u => {
                 const tr = document.createElement('tr');
-                const isInstructor = u.role === 'instructor';
+                const role = (u.role || 'student').toLowerCase();
+                const isInstructor = role === 'instructor';
                 const proBadge = u.is_pro ? ' ⚡' : '';
-                const action = isInstructor ?
-                    '<span style="color:var(--text-muted);font-size:12px;">Protected</span>' :
-                    '<button class="block-btn" onclick="forceBlockUser(\'' + u.username + '\')">Block</button>';
-                tr.innerHTML = `
-                    <td><strong>${u.username}${proBadge}</strong></td>
-                    <td style="font-size:13px;color:${isInstructor ? 'var(--blue-dark)' : 'var(--text-muted)'};">${u.role.toUpperCase()}</td>
-                    <td>${action}</td>
-                `;
+                let action;
+                if (isInstructor) {
+                    action = '<span style="color:var(--text-muted);font-size:12px;">Protected</span>';
+                } else if (isTeacherUser) {
+                    action = '<button class="block-btn" onclick="forceBlockUser(\'' +
+                             escapeHtml(u.username).replace(/'/g, "\\'") + '\')">Block</button>';
+                } else {
+                    action = '<span style="color:var(--text-muted);font-size:12px;">—</span>';
+                }
+                tr.innerHTML =
+                    '<td><strong>' + escapeHtml(u.username) + proBadge + '</strong></td>' +
+                    '<td style="font-size:13px;color:' + (isInstructor ? 'var(--blue-dark)' : 'var(--text-muted)') + ';">' +
+                    role.toUpperCase() + '</td>' +
+                    '<td>' + action + '</td>';
                 list.appendChild(tr);
             });
         }
 
         function forceBlockUser(username) {
-            if (confirm('Block ' + username + '?')) {
-                const blockMsg = {
-                    name: 'SYSTEM',
-                    content: JSON.stringify({ type: 'block', target: username }),
-                    type: 'system'
-                };
-                db.ref('classrooms/' + classCodeRoom + '/messages').push(blockMsg);
-                logDebug('Blocked user: ' + username);
-            }
+            if (!confirm('Block ' + username + ' from this classroom?')) return;
+            const blockMsg = {
+                name: 'SYSTEM',
+                content: JSON.stringify({ type: 'block', target: username }),
+                type: 'system',
+                timestamp: Date.now()
+            };
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(blockMsg)
+              .then(() => showToast('Blocked ' + username, 'success'))
+              .catch(err => showToast('Block failed: ' + err.message, 'error'));
         }
 
         // ============================================================
-        // HANDLE INCOMING MESSAGES
+        // INCOMING MESSAGES
         // ============================================================
         function handleIncomingMessage(msg) {
+            const isRecent = !msg.timestamp || msg.timestamp >= (joinedAt - 3000);
+
             if (msg.type === 'emoji_reaction') {
-                createFloatingEmoji(msg.content);
-                appendMsg(msg.name, msg.content, 'emoji_reaction');
+                if (isRecent) createFloatingEmoji(msg.content);
+                appendMsg(msg.name, msg.content, 'emoji_reaction', msg.timestamp);
                 return;
             }
+
             if (msg.type === 'deploy_examination') {
-                if (!isTeacherUser) {
-                    const config = JSON.parse(msg.content);
-                    if (confirm("📝 Exam is ready! Start now?")) {
-                        launchStudentExamWorkspace(config);
-                    }
+                if (!isTeacherUser && isRecent) {
+                    try {
+                        const config = JSON.parse(msg.content);
+                        setTimeout(() => {
+                            if (confirm('📝 A new exam has been deployed! Start now?')) {
+                                launchStudentExamWorkspace(config);
+                            }
+                        }, 400);
+                    } catch (e) { /* ignore */ }
                 }
                 return;
             }
+
             if (msg.type === 'exam_submission') {
-                if (isTeacherUser) {
-                    const sub = JSON.parse(msg.content);
-                    examGradebook[sub.studentName] = {
-                        objScore: sub.objScore,
-                        theoryResponses: sub.theoryResponses,
-                        theoryGrade: "",
-                        remarks: ""
-                    };
-                    appendMsg("SYSTEM", "📝 Exam received from: " + sub.studentName, "text");
-                    logDebug('Exam submission from ' + sub.studentName);
+                if (isTeacherUser && isRecent) {
+                    try {
+                        const sub = JSON.parse(msg.content);
+                        examGradebook[sub.studentName] = {
+                            objScore: sub.objScore,
+                            theoryResponses: sub.theoryResponses || [],
+                            theoryGrade: "",
+                            remarks: ""
+                        };
+                        appendMsg('SYSTEM', '📝 Exam received from: ' + sub.studentName, 'system', msg.timestamp);
+                        showToast('Exam submitted by ' + sub.studentName, 'success');
+                    } catch (e) { /* ignore */ }
                 }
                 return;
             }
+
             if (msg.type === 'publish_report_card') {
-                const report = JSON.parse(msg.content);
-                if (!isTeacherUser && report.targetStudent === myUsername) {
-                    alert(
-                        '📊 NEXUS LEARN RESULTS\n─────────────────────────\nMultiple Choice: ' + report.objScore +
-                        '\nTheory Grade: ' + report.theoryGrade + '\nRemarks: ' + report.remarks
-                    );
+                if (!isTeacherUser && isRecent) {
+                    try {
+                        const report = JSON.parse(msg.content);
+                        if (report.targetStudent === myUsername) {
+                            alert(
+                                '📊 NEXUS LEARN RESULTS\n' +
+                                '─────────────────────────\n' +
+                                'Multiple Choice: ' + report.objScore + '\n' +
+                                'Theory Grade: ' + report.theoryGrade + '\n' +
+                                'Remarks: ' + report.remarks
+                            );
+                        }
+                    } catch (e) { /* ignore */ }
                 }
                 return;
             }
+
+            if (msg.type === 'announcement') {
+                const banner = document.getElementById('announcement-banner');
+                document.getElementById('announcement-text').innerText = msg.content || '';
+                banner.classList.remove('hidden');
+                appendMsg('📢 ' + msg.name, msg.content, 'announce', msg.timestamp);
+                if (isRecent && msg.name !== myUsername) {
+                    showToast('📢 New announcement from teacher', 'success');
+                    playPing();
+                }
+                return;
+            }
+
             if (msg.type === 'system') {
                 try {
                     const data = JSON.parse(msg.content);
-                    if (data.type === 'block' && data.target === myUsername) {
-                        handleForcedLockout('You have been blocked by the instructor.');
+                    if (data.type === 'block' && data.target === myUsername && isRecent) {
+                        handleForcedLockout('You have been removed from this classroom by the instructor.');
                         return;
                     }
                 } catch (e) { /* ignore */ }
-                appendMsg(msg.name, msg.content, 'text');
+                appendMsg(msg.name || 'SYSTEM', msg.content, 'system', msg.timestamp);
                 return;
             }
-            appendMsg(msg.name, msg.content, msg.type);
+
+            appendMsg(msg.name, msg.content, msg.type, msg.timestamp);
+
+            if (isRecent && msg.name && myUsername && msg.name.indexOf(myUsername) !== 0) {
+                if (document.hidden) playPing();
+            }
         }
 
         // ============================================================
         // SEND MESSAGE
         // ============================================================
         function sendMsg(role) {
+            if ((role === 'teacher') !== isTeacherUser) {
+                showToast('You can only send messages as your own role.', 'error');
+                return;
+            }
             const el = document.getElementById(role + '-input-field');
             if (el && el.value.trim()) {
                 const displayName = myUsername + ' (' + role.toUpperCase() + ')' + (isProUser ? ' ⚡' : '');
@@ -1932,7 +1846,7 @@
                     timestamp: Date.now()
                 };
                 db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
-                  .catch(err => logDebug('Error sending message: ' + err.message));
+                  .catch(err => showToast('Could not send message: ' + err.message, 'error'));
                 el.value = '';
             }
         }
@@ -1945,15 +1859,10 @@
         // EMOJI REACTIONS
         // ============================================================
         function sendEmojiReaction(emoji) {
+            if (!classCodeRoom) return;
             createFloatingEmoji(emoji);
-            const msg = {
-                name: myUsername,
-                content: emoji,
-                type: 'emoji_reaction',
-                timestamp: Date.now()
-            };
-            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
-              .catch(err => logDebug('Error sending emoji: ' + err.message));
+            const msg = { name: myUsername, content: emoji, type: 'emoji_reaction', timestamp: Date.now() };
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg).catch(() => {});
         }
 
         function createFloatingEmoji(emoji) {
@@ -1966,28 +1875,48 @@
         }
 
         // ============================================================
+        // RAISE HAND
+        // ============================================================
+        document.getElementById('raise-hand-btn').addEventListener('click', () => {
+            if (!classCodeRoom) return;
+            const msg = {
+                name: myUsername,
+                content: '✋ ' + myUsername + ' raised their hand!',
+                type: 'system',
+                timestamp: Date.now()
+            };
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+            createFloatingEmoji('✋');
+            showToast('Hand raised!', 'success');
+        });
+
+        // ============================================================
         // IMAGE HANDLING
         // ============================================================
         function compressAndSendImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file.', 'error');
+                return;
+            }
+            if (file.size > 8 * 1024 * 1024) {
+                showToast('Image too large (max 8MB).', 'error');
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    let width = img.width,
-                        height = img.height;
+                    let width = img.width, height = img.height;
                     const maxDim = 800;
                     if (width > height) {
-                        if (width > maxDim) { height = (height * maxDim) / width;
-                            width = maxDim; }
+                        if (width > maxDim) { height = (height * maxDim) / width; width = maxDim; }
                     } else {
-                        if (height > maxDim) { width = (width * maxDim) / height;
-                            height = maxDim; }
+                        if (height > maxDim) { width = (width * maxDim) / height; height = maxDim; }
                     }
                     canvas.width = width;
                     canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     const compressed = canvas.toDataURL('image/jpeg', 0.7);
                     const msg = {
                         name: myUsername,
@@ -1995,17 +1924,21 @@
                         type: 'image',
                         timestamp: Date.now()
                     };
-                    db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
+                    db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+                      .then(() => showToast('Image shared!', 'success'))
+                      .catch(err => showToast('Image failed: ' + err.message, 'error'));
                 };
+                img.onerror = () => showToast('Could not read that image.', 'error');
                 img.src = event.target.result;
             };
+            reader.onerror = () => showToast('Could not read that file.', 'error');
             reader.readAsDataURL(file);
         }
 
         document.getElementById('file-import-input').addEventListener('change', function() {
             const file = this.files[0];
-            if (file) { compressAndSendImage(file);
-                this.value = ''; }
+            if (file) compressAndSendImage(file);
+            this.value = '';
         });
 
         // ============================================================
@@ -2014,59 +1947,141 @@
         function openZoomModal(src) {
             document.getElementById('zoomModalImg').src = src;
             currentZoomScale = 1;
-            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
+            document.getElementById('zoomModalImg').style.transform = 'scale(1)';
             document.getElementById('imageZoomModal').classList.add('active');
         }
-
-        function closeZoomModal() {
-            document.getElementById('imageZoomModal').classList.remove('active');
-        }
-
-        function zoomIn() {
-            currentZoomScale += 0.25;
-            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
-        }
-
-        function zoomOut() {
-            if (currentZoomScale > 0.5) {
-                currentZoomScale -= 0.25;
-                document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
-            }
-        }
-
-        function resetZoom() {
-            currentZoomScale = 1;
-            document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')';
-        }
+        function closeZoomModal() { document.getElementById('imageZoomModal').classList.remove('active'); }
+        function zoomIn() { currentZoomScale = Math.min(currentZoomScale + 0.25, 4); document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')'; }
+        function zoomOut() { currentZoomScale = Math.max(currentZoomScale - 0.25, 0.25); document.getElementById('zoomModalImg').style.transform = 'scale(' + currentZoomScale + ')'; }
+        function resetZoom() { currentZoomScale = 1; document.getElementById('zoomModalImg').style.transform = 'scale(1)'; }
 
         // ============================================================
-        // APPEND MESSAGE TO CHAT BOX
+        // APPEND MESSAGE
         // ============================================================
-        function appendMsg(sender, content, type) {
+        function appendMsg(sender, content, type, timestamp) {
             const log = document.getElementById('text-chat-log');
             const d = document.createElement('div');
             d.className = 'msg';
+
+            const isMine = sender && myUsername && sender.indexOf(myUsername) === 0;
+            if (isMine) d.classList.add('mine');
+            if (type === 'system') d.classList.add('system');
+            if (type === 'announce') d.classList.add('announce');
+
+            const timeHtml = timestamp ? '<span class="time">' + formatTime(timestamp) + '</span>' : '';
+
             if (type === 'image') {
                 const wrap = document.createElement('div');
                 wrap.className = 'img-container';
                 const img = document.createElement('img');
                 img.src = content;
+                img.alt = 'shared image';
                 const zoom = document.createElement('button');
                 zoom.className = 'zoom-btn';
                 zoom.innerText = '🔍';
                 zoom.onclick = () => openZoomModal(content);
                 wrap.appendChild(img);
                 wrap.appendChild(zoom);
-                d.innerHTML = '<strong>' + sender + ':</strong><br>';
+                d.innerHTML = '<strong>' + escapeHtml(sender) + ':</strong>' + timeHtml + '<br>';
                 d.appendChild(wrap);
             } else if (type === 'emoji_reaction') {
-                d.innerHTML = '<strong>' + sender + ':</strong> ' + content;
+                d.innerHTML = '<strong>' + escapeHtml(sender) + ':</strong> ' + content + timeHtml;
             } else {
-                d.innerHTML = '<strong>' + sender + ':</strong> ' + content;
+                d.innerHTML = '<strong>' + escapeHtml(sender) + ':</strong> ' + escapeHtml(content) + timeHtml;
             }
+
             log.appendChild(d);
+
+            while (log.children.length > 400) log.removeChild(log.firstChild);
+
             log.scrollTop = log.scrollHeight;
         }
+
+        // ============================================================
+        // LEAVE CLASSROOM
+        // ============================================================
+        function leaveClassroom() {
+            if (!confirm('Leave this classroom?')) return;
+
+            if (videoCallActive) leaveVideoCall();
+
+            if (classCodeRoom && myUsername) {
+                db.ref('classrooms/' + classCodeRoom + '/presence/' + myUsername).remove().catch(() => {});
+            }
+            if (messagesRef) { messagesRef.off(); messagesRef = null; }
+            if (presenceListRef) { presenceListRef.off(); presenceListRef = null; }
+
+            document.getElementById('text-chat-log').innerHTML = '';
+            document.getElementById('announcement-banner').classList.add('hidden');
+            document.getElementById('active-tracked-users-list').innerHTML =
+                '<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-muted);">No users connected</td></tr>';
+            document.getElementById('participant-count').textContent = '0 online';
+
+            document.getElementById('app-container').classList.remove('classroom-container');
+            document.body.classList.remove('in-classroom');
+
+            classCodeRoom = "";
+
+            if (isTeacherUser) {
+                showTeacherDashboard();
+            } else {
+                showHomepage();
+            }
+            logDebug('Left classroom');
+        }
+
+        // ============================================================
+        // COPY CLASS CODE
+        // ============================================================
+        document.getElementById('copy-class-code-btn').addEventListener('click', function() {
+            navigator.clipboard.writeText(classCodeRoom).then(() => {
+                showToast('Class code copied: ' + classCodeRoom, 'success');
+                this.innerText = '✓';
+                setTimeout(() => { this.innerText = '📋'; }, 1500);
+            }).catch(() => showToast('Copy failed', 'error'));
+        });
+
+        // ============================================================
+        // ANNOUNCEMENTS
+        // ============================================================
+        document.getElementById('teacher-announce-btn').addEventListener('click', () => {
+            const text = prompt('Enter announcement for your class:');
+            if (!text || !text.trim()) return;
+            const msg = {
+                name: myUsername,
+                content: text.trim(),
+                type: 'announcement',
+                timestamp: Date.now()
+            };
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+              .then(() => showToast('Announcement sent!', 'success'))
+              .catch(err => showToast('Failed: ' + err.message, 'error'));
+        });
+
+        // ============================================================
+        // ATTENDANCE EXPORT
+        // ============================================================
+        document.getElementById('teacher-attendance-btn').addEventListener('click', () => {
+            const entries = Object.values(lastPresence || {});
+            if (entries.length === 0) { showToast('No participants to export.', 'error'); return; }
+            const rows = [['Username', 'Role', 'Joined At']];
+            entries.forEach(u => {
+                rows.push([
+                    '"' + (u.username || '') + '"',
+                    (u.role || 'student'),
+                    u.joined ? new Date(u.joined).toLocaleString() : '—'
+                ]);
+            });
+            const csv = rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'attendance_' + classCodeRoom + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            showToast('Attendance exported!', 'success');
+        });
 
         // ============================================================
         // PRO PAYMENT
@@ -2076,30 +2091,16 @@
             document.getElementById('pro-form-section').classList.remove('hidden');
             document.getElementById('pro-payment-details').classList.add('hidden');
             document.getElementById('pro-pending-status').classList.add('hidden');
-            if (myUsername) {
-                document.getElementById('pro-full-name').value = myUsername;
-            }
+            if (myUsername) document.getElementById('pro-full-name').value = myUsername;
         }
+        function closeProPaymentModal() { document.getElementById('pro-modal').classList.remove('active'); }
 
-        function closeProPaymentModal() {
-            document.getElementById('pro-modal').classList.remove('active');
-        }
-
-        async function submitProRequest() {
+        function submitProRequest() {
             const fullName = document.getElementById('pro-full-name').value.trim();
             const phone = document.getElementById('pro-phone').value.trim();
-            const duration = document.getElementById('pro-duration').value;
-            if (!fullName || !phone) { alert('Please fill in all fields.'); return; }
-            const btn = document.querySelector('#pro-form-section button');
-            const originalText = btn.textContent;
-            btn.textContent = '⏳ Processing...';
-            btn.disabled = true;
-            setTimeout(() => {
-                document.getElementById('pro-form-section').classList.add('hidden');
-                document.getElementById('pro-payment-details').classList.remove('hidden');
-                btn.textContent = originalText;
-                btn.disabled = false;
-            }, 1000);
+            if (!fullName || !phone) { showToast('Please fill in all fields.', 'error'); return; }
+            document.getElementById('pro-form-section').classList.add('hidden');
+            document.getElementById('pro-payment-details').classList.remove('hidden');
         }
 
         function copyPaymentDetail(text, btn) {
@@ -2110,10 +2111,11 @@
             });
         }
 
-        async function confirmProPayment() {
+        function confirmProPayment() {
             document.getElementById('pro-payment-details').classList.add('hidden');
             document.getElementById('pro-pending-status').classList.remove('hidden');
-            document.getElementById('pending-message').innerText = 'Your Pro activation is being processed. We will notify you shortly.';
+            document.getElementById('pending-message').innerText =
+                'Your Pro activation is being processed. Send your receipt to +2348024300891 and we will notify you shortly.';
         }
 
         // ============================================================
@@ -2121,56 +2123,50 @@
         // ============================================================
         async function activateProCode() {
             const code = document.getElementById('pro-code-input').value.trim().toUpperCase();
-            if (!code) { alert('Please enter your Pro activation code.'); return; }
-            if (!myUsername) { alert('Please log in first to activate Pro.'); return; }
+            if (!code) { showToast('Please enter your Pro activation code.', 'error'); return; }
+            if (!myUsername) { showToast('Please log in first to activate Pro.', 'error'); return; }
             try {
                 const data = await httpPost('/api/activate_pro', { username: myUsername, activation_code: code });
-                alert(data.message);
-                logDebug('Pro activation response: ' + data.message);
                 if (data.success) {
                     isProUser = true;
                     proExpiryDate = data.expiry || '2026-12-31';
                     document.getElementById('pro-code-input').value = '';
                     document.getElementById('nav-pro').textContent = '⚡ Pro ✓';
                     document.getElementById('nav-pro').classList.add('active-pro');
+                    showToast('Pro activated! Expires ' + proExpiryDate, 'success');
+                } else {
+                    showToast(data.message || 'Invalid activation code.', 'error');
                 }
             } catch (err) {
-                alert('Error activating Pro: ' + err.message);
-                logDebug('Pro activation error: ' + err.message);
+                showToast('Error activating Pro: ' + err.message, 'error');
             }
         }
 
         // ============================================================
         // AI CHAT
         // ============================================================
-        function toggleAIChat() {
-            document.getElementById('ai-window').classList.toggle('active');
-        }
-
-        function handleAIKey(e) {
-            if (e.key === 'Enter') sendAIQuery();
-        }
+        function toggleAIChat() { document.getElementById('ai-window').classList.toggle('active'); }
+        function handleAIKey(e) { if (e.key === 'Enter') sendAIQuery(); }
 
         async function sendAIQuery() {
             const input = document.getElementById('ai-input');
             const query = input.value.trim();
             if (!query) return;
             const msgs = document.getElementById('ai-messages');
-            msgs.innerHTML += '<div class="user">' + query + '</div>';
+            msgs.innerHTML += '<div class="user">' + escapeHtml(query) + '</div>';
+            input.value = '';
+            msgs.scrollTop = msgs.scrollHeight;
             try {
                 const data = await httpPost('/api/ai', { query });
-                msgs.innerHTML += '<div class="bot">' + data.response + '</div>';
-                logDebug('AI query sent');
+                msgs.innerHTML += '<div class="bot">' + escapeHtml(data.response || 'No response') + '</div>';
             } catch (err) {
                 msgs.innerHTML += '<div class="bot">Sorry, I encountered an error. Please try again.</div>';
-                logDebug('AI error: ' + err.message);
             }
-            input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
         }
 
         // ============================================================
-        // EXAM SYSTEM
+        // EXAM SYSTEM — TEACHER SETUP
         // ============================================================
         document.getElementById('teacher-exam-portal-btn').addEventListener('click', () => {
             document.getElementById('teacher-exam-setup-modal').classList.add('active');
@@ -2178,72 +2174,66 @@
             document.getElementById('theory-questions-list').innerHTML = '';
             addOBJQuestion();
             addTheoryQuestion();
-            logDebug('Exam portal opened');
         });
 
-        function closeExamSetup() {
-            document.getElementById('teacher-exam-setup-modal').classList.remove('active');
-        }
-
-        function toggleOBJ() {
-            document.getElementById('obj-wrapper').style.display = document.getElementById('exam-has-obj').checked ? 'block' : 'none';
-        }
-
-        function toggleTheory() {
-            document.getElementById('theory-wrapper').style.display = document.getElementById('exam-has-theory').checked ? 'block' : 'none';
-        }
+        function closeExamSetup() { document.getElementById('teacher-exam-setup-modal').classList.remove('active'); }
+        function toggleOBJ() { document.getElementById('obj-wrapper').style.display = document.getElementById('exam-has-obj').checked ? 'block' : 'none'; }
+        function toggleTheory() { document.getElementById('theory-wrapper').style.display = document.getElementById('exam-has-theory').checked ? 'block' : 'none'; }
 
         function addOBJQuestion() {
             const container = document.getElementById('obj-questions-list');
-            const id = container.children.length + 1;
+            const id = 'obj-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
             const block = document.createElement('div');
             block.className = 'exam-question-block';
-            block.id = 'obj-block-' + id;
-            block.innerHTML = `
-                <div class="q-header">
-                    <strong>Q${id}</strong>
-                    <button onclick="document.getElementById('obj-block-${id}').remove()">✕</button>
-                </div>
-                <input type="text" class="obj-prompt" placeholder="Question prompt...">
-                <div class="opt-grid">
-                    <input type="text" class="opt-a" placeholder="A">
-                    <input type="text" class="opt-b" placeholder="B">
-                    <input type="text" class="opt-c" placeholder="C">
-                    <input type="text" class="opt-d" placeholder="D">
-                </div>
-                <select class="obj-correct-key" style="margin-top:6px; padding:8px 14px; border:2px solid var(--blue-soft); border-radius:var(--radius-sm); font-family:inherit; background:rgba(255,255,255,0.5);">
-                    <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                </select>
-            `;
+            block.id = id;
+            block.innerHTML =
+                '<div class="q-header">' +
+                    '<strong>Objective Question</strong>' +
+                    '<button onclick="document.getElementById(\'' + id + '\').remove()">✕</button>' +
+                '</div>' +
+                '<input type="text" class="obj-prompt" placeholder="Question prompt...">' +
+                '<div class="opt-grid">' +
+                    '<input type="text" class="opt-a" placeholder="Option A">' +
+                    '<input type="text" class="opt-b" placeholder="Option B">' +
+                    '<input type="text" class="opt-c" placeholder="Option C">' +
+                    '<input type="text" class="opt-d" placeholder="Option D">' +
+                '</div>' +
+                '<select class="obj-correct-key" style="margin-top:6px;">' +
+                    '<option value="A">Correct: A</option>' +
+                    '<option value="B">Correct: B</option>' +
+                    '<option value="C">Correct: C</option>' +
+                    '<option value="D">Correct: D</option>' +
+                '</select>';
             container.appendChild(block);
         }
 
         function addTheoryQuestion() {
             const container = document.getElementById('theory-questions-list');
-            const id = container.children.length + 1;
+            const id = 'theory-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
             const block = document.createElement('div');
             block.className = 'exam-question-block';
-            block.id = 'theory-block-' + id;
-            block.innerHTML = `
-                <div class="q-header">
-                    <strong>Theory ${id}</strong>
-                    <button onclick="document.getElementById('theory-block-${id}').remove()">✕</button>
-                </div>
-                <textarea class="theory-prompt" placeholder="Essay question..." style="height:70px; resize:vertical;"></textarea>
-            `;
+            block.id = id;
+            block.innerHTML =
+                '<div class="q-header">' +
+                    '<strong>Theory Question</strong>' +
+                    '<button onclick="document.getElementById(\'' + id + '\').remove()">✕</button>' +
+                '</div>' +
+                '<textarea class="theory-prompt" placeholder="Essay question..." style="height:70px; resize:vertical;"></textarea>';
             container.appendChild(block);
         }
 
         function deployClassExam() {
-            const minutes = parseInt(document.getElementById('exam-minutes').value) || 10;
+            const minutes = Math.max(1, parseInt(document.getElementById('exam-minutes').value) || 10);
             const hasOBJ = document.getElementById('exam-has-obj').checked;
             const hasTheory = document.getElementById('exam-has-theory').checked;
 
             const objList = [];
             if (hasOBJ) {
                 document.querySelectorAll('#obj-questions-list .exam-question-block').forEach(b => {
+                    const prompt = b.querySelector('.obj-prompt').value.trim();
+                    if (!prompt) return;
                     objList.push({
-                        prompt: b.querySelector('.obj-prompt').value.trim(),
+                        prompt: prompt,
                         A: b.querySelector('.opt-a').value.trim(),
                         B: b.querySelector('.opt-b').value.trim(),
                         C: b.querySelector('.opt-c').value.trim(),
@@ -2256,11 +2246,16 @@
             const theoryList = [];
             if (hasTheory) {
                 document.querySelectorAll('#theory-questions-list .exam-question-block').forEach(b => {
-                    theoryList.push({ prompt: b.querySelector('.theory-prompt').value.trim() });
+                    const prompt = b.querySelector('.theory-prompt').value.trim();
+                    if (!prompt) return;
+                    theoryList.push({ prompt: prompt });
                 });
             }
 
-            if (!hasOBJ && !hasTheory) { alert('Add at least one question.'); return; }
+            if (objList.length === 0 && theoryList.length === 0) {
+                showToast('Add at least one question with content.', 'error');
+                return;
+            }
 
             const config = { duration: minutes, objQuestions: objList, theoryQuestions: theoryList };
             const msg = {
@@ -2269,14 +2264,28 @@
                 type: 'deploy_examination',
                 timestamp: Date.now()
             };
-            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
-            closeExamSetup();
-            alert('Exam deployed successfully!');
-            logDebug('Exam deployed');
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+              .then(() => { closeExamSetup(); showToast('Exam deployed!', 'success'); })
+              .catch(err => showToast('Deploy failed: ' + err.message, 'error'));
+        }
+
+        // ============================================================
+        // EXAM SYSTEM — STUDENT WORKSPACE
+        // ============================================================
+        function closeStudentExam() {
+            if (examSubmitted) {
+                document.getElementById('student-exam-workspace-modal').classList.remove('active');
+                return;
+            }
+            if (confirm('Close the exam? Your answers will be lost.')) {
+                clearInterval(examIntervalTimer);
+                document.getElementById('student-exam-workspace-modal').classList.remove('active');
+            }
         }
 
         function launchStudentExamWorkspace(config) {
             activeExamConfig = config;
+            examSubmitted = false;
             document.getElementById('student-exam-workspace-modal').classList.add('active');
 
             const objContainer = document.getElementById('student-obj-questions-container');
@@ -2286,15 +2295,14 @@
                 config.objQuestions.forEach((q, idx) => {
                     const block = document.createElement('div');
                     block.className = 'exam-question-block';
-                    block.innerHTML = `
-                        <p style="margin:0 0 8px 0;"><strong>Q${idx+1}:</strong> ${q.prompt}</p>
-                        <div style="display:flex;flex-direction:column;gap:4px;">
-                            <label><input type="radio" name="student-q-${idx}" value="A"> A: ${q.A}</label>
-                            <label><input type="radio" name="student-q-${idx}" value="B"> B: ${q.B}</label>
-                            <label><input type="radio" name="student-q-${idx}" value="C"> C: ${q.C}</label>
-                            <label><input type="radio" name="student-q-${idx}" value="D"> D: ${q.D}</label>
-                        </div>
-                    `;
+                    block.innerHTML =
+                        '<p style="margin:0 0 8px 0;"><strong>Q' + (idx + 1) + ':</strong> ' + escapeHtml(q.prompt) + '</p>' +
+                        '<div style="display:flex;flex-direction:column;gap:6px;">' +
+                            '<label style="cursor:pointer;"><input type="radio" name="student-q-' + idx + '" value="A"> A: ' + escapeHtml(q.A) + '</label>' +
+                            '<label style="cursor:pointer;"><input type="radio" name="student-q-' + idx + '" value="B"> B: ' + escapeHtml(q.B) + '</label>' +
+                            '<label style="cursor:pointer;"><input type="radio" name="student-q-' + idx + '" value="C"> C: ' + escapeHtml(q.C) + '</label>' +
+                            '<label style="cursor:pointer;"><input type="radio" name="student-q-' + idx + '" value="D"> D: ' + escapeHtml(q.D) + '</label>' +
+                        '</div>';
                     objContainer.appendChild(block);
                 });
             } else {
@@ -2308,10 +2316,11 @@
                 config.theoryQuestions.forEach((q, idx) => {
                     const block = document.createElement('div');
                     block.className = 'exam-question-block';
-                    block.innerHTML = `
-                        <p style="margin:0 0 8px 0;"><strong>Q${idx+1}:</strong> ${q.prompt}</p>
-                        <textarea class="student-theory-response" data-idx="${idx}" placeholder="Write your answer..." style="width:100%;height:80px;padding:10px;border:2px solid var(--blue-soft);border-radius:var(--radius-sm);font-family:inherit;background:rgba(255,255,255,0.5);resize:vertical;"></textarea>
-                    `;
+                    block.innerHTML =
+                        '<p style="margin:0 0 8px 0;"><strong>Q' + (idx + 1) + ':</strong> ' + escapeHtml(q.prompt) + '</p>' +
+                        '<textarea class="student-theory-response" data-idx="' + idx + '" placeholder="Write your answer..." ' +
+                        'style="width:100%;height:80px;padding:10px;border:2px solid var(--blue-soft);border-radius:var(--radius-sm);' +
+                        'font-family:inherit;background:rgba(255,255,255,0.6);resize:vertical;outline:none;"></textarea>';
                     theoryContainer.appendChild(block);
                 });
             } else {
@@ -2326,23 +2335,29 @@
                 updateTimerDisplay();
                 if (currentExamTimeSecondsLeft <= 0) {
                     clearInterval(examIntervalTimer);
-                    alert('Time is up! Submitting your exam...');
+                    showToast('⏰ Time is up! Submitting your exam...', 'error');
                     submitStudentExamAnswers();
                 }
             }, 1000);
-            logDebug('Exam workspace launched');
+
+            showToast('Exam started! You have ' + config.duration + ' minutes.', 'success');
         }
 
         function updateTimerDisplay() {
-            const mins = String(Math.floor(currentExamTimeSecondsLeft / 60)).padStart(2, '0');
-            const secs = String(currentExamTimeSecondsLeft % 60).padStart(2, '0');
+            const safe = Math.max(0, currentExamTimeSecondsLeft);
+            const mins = String(Math.floor(safe / 60)).padStart(2, '0');
+            const secs = String(safe % 60).padStart(2, '0');
             document.getElementById('exam-timer-display').innerText = mins + ':' + secs;
         }
 
         function submitStudentExamAnswers() {
+            if (examSubmitted) return;
+            examSubmitted = true;
             clearInterval(examIntervalTimer);
+
             let totalCorrectObj = 0;
             let possibleObj = 0;
+
             if (activeExamConfig && activeExamConfig.objQuestions && activeExamConfig.objQuestions.length > 0) {
                 possibleObj = activeExamConfig.objQuestions.length;
                 activeExamConfig.objQuestions.forEach((q, idx) => {
@@ -2354,27 +2369,36 @@
             const theorySubmissions = [];
             document.querySelectorAll('.student-theory-response').forEach(t => {
                 const idx = parseInt(t.getAttribute('data-idx'));
-                const promptText = (activeExamConfig.theoryQuestions && activeExamConfig.theoryQuestions[idx]) ?
-                    activeExamConfig.theoryQuestions[idx].prompt : "";
+                const promptText = (activeExamConfig.theoryQuestions && activeExamConfig.theoryQuestions[idx])
+                    ? activeExamConfig.theoryQuestions[idx].prompt : '';
                 theorySubmissions.push({ prompt: promptText, answer: t.value.trim() });
             });
 
             const submission = {
                 studentName: myUsername,
-                objScore: possibleObj > 0 ? totalCorrectObj + '/' + possibleObj : "N/A",
+                objScore: possibleObj > 0 ? (totalCorrectObj + '/' + possibleObj) : 'N/A',
                 theoryResponses: theorySubmissions
             };
+
             const msg = {
                 name: myUsername,
                 content: JSON.stringify(submission),
                 type: 'exam_submission',
                 timestamp: Date.now()
             };
-            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
 
-            document.getElementById('student-exam-workspace-modal').classList.remove('active');
-            alert('Exam submitted successfully!');
-            logDebug('Exam submitted by ' + myUsername);
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+              .then(() => {
+                  document.getElementById('student-exam-workspace-modal').classList.remove('active');
+                  showToast('Exam submitted successfully!', 'success');
+                  if (possibleObj > 0) {
+                      setTimeout(() => alert('📊 Your objective score: ' + totalCorrectObj + '/' + possibleObj), 400);
+                  }
+              })
+              .catch(err => {
+                  examSubmitted = false;
+                  showToast('Submission failed: ' + err.message, 'error');
+              });
         }
 
         // ============================================================
@@ -2383,12 +2407,9 @@
         document.getElementById('teacher-gradebook-btn').addEventListener('click', () => {
             renderGradebookUI();
             document.getElementById('teacher-gradebook-modal').classList.add('active');
-            logDebug('Gradebook opened');
         });
 
-        function closeGradebookModal() {
-            document.getElementById('teacher-gradebook-modal').classList.remove('active');
-        }
+        function closeGradebookModal() { document.getElementById('teacher-gradebook-modal').classList.remove('active'); }
 
         function renderGradebookUI() {
             const tbody = document.getElementById('gradebook-table-rows');
@@ -2400,32 +2421,42 @@
             }
             keys.forEach(student => {
                 const entry = examGradebook[student];
-                let theoryHtml = "N/A";
+                let theoryHtml = 'N/A';
                 if (entry.theoryResponses && entry.theoryResponses.length > 0) {
                     theoryHtml = entry.theoryResponses.map((t, i) =>
-                        '<p style="margin:2px 0;font-size:12px;"><strong>Q' + (i + 1) + ':</strong> ' + (t.answer || '(Empty)') + '</p>'
+                        '<p style="margin:2px 0;font-size:12px;"><strong>Q' + (i + 1) + ':</strong> ' +
+                        escapeHtml(t.answer || '(Empty)') + '</p>'
                     ).join('');
                 }
+                const safeId = student.replace(/[^A-Za-z0-9_-]/g, '_');
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding:8px;font-weight:bold;">${student}</td>
-                    <td style="padding:8px;color:var(--blue-dark);font-weight:600;">${entry.objScore}</td>
-                    <td style="padding:8px;max-width:150px;overflow:hidden;font-size:13px;">${theoryHtml}</td>
-                    <td style="padding:8px;"><input type="text" class="theory-grade-val-${student}" placeholder="Grade" style="width:70px;"></td>
-                    <td style="padding:8px;"><button class="publish-btn" onclick="publishStudentScores('${student}')">Publish</button></td>
-                `;
+                tr.innerHTML =
+                    '<td style="padding:8px;font-weight:bold;">' + escapeHtml(student) + '</td>' +
+                    '<td style="padding:8px;color:var(--blue-dark);font-weight:600;">' + escapeHtml(entry.objScore) + '</td>' +
+                    '<td style="padding:8px;max-width:200px;font-size:13px;">' + theoryHtml + '</td>' +
+                    '<td style="padding:8px;"><input type="text" class="theory-grade-val-' + safeId + '" placeholder="Grade"></td>' +
+                    '<td style="padding:8px;"><button class="publish-btn" data-safe="' + safeId + '" data-student="' + escapeHtml(student) + '">Publish</button></td>';
                 tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('.publish-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    publishStudentScores(this.getAttribute('data-student'), this.getAttribute('data-safe'));
+                });
             });
         }
 
-        function publishStudentScores(student) {
-            const theoryVal = document.querySelector('.theory-grade-val-' + student).value.trim();
-            examGradebook[student].theoryGrade = theoryVal || "N/A";
+        function publishStudentScores(student, safeId) {
+            const input = document.querySelector('.theory-grade-val-' + safeId);
+            const theoryVal = input ? input.value.trim() : '';
+            if (!examGradebook[student]) return;
+            examGradebook[student].theoryGrade = theoryVal || 'N/A';
+
             const publishData = {
                 targetStudent: student,
                 objScore: examGradebook[student].objScore,
-                theoryGrade: theoryVal || "N/A",
-                remarks: "Well done!"
+                theoryGrade: theoryVal || 'N/A',
+                remarks: 'Well done!'
             };
             const msg = {
                 name: myUsername,
@@ -2433,46 +2464,56 @@
                 type: 'publish_report_card',
                 timestamp: Date.now()
             };
-            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg);
-            alert('Grades published for ' + student);
-            logDebug('Published grades for ' + student);
+            db.ref('classrooms/' + classCodeRoom + '/messages').push(msg)
+              .then(() => showToast('Grades published for ' + student, 'success'))
+              .catch(err => showToast('Publish failed: ' + err.message, 'error'));
         }
 
         // ============================================================
         // FORCED LOCKOUT
         // ============================================================
         function handleForcedLockout(msg) {
-            document.body.innerHTML = `
-                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--blue-light);color:var(--text-primary);text-align:center;padding:20px;">
-                    <span style="font-size:72px;">🚫</span>
-                    <h1 style="margin:16px 0 8px;">Account Locked</h1>
-                    <p style="color:var(--text-muted);max-width:400px;">${msg || 'You have been removed from this session.'}</p>
-                    <button onclick="location.reload()" style="margin-top:20px;padding:14px 40px;background:var(--blue-accent);color:#fff;border:none;border-radius:50px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;">Reconnect</button>
-                </div>
-            `;
-            logDebug('Forced lockout: ' + msg);
+            if (videoCallActive) leaveVideoCall();
+            document.body.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;' +
+                'background:var(--blue-light);color:var(--text-primary);text-align:center;padding:20px;font-family:inherit;">' +
+                    '<span style="font-size:72px;">🚫</span>' +
+                    '<h1 style="margin:16px 0 8px;">Account Locked</h1>' +
+                    '<p style="color:var(--text-muted);max-width:400px;line-height:1.7;">' +
+                        escapeHtml(msg || 'You have been removed from this session.') + '</p>' +
+                    '<button onclick="location.reload()" style="margin-top:20px;padding:14px 40px;background:var(--blue-accent);' +
+                    'color:#fff;border:none;border-radius:50px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;">' +
+                    'Reconnect</button>' +
+                '</div>';
         }
 
         // ============================================================
         // ANIMATED EMOJI BACKGROUND
         // ============================================================
-        (function createEmojiBackground() {
+        function createEmojiBackground() {
             const bg = document.getElementById('emojiBg');
-            const emojis = ['📚', '✏️', '🎓', '📝', '📖', '🏫', '📐', '🔬', '🧪', '🌍', '💡', '🧮', '📊', '🎯', '🏆', '📌', '🖊️', '📓', '📒', '📕', '📗', '📘'];
-            for (let i = 0; i < 150; i++) {
+            if (!bg || bg.dataset.ready === '1') return;
+            bg.dataset.ready = '1';
+
+            const emojis = ['📚', '✏️', '🎓', '📝', '📖', '🏫', '📐', '🔬', '🧪', '🌍', '💡', '🧮', '📊', '🎯', '🏆', '📌', '🖊️', '📓'];
+            const isMobile = window.innerWidth < 768;
+            const count = isMobile ? 40 : 90;
+
+            for (let i = 0; i < count; i++) {
                 const el = document.createElement('div');
                 el.className = 'floating-emoji-item';
                 el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                const size = Math.random() * 30 + 14;
-                el.style.fontSize = size + 'px';
+                el.style.fontSize = (Math.random() * 26 + 14) + 'px';
                 el.style.left = Math.random() * 100 + '%';
-                el.style.animationDuration = (Math.random() * 35 + 20) + 's';
+                el.style.animationDuration = (Math.random() * 35 + 22) + 's';
                 el.style.animationDelay = (Math.random() * 25) + 's';
-                el.style.opacity = Math.random() * 0.2 + 0.06;
+                el.style.opacity = Math.random() * 0.16 + 0.05;
                 bg.appendChild(el);
             }
+
             const shapes = ['📚', '✏️', '🎓', '📝', '📖', '🏫'];
-            for (let i = 0; i < 15; i++) {
+            const shapeCount = isMobile ? 6 : 12;
+            for (let i = 0; i < shapeCount; i++) {
                 const s = document.createElement('div');
                 s.className = 'shape-bg';
                 s.textContent = shapes[i % shapes.length];
@@ -2483,9 +2524,7 @@
                 s.style.color = Math.random() > 0.5 ? '#d4e2f0' : '#e8ddd0';
                 bg.appendChild(s);
             }
-        })();
-
-        console.log('🚀 Nexus Learn Ultimate Edition (Jitsi meetings) loaded!');
+        }
 
         // ============================================================
         // JITSI VIDEO MEETING INTEGRATION
@@ -2494,7 +2533,7 @@
             return new Promise((resolve, reject) => {
                 const existing = document.querySelector('script[data-jitsi-src="' + src + '"]');
                 if (existing) {
-                    if (window.JitsiMeetExternalAPI) resolve();
+                    if (window.JitsiMeetExternalAPI) { resolve(); }
                     else {
                         existing.addEventListener('load', () => resolve());
                         existing.addEventListener('error', () => reject(new Error('Jitsi script failed to load')));
@@ -2513,11 +2552,11 @@
 
         async function startVideoCall() {
             if (videoCallActive) {
-                logDebug('Jitsi meeting already active');
+                showToast('You are already in the meeting.', 'error');
                 return;
             }
             if (!classCodeRoom || !myUsername) {
-                alert('You must be in a classroom to start a video call.');
+                showToast('You must be in a classroom to start a video call.', 'error');
                 return;
             }
 
@@ -2533,9 +2572,7 @@
                     is_teacher: isTeacherUser
                 });
 
-                if (!res.success) {
-                    throw new Error(res.message || 'Failed to authorize meeting access.');
-                }
+                if (!res.success) throw new Error(res.message || 'Failed to authorize meeting access.');
 
                 const domain = res.domain || '8x8.vc';
                 const appId = res.appId;
@@ -2548,24 +2585,21 @@
                 document.getElementById('call-class-name').innerText = className;
 
                 overlay.classList.add('active');
-                container.innerHTML = `
-                    <div class="jitsi-loading">
-                        <div class="spinner">🎥</div>
-                        <div>Preparing your classroom meeting…</div>
-                    </div>
-                `;
+                overlay.classList.remove('minimized');
+                videoCallMinimized = false;
+                document.getElementById('minimize-call-btn').innerText = '⬇️';
+
+                container.innerHTML =
+                    '<div class="jitsi-loading">' +
+                        '<div class="spinner">🎥</div>' +
+                        '<div>Preparing your classroom meeting…</div>' +
+                    '</div>';
 
                 await loadScriptOnce(scriptSrc);
 
-                if (!window.JitsiMeetExternalAPI) {
-                    throw new Error('Jitsi API did not initialize.');
-                }
+                if (!window.JitsiMeetExternalAPI) throw new Error('Jitsi API did not initialize.');
 
-                if (jitsiApi) {
-                    try { jitsiApi.dispose(); } catch (e) {}
-                    jitsiApi = null;
-                }
-
+                if (jitsiApi) { try { jitsiApi.dispose(); } catch (e) {} jitsiApi = null; }
                 container.innerHTML = '';
 
                 const options = {
@@ -2613,47 +2647,76 @@
                 videoCallActive = true;
                 joinBtn.textContent = '📹 In Meeting';
                 joinBtn.style.background = '#f39c12';
+                joinBtn.style.borderColor = '#f39c12';
                 joinBtn.disabled = false;
 
-                jitsiApi.addEventListener('videoConferenceLeft', () => { endJitsiSession(); });
-                jitsiApi.addEventListener('readyToClose', () => { endJitsiSession(); });
+                jitsiApi.addEventListener('videoConferenceLeft', () => endJitsiSession());
+                jitsiApi.addEventListener('readyToClose', () => endJitsiSession());
 
-                logDebug('Jitsi meeting started, room: ' + roomName);
+                showToast('Connected! Tap ⬇️ to keep the call while you use the classroom.', 'success');
 
             } catch (err) {
-                logDebug('Error starting Jitsi meeting: ' + err.message);
-                alert('Could not start the meeting: ' + err.message);
+                showToast('Could not start the meeting: ' + err.message, 'error');
                 endJitsiSession();
-                joinBtn.textContent = originalText;
-                joinBtn.disabled = false;
+            }
+        }
+
+        function toggleMinimizeVideoCall() {
+            const overlay = document.getElementById('video-call-overlay');
+            const btn = document.getElementById('minimize-call-btn');
+            if (!videoCallActive) return;
+
+            videoCallMinimized = !videoCallMinimized;
+            overlay.classList.toggle('minimized', videoCallMinimized);
+            btn.innerText = videoCallMinimized ? '⬆️' : '⬇️';
+            btn.title = videoCallMinimized ? 'Restore full screen' : 'Minimize call';
+
+            if (videoCallMinimized) {
+                showToast('Call minimized — you can keep using the classroom.', 'success');
             }
         }
 
         function endJitsiSession() {
-            if (jitsiApi) {
-                try { jitsiApi.dispose(); } catch (e) {}
-                jitsiApi = null;
-            }
+            if (jitsiApi) { try { jitsiApi.dispose(); } catch (e) {} jitsiApi = null; }
             videoCallActive = false;
+            videoCallMinimized = false;
+
             const overlay = document.getElementById('video-call-overlay');
-            if (overlay) overlay.classList.remove('active');
+            if (overlay) { overlay.classList.remove('active'); overlay.classList.remove('minimized'); }
+
             const container = document.getElementById('jitsi-container');
             if (container) container.innerHTML = '';
+
+            const btn = document.getElementById('minimize-call-btn');
+            if (btn) { btn.innerText = '⬇️'; btn.title = 'Minimize call'; }
+
             const joinBtn = document.getElementById('join-video-btn');
             if (joinBtn) {
                 joinBtn.textContent = '🎥 Join Video';
-                joinBtn.style.background = '#4CAF50';
+                joinBtn.style.background = 'var(--green)';
+                joinBtn.style.borderColor = 'var(--green)';
                 joinBtn.disabled = false;
             }
             logDebug('Jitsi session ended');
         }
 
         function leaveVideoCall() {
-            if (jitsiApi) {
-                try { jitsiApi.executeCommand('hangup'); } catch (e) {}
-            }
+            if (jitsiApi) { try { jitsiApi.executeCommand('hangup'); } catch (e) {} }
             endJitsiSession();
         }
+
+        // ============================================================
+        // GLOBAL KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(m => {
+                    if (m.id !== 'student-exam-workspace-modal') m.classList.remove('active');
+                });
+            }
+        });
+
+        console.log('🚀 Nexus Learn loaded — Jitsi meetings with picture-in-picture enabled.');
     </script>
 </body>
 </html>
