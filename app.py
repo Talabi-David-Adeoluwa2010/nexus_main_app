@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
@@ -12,7 +13,7 @@ except ImportError:
     pyjwt = None
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-in-production')
 CORS(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
@@ -40,7 +41,9 @@ if not _jitsi_key:
             _jitsi_key = f.read()
 JITSI_PRIVATE_KEY = _jitsi_key.strip() if _jitsi_key else ''
 
-if JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt:
+JITSI_CONFIGURED = bool(JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt)
+
+if JITSI_CONFIGURED:
     logger.info('JaaS configured. App ID starts with: %s', JITSI_APP_ID[:24])
 else:
     logger.warning('JaaS not fully configured. Video meetings will not work until env vars are set.')
@@ -49,17 +52,26 @@ else:
 def _build_jitsi_room(classroom_code):
     """Deterministic room name derived from classroom code."""
     slug = ''.join(ch for ch in classroom_code if ch.isalnum()).lower()
+    if not slug:
+        slug = 'default'
     return 'nexusclass' + slug
 
 
-# In-memory stores (non-video)
+# ============================================================
+# IN-MEMORY STORES
+# ============================================================
 teacher_accounts = {"admin": "admin123"}
 pro_activations = {}
+blocked_users = {}  # {classroom_code: set(usernames)}
 
-# ---------- Routes ----------
+
+# ============================================================
+# ROUTES
+# ============================================================
 @app.route('/')
 def home():
     return render_template('index.html')
+
 
 @app.route('/api/health', methods=['GET'])
 def health():
@@ -68,7 +80,7 @@ def health():
         'timestamp': datetime.utcnow().isoformat(),
         'teachers': len(teacher_accounts),
         'pro_users': len(pro_activations),
-        'jitsi_configured': bool(JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt),
+        'jitsi_configured': JITSI_CONFIGURED,
         'diagnostics': {
             'has_app_id': bool(JITSI_APP_ID),
             'has_kid': bool(JITSI_KID),
@@ -77,71 +89,124 @@ def health():
             'private_key_starts_correctly': JITSI_PRIVATE_KEY.startswith('-----BEGIN') if JITSI_PRIVATE_KEY else False,
             'has_pyjwt': bool(pyjwt),
             'has_path_env': bool(os.environ.get('JITSI_PRIVATE_KEY_PATH', '')),
-            'has_key_env': bool(os.environ.get('JITSI_PRIVATE_KEY', '')),
         }
     }), 200
+
 
 @app.route('/api/debug', methods=['GET'])
 def debug():
     safe_accounts = {u: '********' for u in teacher_accounts}
-    return jsonify({'teacher_accounts': safe_accounts, 'pro_activations': pro_activations}), 200
+    return jsonify({
+        'teacher_accounts': safe_accounts,
+        'pro_activations': pro_activations,
+        'blocked_users': {k: list(v) for k, v in blocked_users.items()}
+    }), 200
+
+
+# ---------- AUTH ----------
+USERNAME_RE = re.compile(r'^[A-Za-z0-9_.-]{3,32}$')
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-    username = data.get('username', '').strip()
-    email = data.get('email', '').strip()
-    password = data.get('password', '')
+
+    username = (data.get('username') or '').strip()
+    email = (data.get('email') or '').strip()
+    password = data.get('password') or ''
+
     if not username or not password:
         return jsonify({'success': False, 'message': 'Username and password are required.'}), 400
+
+    if not USERNAME_RE.match(username):
+        return jsonify({
+            'success': False,
+            'message': 'Username must be 3–32 characters (letters, numbers, _ . -).'
+        }), 400
+
+    if len(password) < 6:
+        return jsonify({'success': False, 'message': 'Password must be at least 6 characters.'}), 400
+
+    if email and not EMAIL_RE.match(email):
+        return jsonify({'success': False, 'message': 'Please enter a valid email address.'}), 400
+
     if username in teacher_accounts:
         return jsonify({'success': False, 'message': 'Username already registered!'}), 400
+
     teacher_accounts[username] = password
-    logger.info(f'User {username} registered successfully')
-    return jsonify({'success': True, 'message': 'Registration successful! You can now log in.'}), 200
+    logger.info('User %s registered successfully', username)
+    return jsonify({
+        'success': True,
+        'message': 'Registration successful! You can now log in.'
+    }), 200
+
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-    username = data.get('username', '').strip()
-    password = data.get('password', '')
+
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': 'Username and password are required.'}), 400
+
     if username in teacher_accounts and teacher_accounts[username] == password:
+        logger.info('User %s logged in', username)
         return jsonify({'success': True, 'username': username}), 200
+
     return jsonify({'success': False, 'message': 'Invalid username or password.'}), 401
 
+
+# ---------- AI ASSISTANT ----------
 @app.route('/api/ai', methods=['POST'])
 def api_ai():
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'response': 'I did not receive a question. Please try again.'}), 400
-    query = data.get('query', '').lower().strip()
-    if 'login' in query:
+
+    query = (data.get('query') or '').lower().strip()
+
+    if not query:
+        response = "Ask me anything about Nexus Learn!"
+    elif 'login' in query or 'sign in' in query or 'register' in query:
         response = "Click 'Login as Teacher', enter your username and password, or register to create an account."
-    elif 'pro' in query or 'pay' in query:
+    elif 'pro' in query or 'pay' in query or 'upgrade' in query:
         response = "To pay for Pro: Transfer to Account: 8024300891 - OPay - Talabi Sunny Okunola, then send the receipt to +2348024300891."
-    elif 'exam' in query or 'test' in query:
+    elif 'exam' in query or 'test' in query or 'quiz' in query:
         response = "Teachers can deploy exams using the 'Setup Exam' button. Students will see a live exam modal with a timer."
-    elif 'video' in query or 'camera' in query or 'meeting' in query:
-        response = "Video meetings are powered by Jitsi. Click 'Join Video' in your classroom to enter the meeting."
+    elif 'video' in query or 'camera' in query or 'meeting' in query or 'call' in query:
+        response = "Video meetings are powered by Jitsi. Click 'Join Video' in your classroom, then tap the ⬇️ button to minimize the call and keep using the classroom."
     elif 'health' in query or 'status' in query:
         response = f"Server is running. Teachers: {len(teacher_accounts)}, Pro users: {len(pro_activations)}."
+    elif 'attendance' in query:
+        response = "Teachers can export a CSV attendance file using the 'Attendance' button in the classroom."
+    elif 'announce' in query:
+        response = "Teachers can broadcast messages using the 'Announce' button in the classroom control hub."
     else:
-        response = "Try asking about 'login', 'pro', 'exam', 'chat', or 'video'."
+        response = "Try asking about 'login', 'pro', 'exam', 'video', 'attendance', or 'announce'."
+
     return jsonify({'response': response}), 200
 
+
+# ---------- PRO ACTIVATION ----------
 @app.route('/api/activate_pro', methods=['POST'])
 def api_activate_pro():
-    data = request.get_json()
+    data = request.get_json(silent=True)
     if not data:
         return jsonify({'success': False, 'message': 'Missing JSON body'}), 400
-    username = data.get('username', '').strip()
-    code = data.get('activation_code', '').strip().upper()
+
+    username = (data.get('username') or '').strip()
+    code = (data.get('activation_code') or '').strip().upper()
+
     if not username:
         return jsonify({'success': False, 'message': 'Username required.'}), 400
+
     if code.startswith('NEXUS-') and len(code) > 6:
         expiry_date = '2026-12-31'
         pro_activations[username] = {
@@ -149,15 +214,21 @@ def api_activate_pro():
             'activated_at': datetime.utcnow().isoformat(),
             'code': code
         }
-        return jsonify({'success': True, 'message': 'Pro activated successfully!', 'expiry': expiry_date}), 200
-    else:
-        return jsonify({'success': False, 'message': 'Invalid activation code.'}), 400
+        logger.info('Pro activated for %s', username)
+        return jsonify({
+            'success': True,
+            'message': 'Pro activated successfully!',
+            'expiry': expiry_date
+        }), 200
 
-# ---------- Jitsi JWT endpoint ----------
+    return jsonify({'success': False, 'message': 'Invalid activation code.'}), 400
+
+
+# ---------- JITSI JWT ----------
 @app.route('/api/jitsi/token', methods=['POST'])
 def api_jitsi_token():
     """Issues a short-lived JaaS JWT scoped to a specific classroom room."""
-    if not (JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt):
+    if not JITSI_CONFIGURED:
         return jsonify({
             'success': False,
             'message': 'Video service is not configured on the server.'
@@ -218,25 +289,40 @@ def api_jitsi_token():
         'domain': '8x8.vc'
     }), 200
 
-# ---------- Socket.IO (kept minimal; no video logic) ----------
+
+# ============================================================
+# SOCKET.IO
+# ============================================================
 @socketio.on('connect')
 def handle_connect():
-    logger.info(f'Client connected: {request.sid}')
+    logger.info('Client connected: %s', request.sid)
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    logger.info(f'Client disconnected: {request.sid}')
+    logger.info('Client disconnected: %s', request.sid)
 
-# ---------- Error Handlers ----------
+
+# ============================================================
+# ERROR HANDLERS
+# ============================================================
 @app.errorhandler(404)
 def not_found(e):
-    return jsonify({'error': 'Not found'}), 404
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Not found'}), 404
+    return render_template('index.html'), 200
+
 
 @app.errorhandler(500)
 def internal_error(e):
+    logger.exception('Internal server error: %s', e)
     return jsonify({'error': 'Internal server error'}), 500
 
-# ---------- Main ----------
+
+# ============================================================
+# MAIN
+# ============================================================
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5001))
+    logger.info('Starting Nexus Learn on port %s', port)
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
