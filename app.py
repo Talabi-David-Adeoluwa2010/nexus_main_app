@@ -1,9 +1,15 @@
 import os
+import time
 import logging
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO
+
+try:
+    import jwt as pyjwt
+except ImportError:
+    pyjwt = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw')
@@ -18,12 +24,37 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# In-memory stores
+# ============================================================
+# JITSI (JaaS) CONFIGURATION
+# ============================================================
+JITSI_APP_ID = os.environ.get('JITSI_APP_ID', '').strip()
+JITSI_KID = os.environ.get('JITSI_KID', '').strip()
+
+_jitsi_key = os.environ.get('JITSI_PRIVATE_KEY', '')
+if _jitsi_key and '\\n' in _jitsi_key and 'BEGIN' in _jitsi_key:
+    _jitsi_key = _jitsi_key.replace('\\n', '\n')
+if not _jitsi_key:
+    _path = os.environ.get('JITSI_PRIVATE_KEY_PATH', '')
+    if _path and os.path.exists(_path):
+        with open(_path, 'r') as f:
+            _jitsi_key = f.read()
+JITSI_PRIVATE_KEY = _jitsi_key.strip() if _jitsi_key else ''
+
+if JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt:
+    logger.info('JaaS configured. App ID starts with: %s', JITSI_APP_ID[:24])
+else:
+    logger.warning('JaaS not fully configured. Video meetings will not work until env vars are set.')
+
+
+def _build_jitsi_room(classroom_code):
+    """Deterministic room name derived from classroom code."""
+    slug = ''.join(ch for ch in classroom_code if ch.isalnum()).lower()
+    return 'nexusclass' + slug
+
+
+# In-memory stores (non-video)
 teacher_accounts = {"admin": "admin123"}
 pro_activations = {}
-active_participants = {}          # classroom_code -> set of usernames
-sid_to_participant = {}           # sid -> (classroom, username)
-username_to_sid = {}              # username -> sid (for direct messaging)
 
 # ---------- Routes ----------
 @app.route('/')
@@ -36,7 +67,8 @@ def health():
         'status': 'ok',
         'timestamp': datetime.utcnow().isoformat(),
         'teachers': len(teacher_accounts),
-        'pro_users': len(pro_activations)
+        'pro_users': len(pro_activations),
+        'jitsi_configured': bool(JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt)
     }), 200
 
 @app.route('/api/debug', methods=['GET'])
@@ -83,8 +115,8 @@ def api_ai():
         response = "To pay for Pro: Transfer to Account: 8024300891 - OPay - Talabi Sunny Okunola, then send the receipt to +2348024300891."
     elif 'exam' in query or 'test' in query:
         response = "Teachers can deploy exams using the 'Setup Exam' button. Students will see a live exam modal with a timer."
-    elif 'video' in query or 'camera' in query:
-        response = "Video features are now available! Click 'Join Video' in your classroom to start a live video call."
+    elif 'video' in query or 'camera' in query or 'meeting' in query:
+        response = "Video meetings are powered by Jitsi. Click 'Join Video' in your classroom to enter the meeting."
     elif 'health' in query or 'status' in query:
         response = f"Server is running. Teachers: {len(teacher_accounts)}, Pro users: {len(pro_activations)}."
     else:
@@ -111,7 +143,72 @@ def api_activate_pro():
     else:
         return jsonify({'success': False, 'message': 'Invalid activation code.'}), 400
 
-# ---------- Socket.IO Handlers ----------
+# ---------- Jitsi JWT endpoint ----------
+@app.route('/api/jitsi/token', methods=['POST'])
+def api_jitsi_token():
+    """Issues a short-lived JaaS JWT scoped to a specific classroom room."""
+    if not (JITSI_APP_ID and JITSI_KID and JITSI_PRIVATE_KEY and pyjwt):
+        return jsonify({
+            'success': False,
+            'message': 'Video service is not configured on the server.'
+        }), 500
+
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
+    classroom = (data.get('classroom') or '').strip()
+    is_teacher = bool(data.get('is_teacher', False))
+
+    if not username or not classroom:
+        return jsonify({'success': False, 'message': 'username and classroom are required'}), 400
+
+    room_name = _build_jitsi_room(classroom)
+    now = int(time.time())
+
+    payload = {
+        'aud': 'jitsi',
+        'iss': 'chat',
+        'sub': JITSI_APP_ID,
+        'room': '*',
+        'iat': now,
+        'nbf': now - 10,
+        'exp': now + 60 * 60,
+        'context': {
+            'user': {
+                'id': username,
+                'name': username,
+                'email': f'{username}@nexuslearn.local',
+                'avatar': '',
+                'moderator': is_teacher
+            },
+            'features': {
+                'livestreaming': False,
+                'recording': False,
+                'transcription': False,
+                'outbound-call': False
+            }
+        }
+    }
+
+    try:
+        token = pyjwt.encode(
+            payload,
+            JITSI_PRIVATE_KEY,
+            algorithm='RS256',
+            headers={'kid': JITSI_KID}
+        )
+    except Exception as e:
+        logger.exception('Failed to sign JaaS token: %s', e)
+        return jsonify({'success': False, 'message': 'Token generation failed'}), 500
+
+    return jsonify({
+        'success': True,
+        'token': token,
+        'appId': JITSI_APP_ID,
+        'roomName': room_name,
+        'domain': '8x8.vc'
+    }), 200
+
+# ---------- Socket.IO (kept minimal; no video logic) ----------
 @socketio.on('connect')
 def handle_connect():
     logger.info(f'Client connected: {request.sid}')
@@ -119,138 +216,6 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     logger.info(f'Client disconnected: {request.sid}')
-    # Clean up if this SID was in a video call
-    if request.sid in sid_to_participant:
-        classroom, username = sid_to_participant[request.sid]
-        # Remove from active participants
-        if classroom in active_participants:
-            active_participants[classroom].discard(username)
-            if not active_participants[classroom]:
-                del active_participants[classroom]
-        # Remove mappings
-        if username in username_to_sid:
-            del username_to_sid[username]
-        del sid_to_participant[request.sid]
-        # Notify others
-        room_name = f'classroom_{classroom}'
-        emit('video_call_user_left', {'username': username}, room=room_name, skip_sid=request.sid)
-        logger.info(f'User {username} automatically removed on disconnect')
-
-@socketio.on('video_call_join')
-def handle_video_join(data):
-    classroom = data.get('classroom')
-    username = data.get('username')
-    if not classroom or not username:
-        emit('video_call_error', {'message': 'Missing classroom or username'})
-        return
-
-    room_name = f'classroom_{classroom}'
-    join_room(room_name)
-
-    # Store mappings
-    sid_to_participant[request.sid] = (classroom, username)
-    username_to_sid[username] = request.sid
-
-    # Add to active participants
-    if classroom not in active_participants:
-        active_participants[classroom] = set()
-    active_participants[classroom].add(username)
-
-    logger.info(f'User {username} joined video call in classroom {classroom}')
-
-    # Send current participant list to the joining user
-    participants = list(active_participants[classroom])
-    emit('video_call_participants', {'participants': participants}, room=request.sid)
-
-    # Notify others
-    emit('video_call_user_joined', {'username': username}, room=room_name, skip_sid=request.sid)
-
-@socketio.on('video_call_leave')
-def handle_video_leave(data):
-    classroom = data.get('classroom')
-    username = data.get('username')
-    if not classroom or not username:
-        return
-
-    room_name = f'classroom_{classroom}'
-    leave_room(room_name)
-
-    # Remove from active participants
-    if classroom in active_participants:
-        active_participants[classroom].discard(username)
-        if not active_participants[classroom]:
-            del active_participants[classroom]
-
-    # Remove mappings
-    if username in username_to_sid:
-        del username_to_sid[username]
-    if request.sid in sid_to_participant:
-        del sid_to_participant[request.sid]
-
-    logger.info(f'User {username} left video call in classroom {classroom}')
-    emit('video_call_user_left', {'username': username}, room=room_name, skip_sid=request.sid)
-
-@socketio.on('video_call_offer')
-def handle_offer(data):
-    target = data.get('target')
-    sdp = data.get('sdp')
-    sender = data.get('sender')
-    classroom = data.get('classroom')
-    if not all([target, sdp, sender, classroom]):
-        return
-    target_sid = username_to_sid.get(target)
-    if target_sid:
-        emit('video_call_offer', {'sender': sender, 'sdp': sdp}, room=target_sid)
-    else:
-        logger.warning(f'Target {target} not found for offer')
-
-@socketio.on('video_call_answer')
-def handle_answer(data):
-    target = data.get('target')
-    sdp = data.get('sdp')
-    sender = data.get('sender')
-    classroom = data.get('classroom')
-    if not all([target, sdp, sender, classroom]):
-        return
-    target_sid = username_to_sid.get(target)
-    if target_sid:
-        emit('video_call_answer', {'sender': sender, 'sdp': sdp}, room=target_sid)
-    else:
-        logger.warning(f'Target {target} not found for answer')
-
-@socketio.on('video_call_ice_candidate')
-def handle_ice_candidate(data):
-    target = data.get('target')
-    candidate = data.get('candidate')
-    sender = data.get('sender')
-    classroom = data.get('classroom')
-    if not all([target, candidate, sender, classroom]):
-        return
-    target_sid = username_to_sid.get(target)
-    if target_sid:
-        emit('video_call_ice_candidate', {'sender': sender, 'candidate': candidate}, room=target_sid)
-    else:
-        logger.warning(f'Target {target} not found for ICE candidate')
-
-@socketio.on('video_call_camera_state')
-def handle_camera_state(data):
-    sender = data.get('sender')
-    state = data.get('state')
-    classroom = data.get('classroom')
-    if not sender or not classroom:
-        return
-    room_name = f'classroom_{classroom}'
-    emit('video_call_camera_state', {'sender': sender, 'state': state}, room=room_name, skip_sid=request.sid)
-
-@socketio.on('video_call_mic_state')
-def handle_mic_state(data):
-    sender = data.get('sender')
-    state = data.get('state')
-    classroom = data.get('classroom')
-    if not sender or not classroom:
-        return
-    room_name = f'classroom_{classroom}'
-    emit('video_call_mic_state', {'sender': sender, 'state': state}, room=room_name, skip_sid=request.sid)
 
 # ---------- Error Handlers ----------
 @app.errorhandler(404)
