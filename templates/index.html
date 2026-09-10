@@ -919,7 +919,7 @@
                 <p class="sub">Enter your details to join your classroom</p>
                 <div class="input-group">
                     <input type="text" id="join-name" placeholder="Your Full Name" autocomplete="name">
-                    <input type="text" id="join-code" placeholder="Class Code (e.g. ABCD-EFGH-IJKL-MNOP)" autocomplete="off" style="text-transform:uppercase;">
+                    <input type="text" id="join-code" placeholder="Class Code (e.g. ABCD-EFGH-IJKL-MNOP)" autocomplete="off" style="text-transform:uppercase;" maxlength="19">
                 </div>
                 <button class="btn" id="join-btn">Join Classroom</button>
                 <div class="link" onclick="showHomepage()">← Back to Homepage</div>
@@ -1240,7 +1240,7 @@
          ============================================================ -->
     <script>
         // ============================================================
-        // FIREBASE CONFIG
+        // FIREBASE CONFIG — EXACTLY AS YOU PROVIDED IT
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBasLelubu8aPurpZieYBWZ1VZwxRqyxsw",
@@ -1302,6 +1302,14 @@
             let json;
             try { json = await res.json(); } catch (e) { json = { success: false, message: 'Invalid server response' }; }
             return json;
+        }
+
+        // CRITICAL FIX: Timeout wrapper (30 seconds)
+        async function dbOnceWithTimeout(path, timeoutMs = 30000) {
+            return Promise.race([
+                db.ref(path).once('value'),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Database connection timed out. Please check your internet and Firebase rules.')), timeoutMs))
+            ]);
         }
 
         function escapeHtml(str) {
@@ -1504,8 +1512,9 @@
                 }
             } catch (err) {
                 showToast('Network error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Complete Registration';
             }
-            btn.disabled = false; btn.textContent = 'Complete Registration';
         });
 
         document.getElementById('login-btn').addEventListener('click', async () => {
@@ -1531,12 +1540,13 @@
                 }
             } catch (err) {
                 showToast('Network error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Secure Login';
             }
-            btn.disabled = false; btn.textContent = 'Secure Login';
         });
 
         // ============================================================
-        // CLASS CREATION (TEACHER)
+        // CLASS CREATION (TEACHER) — SAVES TO FIREBASE
         // ============================================================
         document.getElementById('create-class-btn').addEventListener('click', async function() {
             const name = document.getElementById('create-classname').value.trim();
@@ -1552,18 +1562,21 @@
             classCodeRoom = code;
             myUsername = currentTeacherUser;
 
-            document.getElementById('display-class-code').innerText = code;
-            document.getElementById('generated-code-box').classList.remove('hidden');
-
             try {
+                // CRITICAL: Save class to Firebase so students can find it
                 await db.ref('classrooms/' + classCodeRoom).update({
                     info: { name: name, teacher: currentTeacherUser, created_at: Date.now() }
                 });
-                showToast('Class "' + name + '" created! Code: ' + code, 'success');
+                
+                document.getElementById('display-class-code').innerText = code;
+                document.getElementById('generated-code-box').classList.remove('hidden');
+                showToast('✅ Class "' + name + '" saved! Code: ' + code, 'success');
+                logDebug('Class created and saved to Firebase: ' + code);
+                
             } catch (err) {
-                showToast('Class created but could not be saved: ' + err.message, 'error');
+                showToast('❌ Could not save class to Firebase: ' + err.message, 'error');
+                logDebug('Class save error: ' + err.message);
             }
-            logDebug('Class created: ' + name + ' / ' + code);
         });
 
         document.getElementById('enter-classroom-btn').addEventListener('click', async () => {
@@ -1572,7 +1585,7 @@
         });
 
         // ============================================================
-        // STUDENT JOIN — ONLY EXISTING CLASSROOMS
+        // STUDENT JOIN — VERIFIES CLASS EXISTS IN FIREBASE
         // ============================================================
         document.getElementById('join-btn').addEventListener('click', async () => {
             const name = document.getElementById('join-name').value.trim();
@@ -1585,21 +1598,31 @@
             btn.disabled = true; btn.textContent = '⏳ Verifying class...';
 
             try {
-                const snap = await db.ref('classrooms/' + code + '/info').once('value');
+                // Check Firebase to see if this class code exists
+                const snap = await dbOnceWithTimeout('classrooms/' + code + '/info');
+                
                 if (!snap.exists()) {
-                    showToast('❌ No classroom found with that code. Please confirm it with your teacher.', 'error');
-                    btn.disabled = false; btn.textContent = 'Join Classroom';
-                    return;
+                    showToast('❌ No classroom found with that code. Please ask your teacher to share it again.', 'error');
+                    logDebug('Class not found in Firebase: ' + code);
+                    return; // finally block will reset the button
                 }
+                
+                // Class exists! Proceed to join.
                 myUsername = name;
                 classCodeRoom = code;
                 isTeacherUser = false;
                 localStorage.setItem('nexus_student_name', name);
+                logDebug('Class found! Joining: ' + code);
                 await enterClassroom();
+
             } catch (err) {
-                showToast('Could not verify the class code: ' + err.message, 'error');
+                showToast('❌ Connection error: ' + err.message, 'error');
+                logDebug('Class verify error: ' + err.message);
+            } finally {
+                // ALWAYS reset the button, whether success or fail
+                btn.disabled = false;
+                btn.textContent = 'Join Classroom';
             }
-            btn.disabled = false; btn.textContent = 'Join Classroom';
         });
 
         // ============================================================
@@ -1640,7 +1663,7 @@
 
             // Class info
             try {
-                const snap = await db.ref('classrooms/' + classCodeRoom + '/info').once('value');
+                const snap = await dbOnceWithTimeout('classrooms/' + classCodeRoom + '/info');
                 const info = snap.val();
                 const clsName = (info && info.name) ? info.name : 'Class Session';
                 document.getElementById('view-class-title').innerText = clsName;
