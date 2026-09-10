@@ -3,3 +3,5 @@ Flask-SocketIO
 eventlet
 flask-cors
 gunicorn
+PyJWT==2.8.0
+cryptography==42.0.5
