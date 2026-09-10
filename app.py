@@ -62,7 +62,7 @@ def _build_jitsi_room(classroom_code):
 # ============================================================
 teacher_accounts = {"admin": "admin123"}
 pro_activations = {}
-blocked_users = {}  # {classroom_code: set(usernames)}
+blocked_users = {}
 
 
 # ============================================================
@@ -86,9 +86,7 @@ def health():
             'has_kid': bool(JITSI_KID),
             'has_private_key': bool(JITSI_PRIVATE_KEY),
             'private_key_length': len(JITSI_PRIVATE_KEY) if JITSI_PRIVATE_KEY else 0,
-            'private_key_starts_correctly': JITSI_PRIVATE_KEY.startswith('-----BEGIN') if JITSI_PRIVATE_KEY else False,
             'has_pyjwt': bool(pyjwt),
-            'has_path_env': bool(os.environ.get('JITSI_PRIVATE_KEY_PATH', '')),
         }
     }), 200
 
@@ -99,7 +97,6 @@ def debug():
     return jsonify({
         'teacher_accounts': safe_accounts,
         'pro_activations': pro_activations,
-        'blocked_users': {k: list(v) for k, v in blocked_users.items()}
     }), 200
 
 
@@ -184,10 +181,6 @@ def api_ai():
         response = "Video meetings are powered by Jitsi. Click 'Join Video' in your classroom, then tap the ⬇️ button to minimize the call and keep using the classroom."
     elif 'health' in query or 'status' in query:
         response = f"Server is running. Teachers: {len(teacher_accounts)}, Pro users: {len(pro_activations)}."
-    elif 'attendance' in query:
-        response = "Teachers can export a CSV attendance file using the 'Attendance' button in the classroom."
-    elif 'announce' in query:
-        response = "Teachers can broadcast messages using the 'Announce' button in the classroom control hub."
     else:
         response = "Try asking about 'login', 'pro', 'exam', 'video', 'attendance', or 'announce'."
 
@@ -227,7 +220,6 @@ def api_activate_pro():
 # ---------- JITSI JWT ----------
 @app.route('/api/jitsi/token', methods=['POST'])
 def api_jitsi_token():
-    """Issues a short-lived JaaS JWT scoped to a specific classroom room."""
     if not JITSI_CONFIGURED:
         return jsonify({
             'success': False,
